@@ -1,0 +1,19 @@
+plugins {
+    id 'application'
+}
+
+group = 'black0ut1'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClass = 'black0ut1.Main'
+}
+
+dependencies {
+    implementation "com.google.guava:guava:32.1.3-jre"
+    implementation "org.jcommander:jcommander:1.83"
+}
