@@ -5,6 +5,7 @@ import black0ut1.data.Network;
 import black0ut1.util.SSSP;
 import black0ut1.util.Util;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 @SuppressWarnings("unchecked")
@@ -24,13 +25,11 @@ public class iTAPAS extends BushBasedAlgorithm {
 	
 	protected final Random rng = new Random(42);
 	
-	protected final List<PAS>[] Pj = new List[network.nodes];
-	protected final List<PAS> P = new ArrayList<>();
+	protected final PASManager manager;
 	
 	public iTAPAS(Parameters parameters) {
 		super(parameters);
-		for (int i = 0; i < Pj.length; i++)
-			Pj[i] = new ArrayList<>();
+		this.manager = new PASManager(parameters.network);
 	}
 	
 	@Override
@@ -60,10 +59,11 @@ public class iTAPAS extends BushBasedAlgorithm {
 				if (newPas == null)
 					continue;
 				
-				addPAS(newPas);
+				manager.addPAS(newPas);
 			}
 			
 			randomShifts();
+			updateCosts();
 		}
 		
 		eliminatePASes();
@@ -87,16 +87,16 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected void randomShifts() {
 		// shift flows of up to RANDOM_SHIFTS random PASs
 		
-		Collections.shuffle(P, rng);
-		for (int i = 0; i < Math.min(RANDOM_SHIFTS, P.size()); i++) {
-			shiftFlows(P.get(i));
+		Collections.shuffle(manager.getPASes(), rng);
+		for (int i = 0; i < Math.min(RANDOM_SHIFTS, manager.getPASes().size()); i++) {
+			shiftFlows(manager.getPASes().get(i));
 		}
 	}
 	
 	protected void eliminatePASes() {
 		for (int i = 0; i < 20; i++) {
 			
-			for (Iterator<PAS> iterator = P.iterator(); iterator.hasNext(); ) {
+			for (Iterator<PAS> iterator = manager.iterator(); iterator.hasNext(); ) {
 				PAS pas = iterator.next();
 				
 				// if these conditions hold, the PAS will be eliminated, but before that we search
@@ -112,9 +112,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 							shiftFlows(pas);
 					}
 					
-					iterator.remove();
-					Pj[pas.head(network)].remove(pas);
-					
+					manager.removePAS(iterator, pas);
 				} else {
 					shiftFlows(pas);
 				}
@@ -123,18 +121,16 @@ public class iTAPAS extends BushBasedAlgorithm {
 	}
 	
 	protected void eliminatePASes2() {
-		for (Iterator<PAS> iterator = P.iterator(); iterator.hasNext(); ) {
+		for (Iterator<PAS> iterator = manager.getPASes().iterator(); iterator.hasNext(); ) {
 			PAS pas = iterator.next();
 			
-			if (!shiftFlows(pas)) {
-				iterator.remove();
-				Pj[pas.head(network)].remove(pas);
-			}
+			if (!shiftFlows(pas))
+				manager.removePAS(iterator, pas);
 		}
 	}
 	
 	protected boolean searchPASes(Network.Edge edge, double reducedCost, Bush bush) {
-		for (PAS pas : Pj[edge.endNode]) {
+		for (PAS pas : manager.getPASes(edge.endNode)) {
 			if (pas.maxSegmentLastEdge() == edge.index
 					&& pas.isEffective(costs, bushes,
 					COST_EFFECTIVE_FACTOR * reducedCost,
@@ -146,23 +142,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 		}
 		
 		return false;
-	}
-	
-	protected void addPAS(PAS newPas) {
-		List<PAS> Pj = this.Pj[newPas.head(network)];
-		
-		boolean pasAlreadyExists = false;
-		for (PAS pas : Pj) {
-			if (pas.equals(newPas)) {
-				pasAlreadyExists = true;
-				break;
-			}
-		}
-		
-		if (!pasAlreadyExists) {
-			P.add(newPas);
-			Pj.add(newPas);
-		}
 	}
 	
 	
@@ -312,18 +291,15 @@ public class iTAPAS extends BushBasedAlgorithm {
 			return false;
 		
 		Bush bush = bushes[pas.origin];
-		Network.Edge[] edges = network.getEdges();
 		
 		for (int edgeIndex : pas.minSegment) {
 			bush.addFlow(edgeIndex, flowShift);
 			flows[edgeIndex] += flowShift;
-			costs[edgeIndex] = costFunction.function(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		for (int edgeIndex : pas.maxSegment) {
 			bush.addFlow(edgeIndex, -flowShift);
 			flows[edgeIndex] -= flowShift;
-			costs[edgeIndex] = costFunction.function(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		return true;
@@ -368,6 +344,45 @@ public class iTAPAS extends BushBasedAlgorithm {
 		return Util.projectToInterval(flowShift, 0, maxFlowShift);
 	}
 	
+	
+	public static class PASManager implements Iterable<PAS> {
+		private final Network network;
+		private final List<PAS> P;
+		private final List<PAS>[] Pj;
+		
+		public PASManager(Network network) {
+			this.network = network;
+			this.P = new ArrayList<>();
+			this.Pj = new List[network.nodes];
+			for (int i = 0; i < Pj.length; i++)
+				Pj[i] = new ArrayList<>();
+		}
+		
+		public void addPAS(PAS newPas) {
+			List<PAS> Pj = this.Pj[newPas.head(network)];
+			
+			P.add(newPas);
+			Pj.add(newPas);
+		}
+		
+		public List<PAS> getPASes() {
+			return P;
+		}
+		
+		public List<PAS> getPASes(int head) {
+			return Pj[head];
+		}
+		
+		@Nonnull
+		public Iterator<PAS> iterator() {
+			return P.iterator();
+		}
+		
+		public void removePAS(Iterator<PAS> it, PAS pas) {
+			it.remove();
+			Pj[pas.head(network)].remove(pas);
+		}
+	}
 	
 	public static class PAS {
 		
