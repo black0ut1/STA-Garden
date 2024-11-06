@@ -52,7 +52,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 					double flow = FLOW_EFFECTIVE_FACTOR * bush.getEdgeFlow(edge.index);
 					if (found != null && found.isEffective(costs, bushes, cost, flow)) {
 						shiftFlows(found);
-						// TODO maybe missing maxFlowBound condition (step 1.2.1)
 					} else {
 						PAS newPas = MFS(edge, minTree, bush);
 						if (newPas != null)
@@ -69,11 +68,23 @@ public class iTAPAS extends BushBasedAlgorithm {
 	}
 	
 	protected void eliminatePASes() {
-		for (Iterator<PAS> iterator = manager.getPASes().iterator(); iterator.hasNext(); ) {
-			PAS pas = iterator.next();
+		for (int i = 0; i < 10; i++) {
 			
-			if (!shiftFlows(pas))
-				manager.removePAS(iterator, pas);
+			nextPAS:
+			for (Iterator<PAS> iterator = manager.getPASes().iterator(); iterator.hasNext(); ) {
+				PAS pas = iterator.next();
+				
+				if (!shiftFlows(pas)) {
+					
+					for (int j = 0; j < 50; j++) {
+						pas.origin = (pas.origin + 1) % network.zones;
+						if (shiftFlows(pas))
+							continue nextPAS;
+					}
+					
+					manager.removePAS(iterator, pas);
+				}
+			}
 		}
 	}
 	
@@ -115,7 +126,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 			while (true) {
 				
 				// not specified in paper, needed to avoid infinite loop
-				if (bush.getEdgeFlow(maxIncomingLink.index) <= FLOW_EPSILON)
+				if (bush.getEdgeFlow(maxIncomingLink.index) == 0)
 					return null;
 				
 				// add max incoming link to the higher cost segment of PAS
