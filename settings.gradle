@@ -1,2 +1,2 @@
 rootProject.name = 'STA-Garden'
-
+include 'gui'
