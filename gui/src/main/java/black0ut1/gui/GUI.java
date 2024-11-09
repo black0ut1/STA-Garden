@@ -4,11 +4,9 @@ import javax.swing.*;
 
 public class GUI extends JFrame {
 	
-	public GUI() {
-		super("GUI");
-		
-		
+	public GUI(JPanel panel) {
+		setContentPane(panel);
+		pack();
 		setVisible(true);
 	}
-	
 }

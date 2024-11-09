@@ -10,6 +10,7 @@ import black0ut1.util.SSSP;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Vector;
+import java.util.function.Consumer;
 
 public class Convergence {
 	
@@ -19,6 +20,7 @@ public class Convergence {
 	
 	private final Map<Criterion, Double> criteria;
 	private final Vector<double[]> data;
+	private final Consumer<double[]> callback;
 	
 	private double maxLowerBound = Double.NEGATIVE_INFINITY;
 	
@@ -34,8 +36,10 @@ public class Convergence {
 	private double objectiveFunction = 0;
 	
 	private Convergence(Algorithm.Parameters algorithmParameters,
-						Map<Criterion, Double> criteria) {
+						Map<Criterion, Double> criteria,
+						Consumer<double[]> callback) {
 		this.criteria = criteria;
+		this.callback = callback;
 		this.network = algorithmParameters.network;
 		this.odMatrix = algorithmParameters.odMatrix;
 		this.costFunction = algorithmParameters.costFunction;
@@ -97,6 +101,9 @@ public class Convergence {
 		for (Criterion criterion : criteria.keySet())
 			iterationData[criterion.ordinal()] = getCriterionValue(criterion);
 		data.add(iterationData);
+		
+		if (callback != null)
+			callback.accept(iterationData);
 	}
 	
 	public void printCriteriaValues() {
@@ -181,6 +188,8 @@ public class Convergence {
 		
 		private final Map<Criterion, Double> criteria = new LinkedHashMap<>();
 		
+		private Consumer<double[]> callback = null;
+		
 		public Builder addCriterion(Criterion criterion, double convergenceValue) {
 			criteria.put(criterion, convergenceValue);
 			return this;
@@ -191,8 +200,13 @@ public class Convergence {
 			return this;
 		}
 		
+		public Builder setCallback(Consumer<double[]> callback) {
+			this.callback = callback;
+			return this;
+		}
+		
 		public Convergence build(Algorithm.Parameters algorithmParameters) {
-			return new Convergence(algorithmParameters, criteria);
+			return new Convergence(algorithmParameters, criteria, callback);
 		}
 	}
 	
