@@ -49,7 +49,7 @@ public class ProjectedGradient extends Algorithm {
 	}
 	
 	@Override
-	protected void updateFlows() {
+	protected void mainLoopIteration() {
 		for (int origin = 0; origin < network.zones; origin++) {
 			
 			var a = SSSP.minTreeLen(network, origin, costs);

@@ -27,13 +27,13 @@ public class Convergence {
 	private boolean tsttNeedsCalculation = false;
 	private boolean spttNeedsCalculation = false;
 	private boolean gapNeedsCalculation = false;
-	private boolean objectiveFunctionNeedsCalculation = false;
+	private boolean beckmannFunctionNeedsCalculation = false;
 	
 	private double totalFlow = 0;
 	private double tstt = 0;
 	private double sptt = 0;
 	private double gap = 0;
-	private double objectiveFunction = 0;
+	private double beckmannFunction = 0;
 	
 	private Convergence(Algorithm.Parameters algorithmParameters,
 						Map<Criterion, Double> criteria,
@@ -62,8 +62,8 @@ public class Convergence {
 		
 		if (criteria.containsKey(Criterion.RELATIVE_GAP_2)
 				|| criteria.containsKey(Criterion.RELATIVE_GAP_3)
-				|| criteria.containsKey(Criterion.OBJECTIVE_FUNCTION))
-			objectiveFunctionNeedsCalculation = true;
+				|| criteria.containsKey(Criterion.BECKMANN_FUNCTION))
+			beckmannFunctionNeedsCalculation = true;
 		
 		if (criteria.containsKey(Criterion.RELATIVE_GAP_2)
 				|| criteria.containsKey(Criterion.RELATIVE_GAP_3)
@@ -94,8 +94,8 @@ public class Convergence {
 			sptt = calculateSPTT(costs);
 		if (gapNeedsCalculation)
 			gap = calculateGap(flows, costs);
-		if (objectiveFunctionNeedsCalculation)
-			objectiveFunction = calculateObjectiveFunction(flows);
+		if (beckmannFunctionNeedsCalculation)
+			beckmannFunction = calculateBeckmannFunction(flows);
 		
 		double[] iterationData = new double[Criterion.values().length];
 		for (Criterion criterion : criteria.keySet())
@@ -110,7 +110,7 @@ public class Convergence {
 		double[] lastIterationData = data.getLast();
 		
 		for (Criterion criterion : criteria.keySet()) {
-			System.out.printf("%s: %.10f%n", criterion.name,
+			System.out.printf("%s: %.15f%n", criterion.name,
 					lastIterationData[criterion.ordinal()]);
 		}
 	}
@@ -152,7 +152,7 @@ public class Convergence {
 		return -gap;
 	}
 	
-	private double calculateObjectiveFunction(double[] flows) {
+	private double calculateBeckmannFunction(double[] flows) {
 		double sum = 0;
 		
 		Network.Edge[] edges = network.getEdges();
@@ -164,21 +164,21 @@ public class Convergence {
 	
 	private double getCriterionValue(Criterion criterion) {
 		return switch (criterion) {
-			case OBJECTIVE_FUNCTION -> objectiveFunction;
+			case BECKMANN_FUNCTION -> beckmannFunction;
 			case TOTAL_SYSTEM_TRAVEL_TIME -> tstt;
 			case GAP -> gap;
 			case AVERAGE_EXCESS_COST -> (tstt - sptt) / totalFlow;
 			case RELATIVE_GAP_1 -> tstt / sptt - 1;
 			case RELATIVE_GAP_2 -> {
-				double lowerBound = objectiveFunction - gap;
-				yield (objectiveFunction - lowerBound) / lowerBound;
+				double lowerBound = beckmannFunction - gap;
+				yield (beckmannFunction - lowerBound) / lowerBound;
 			}
 			case RELATIVE_GAP_3 -> {
-				double lowerBound = objectiveFunction - gap;
+				double lowerBound = beckmannFunction - gap;
 				if (lowerBound > maxLowerBound)
 					maxLowerBound = lowerBound;
 				
-				yield (objectiveFunction - maxLowerBound) / maxLowerBound;
+				yield (beckmannFunction - maxLowerBound) / maxLowerBound;
 			}
 			case null -> Double.NaN;
 		};
@@ -212,7 +212,7 @@ public class Convergence {
 	
 	public enum Criterion {
 		
-		OBJECTIVE_FUNCTION("Objective function"),
+		BECKMANN_FUNCTION("Beckmann function"),
 		
 		TOTAL_SYSTEM_TRAVEL_TIME("Total system travel time"),
 		
