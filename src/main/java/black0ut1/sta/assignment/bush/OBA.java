@@ -16,7 +16,7 @@ public class OBA extends BushBasedAlgorithm {
 	}
 	
 	@Override
-	protected void updateFlows() {
+	protected void mainLoopIteration() {
 		for (Bush bush : bushes) {
 			
 			improveBush(bush);

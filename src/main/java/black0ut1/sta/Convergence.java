@@ -10,6 +10,7 @@ import black0ut1.util.SSSP;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Vector;
+import java.util.function.Consumer;
 
 public class Convergence {
 	
@@ -19,23 +20,26 @@ public class Convergence {
 	
 	private final Map<Criterion, Double> criteria;
 	private final Vector<double[]> data;
+	private final Consumer<double[]> callback;
 	
 	private double maxLowerBound = Double.NEGATIVE_INFINITY;
 	
 	private boolean tsttNeedsCalculation = false;
 	private boolean spttNeedsCalculation = false;
 	private boolean gapNeedsCalculation = false;
-	private boolean objectiveFunctionNeedsCalculation = false;
+	private boolean beckmannFunctionNeedsCalculation = false;
 	
 	private double totalFlow = 0;
 	private double tstt = 0;
 	private double sptt = 0;
 	private double gap = 0;
-	private double objectiveFunction = 0;
+	private double beckmannFunction = 0;
 	
 	private Convergence(Algorithm.Parameters algorithmParameters,
-						Map<Criterion, Double> criteria) {
+						Map<Criterion, Double> criteria,
+						Consumer<double[]> callback) {
 		this.criteria = criteria;
+		this.callback = callback;
 		this.network = algorithmParameters.network;
 		this.odMatrix = algorithmParameters.odMatrix;
 		this.costFunction = algorithmParameters.costFunction;
@@ -58,8 +62,8 @@ public class Convergence {
 		
 		if (criteria.containsKey(Criterion.RELATIVE_GAP_2)
 				|| criteria.containsKey(Criterion.RELATIVE_GAP_3)
-				|| criteria.containsKey(Criterion.OBJECTIVE_FUNCTION))
-			objectiveFunctionNeedsCalculation = true;
+				|| criteria.containsKey(Criterion.BECKMANN_FUNCTION))
+			beckmannFunctionNeedsCalculation = true;
 		
 		if (criteria.containsKey(Criterion.RELATIVE_GAP_2)
 				|| criteria.containsKey(Criterion.RELATIVE_GAP_3)
@@ -90,20 +94,23 @@ public class Convergence {
 			sptt = calculateSPTT(costs);
 		if (gapNeedsCalculation)
 			gap = calculateGap(flows, costs);
-		if (objectiveFunctionNeedsCalculation)
-			objectiveFunction = calculateObjectiveFunction(flows);
+		if (beckmannFunctionNeedsCalculation)
+			beckmannFunction = calculateBeckmannFunction(flows);
 		
 		double[] iterationData = new double[Criterion.values().length];
 		for (Criterion criterion : criteria.keySet())
 			iterationData[criterion.ordinal()] = getCriterionValue(criterion);
 		data.add(iterationData);
+		
+		if (callback != null)
+			callback.accept(iterationData);
 	}
 	
 	public void printCriteriaValues() {
 		double[] lastIterationData = data.getLast();
 		
 		for (Criterion criterion : criteria.keySet()) {
-			System.out.printf("%s: %.10f%n", criterion.name,
+			System.out.printf("%s: %.15f%n", criterion.name,
 					lastIterationData[criterion.ordinal()]);
 		}
 	}
@@ -145,7 +152,7 @@ public class Convergence {
 		return -gap;
 	}
 	
-	private double calculateObjectiveFunction(double[] flows) {
+	private double calculateBeckmannFunction(double[] flows) {
 		double sum = 0;
 		
 		Network.Edge[] edges = network.getEdges();
@@ -157,21 +164,21 @@ public class Convergence {
 	
 	private double getCriterionValue(Criterion criterion) {
 		return switch (criterion) {
-			case OBJECTIVE_FUNCTION -> objectiveFunction;
+			case BECKMANN_FUNCTION -> beckmannFunction;
 			case TOTAL_SYSTEM_TRAVEL_TIME -> tstt;
 			case GAP -> gap;
 			case AVERAGE_EXCESS_COST -> (tstt - sptt) / totalFlow;
 			case RELATIVE_GAP_1 -> tstt / sptt - 1;
 			case RELATIVE_GAP_2 -> {
-				double lowerBound = objectiveFunction - gap;
-				yield (objectiveFunction - lowerBound) / lowerBound;
+				double lowerBound = beckmannFunction - gap;
+				yield (beckmannFunction - lowerBound) / lowerBound;
 			}
 			case RELATIVE_GAP_3 -> {
-				double lowerBound = objectiveFunction - gap;
+				double lowerBound = beckmannFunction - gap;
 				if (lowerBound > maxLowerBound)
 					maxLowerBound = lowerBound;
 				
-				yield (objectiveFunction - maxLowerBound) / maxLowerBound;
+				yield (beckmannFunction - maxLowerBound) / maxLowerBound;
 			}
 			case null -> Double.NaN;
 		};
@@ -180,6 +187,8 @@ public class Convergence {
 	public static class Builder {
 		
 		private final Map<Criterion, Double> criteria = new LinkedHashMap<>();
+		
+		private Consumer<double[]> callback = null;
 		
 		public Builder addCriterion(Criterion criterion, double convergenceValue) {
 			criteria.put(criterion, convergenceValue);
@@ -191,14 +200,19 @@ public class Convergence {
 			return this;
 		}
 		
+		public Builder setCallback(Consumer<double[]> callback) {
+			this.callback = callback;
+			return this;
+		}
+		
 		public Convergence build(Algorithm.Parameters algorithmParameters) {
-			return new Convergence(algorithmParameters, criteria);
+			return new Convergence(algorithmParameters, criteria, callback);
 		}
 	}
 	
 	public enum Criterion {
 		
-		OBJECTIVE_FUNCTION("Objective function"),
+		BECKMANN_FUNCTION("Beckmann function"),
 		
 		TOTAL_SYSTEM_TRAVEL_TIME("Total system travel time"),
 		
