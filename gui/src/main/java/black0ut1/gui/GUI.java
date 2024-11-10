@@ -8,5 +8,7 @@ public class GUI extends JFrame {
 		setContentPane(panel);
 		pack();
 		setVisible(true);
+		setLocationRelativeTo(null);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
 	}
 }
