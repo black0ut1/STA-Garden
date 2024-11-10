@@ -16,7 +16,7 @@ public abstract class LinkBasedAlgorithm extends Algorithm {
 	}
 	
 	@Override
-	protected void updateFlows() {
+	protected void mainLoopIteration() {
 		double[] target = calculateTarget();
 		
 		double stepSize = calculateStepSize(target);

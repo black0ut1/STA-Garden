@@ -32,7 +32,7 @@ public class ParallelB extends B {
 	}
 	
 	@Override
-	protected void updateFlows() {
+	protected void mainLoopIteration() {
 		// #threads bushes are processed concurrently
 		// for example, when started with 6 threads, 6 bushes are processed at once
 		for (int i = 0; i < bushes.length; i += threads) {
@@ -91,7 +91,7 @@ public class ParallelB extends B {
 	}
 	
 	@Override
-	protected void cleanUp() {
+	protected void postProcess() {
 		executor.shutdown();
 		try {
 			if (!executor.awaitTermination(10, TimeUnit.MILLISECONDS))

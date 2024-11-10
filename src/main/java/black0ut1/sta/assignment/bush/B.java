@@ -15,7 +15,7 @@ public class B extends BushBasedAlgorithm {
 	}
 	
 	@Override
-	protected void updateFlows() {
+	protected void mainLoopIteration() {
 		for (Bush bush : bushes) {
 			// add some edges to bush, but maintain bush acyclicity
 			improveBush(bush);

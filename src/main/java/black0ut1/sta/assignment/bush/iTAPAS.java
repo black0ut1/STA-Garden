@@ -27,7 +27,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 	}
 	
 	@Override
-	protected void updateFlows() {
+	protected void mainLoopIteration() {
 		for (int zone = 0; zone < network.zones; zone++) {
 			Bush bush = bushes[zone];
 //			System.out.print("\rzone: " + zone + ", no. of PASes: "
@@ -59,8 +59,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 					}
 				}
 			}
-			
-			updateCosts();
 		}
 		
 		eliminatePASes();
@@ -99,6 +97,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		return null;
 	}
 	
+	//////////////////// Methods related to creating PASes ////////////////////
 	
 	protected PAS MFS(Network.Edge ij, Network.Edge[] minTree, Bush bush) {
 		restart:
@@ -222,6 +221,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		}
 	}
 	
+	//////////////////// Methods related to shifting flows ////////////////////
 	
 	protected boolean shiftFlows(PAS pas) {
 		double flowShift = findFlowShift(pas);
@@ -229,15 +229,18 @@ public class iTAPAS extends BushBasedAlgorithm {
 			return false;
 		
 		Bush bush = bushes[pas.origin];
+		var edges = network.getEdges();
 		
 		for (int edgeIndex : pas.minSegment) {
 			bush.addFlow(edgeIndex, flowShift);
 			flows[edgeIndex] += flowShift;
+			costs[edgeIndex] = costFunction.function(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		for (int edgeIndex : pas.maxSegment) {
 			bush.addFlow(edgeIndex, -flowShift);
 			flows[edgeIndex] -= flowShift;
+			costs[edgeIndex] = costFunction.function(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		return true;
