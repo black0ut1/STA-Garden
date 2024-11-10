@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class CriterionChartPanel extends JPanel {
 	
-	private static final double MIN_VALUE = 1e-1;
+	private static final double MIN_VALUE = 1e-4;
 	
 	private final DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 	private final Map<String, Integer> iterations = new HashMap<>();
