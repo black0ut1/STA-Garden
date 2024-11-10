@@ -40,9 +40,9 @@ public abstract class Algorithm {
 		System.out.println("===================================");
 		
 		while (convergence.checkForConvergence() && iteration < maxIterations) {
-			System.out.println("Iteration " + iteration);
+			System.out.println("Iteration " + (iteration + 1));
 			
-			updateFlows();
+			mainLoopIteration();
 			
 			convergence.computeCriteria(flows, costs);
 			convergence.printCriteriaValues();
@@ -51,14 +51,14 @@ public abstract class Algorithm {
 			iteration++;
 		}
 		
-		cleanUp();
+		postProcess();
 	}
 	
 	protected abstract void init();
 	
-	protected abstract void updateFlows();
+	protected abstract void mainLoopIteration();
 	
-	protected void cleanUp() {}
+	protected void postProcess() {}
 	
 	public double[] getFlows() {
 		return flows;

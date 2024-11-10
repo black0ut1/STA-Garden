@@ -27,7 +27,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 	}
 	
 	@Override
-	protected void updateFlows() {
+	protected void mainLoopIteration() {
 		for (int zone = 0; zone < network.zones; zone++) {
 			Bush bush = bushes[zone];
 //			System.out.print("\rzone: " + zone + ", no. of PASes: "
