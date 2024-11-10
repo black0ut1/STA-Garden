@@ -85,8 +85,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 					manager.removePAS(iterator, pas);
 				}
 			}
-			
-			updateCosts();
 		}
 	}
 	
@@ -247,9 +245,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 	
 	protected double findFlowShift(PAS pas) {
 		double maxFlowShift = pas.maxSegmentFlowBound(bushes);
-		if (maxFlowShift == 0)
-			return 0;
-		
 		Network.Edge[] edges = network.getEdges();
 		
 		double flowShift = 0;
