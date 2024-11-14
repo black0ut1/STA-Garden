@@ -5,6 +5,7 @@ import black0ut1.data.Network;
 import black0ut1.util.SSSP;
 import black0ut1.util.Util;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 @SuppressWarnings("unchecked")
@@ -14,248 +15,164 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected static final double NEWTON_EPSILON = 1e-10;
 	
 	protected static final double FLOW_EPSILON = 1e-12;
-	protected static final double REDUCED_COST_EPSILON = 1e-16;
 	
 	protected static final double COST_EFFECTIVE_FACTOR = 0.5;
 	protected static final double FLOW_EFFECTIVE_FACTOR = 0.25;
 	
-	protected static final int RANDOM_SHIFTS = 400;
-	protected static final int ORIGINS_SEARCHED = 50;
-	
-	protected final Random rng = new Random(42);
-	
-	protected final List<PAS>[] Pj = new List[network.nodes];
-	protected final List<PAS> P = new ArrayList<>();
+	protected final PASManager manager;
 	
 	public iTAPAS(Parameters parameters) {
 		super(parameters);
-		for (int i = 0; i < Pj.length; i++)
-			Pj[i] = new ArrayList<>();
+		this.manager = new PASManager(parameters.network);
 	}
 	
 	@Override
 	protected void mainLoopIteration() {
 		for (int zone = 0; zone < network.zones; zone++) {
 			Bush bush = bushes[zone];
-//			System.out.println("zone: " + zone + ", no. of PASes: " + P.size());
+//			System.out.print("\rzone: " + zone + ", no. of PASes: "
+//					+ manager.getPASes().size() + "-------");
 			
 			var pair = SSSP.minTree(network, zone, costs);
 			Network.Edge[] minTree = pair.first();
 			double[] minDistance = pair.second();
 			
-			var Lr = getPotentialLinks(minDistance, bush);
-			
-			
-			while (!Lr.isEmpty()) {
-				int edgeIndex = Lr.pop();
-				Network.Edge edge = network.getEdges()[edgeIndex];
-				
-				double reducedCost = costs[edgeIndex] + minDistance[edge.startNode] - minDistance[edge.endNode];
-				
-				boolean cont = searchPASes(edge, reducedCost, bush);
-				if (cont)
+			for (int node = 0; node < network.nodes; node++) {
+				if (minTree[node] == null)
 					continue;
 				
-				PAS newPas = MFS(network.getEdges()[edgeIndex], minTree, bush);
-				if (newPas == null)
-					continue;
-				
-				addPAS(newPas);
+				for (Network.Edge edge : network.incomingOf(node)) {
+					if (edge == minTree[node] || bush.getEdgeFlow(edge.index) <= FLOW_EPSILON)
+						continue;
+					
+					PAS found = searchPASes(edge, minTree[node]);
+					
+					double cost = COST_EFFECTIVE_FACTOR *
+							(minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode]);
+					double flow = FLOW_EFFECTIVE_FACTOR * bush.getEdgeFlow(edge.index);
+					if (found != null && found.isEffective(costs, bushes, cost, flow)) {
+						shiftFlows(found);
+					} else {
+						PAS newPas = MFS(edge, minTree, bush);
+						if (newPas != null)
+							manager.addPAS(newPas);
+					}
+				}
 			}
-			
-			randomShifts();
 		}
 		
 		eliminatePASes();
-//		System.out.println("no. of PASes: " + P.size());
-	}
-	
-	protected Stack<Integer> getPotentialLinks(double[] minDistance, Bush bush) {
-		Stack<Integer> Lr = new Stack<>();
-		
-		for (int i = 0; i < network.edges; i++) {
-			Network.Edge edge = network.getEdges()[i];
-			double reducedCost = costs[i] + minDistance[edge.startNode] - minDistance[edge.endNode];
-			
-			if (bush.getEdgeFlow(i) > FLOW_EPSILON && reducedCost > REDUCED_COST_EPSILON)
-				Lr.push(i);
-		}
-		
-		return Lr;
-	}
-	
-	protected void randomShifts() {
-		// shift flows of up to RANDOM_SHIFTS random PASs
-		
-		Collections.shuffle(P, rng);
-		for (int i = 0; i < Math.min(RANDOM_SHIFTS, P.size()); i++) {
-			shiftFlows(P.get(i));
-		}
+//		System.out.println("no. of PASes: " + manager.getPASes().size());
 	}
 	
 	protected void eliminatePASes() {
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 10; i++) {
 			
-			for (Iterator<PAS> iterator = P.iterator(); iterator.hasNext(); ) {
+			nextPAS:
+			for (Iterator<PAS> iterator = manager.getPASes().iterator(); iterator.hasNext(); ) {
 				PAS pas = iterator.next();
 				
-				// if these conditions hold, the PAS will be eliminated, but before that we search
-				// some origins and maybe shift flows on them
-				if (pas.maxSegmentFlowBound(bushes) == 0 &&
-						pas.minSegmentFlowBound(bushes) == 0 &&
-						pas.segmentsCostDifference(costs) != 0) {
+				if (!shiftFlows(pas)) {
 					
-					for (int j = 0; j < ORIGINS_SEARCHED; j++) {
-						pas.origin = (pas.origin + j) % network.zones;
-						
-						if (pas.maxSegmentFlowBound(bushes) > 0)
-							shiftFlows(pas);
+					for (int j = 0; j < 50; j++) {
+						pas.origin = (pas.origin + 1) % network.zones;
+						if (shiftFlows(pas))
+							continue nextPAS;
 					}
 					
-					iterator.remove();
-					Pj[pas.head(network)].remove(pas);
-					
-				} else {
-					shiftFlows(pas);
+					manager.removePAS(iterator, pas);
 				}
 			}
 		}
 	}
 	
-	protected void eliminatePASes2() {
-		for (Iterator<PAS> iterator = P.iterator(); iterator.hasNext(); ) {
-			PAS pas = iterator.next();
-			
-			if (!shiftFlows(pas)) {
-				iterator.remove();
-				Pj[pas.head(network)].remove(pas);
-			}
-		}
-	}
-	
-	protected boolean searchPASes(Network.Edge edge, double reducedCost, Bush bush) {
-		for (PAS pas : Pj[edge.endNode]) {
-			if (pas.maxSegmentLastEdge() == edge.index
-					&& pas.isEffective(costs, bushes,
-					COST_EFFECTIVE_FACTOR * reducedCost,
-					FLOW_EFFECTIVE_FACTOR * bush.getEdgeFlow(edge.index))) {
-				
-				shiftFlows(pas);
-				return pas.maxSegmentFlowBound(bushes) > FLOW_EPSILON;
+	protected PAS searchPASes(Network.Edge higherCostEdge, Network.Edge lowerCostEdge) {
+		for (PAS pas : manager.getPASes(higherCostEdge.endNode)) {
+			if (pas.maxSegmentLastEdge() == higherCostEdge.index &&
+					pas.minSegmentLastEdge() == lowerCostEdge.index) {
+				return pas;
 			}
 		}
 		
-		return false;
+		return null;
 	}
 	
-	protected void addPAS(PAS newPas) {
-		List<PAS> Pj = this.Pj[newPas.head(network)];
-		
-		boolean pasAlreadyExists = false;
-		for (PAS pas : Pj) {
-			if (pas.equals(newPas)) {
-				pasAlreadyExists = true;
-				break;
-			}
-		}
-		
-		if (!pasAlreadyExists) {
-			P.add(newPas);
-			Pj.add(newPas);
-		}
-	}
-	
+	//////////////////// Methods related to creating PASes ////////////////////
 	
 	protected PAS MFS(Network.Edge ij, Network.Edge[] minTree, Bush bush) {
-		int[] scanStatus = new int[network.nodes];
-		
-		// set scanStatus of nodes on minpath from root to j to -1
-		for (Network.Edge edge = minTree[ij.endNode];
-			 edge != null;
-			 edge = minTree[edge.startNode]) {
-			scanStatus[edge.startNode] = -1;
-		}
-		scanStatus[ij.endNode] = 1;
-		
-		// path of max segment from tail to start of i->head, higherCostSegment[v] = edge starting in v
-		Network.Edge[] higherCostSegment = new Network.Edge[network.nodes];
-		
-		// now we back up along incoming links with max flow until we encounter node from mintree
-		int node = ij.startNode;
-		Network.Edge maxIncomingLink = ij;
+		restart:
 		while (true) {
+			int[] scanStatus = new int[network.nodes];
 			
-			// not specified in paper, needed to avoid infinite loop
-			if (bush.getEdgeFlow(maxIncomingLink.index) < FLOW_EPSILON)
-				return null;
+			// set scanStatus of nodes on minTree path from j to root to -(distance from j)
+			int count = 1;
+			for (Network.Edge edge = minTree[ij.endNode];
+				 edge != null;
+				 edge = minTree[edge.startNode]) {
+				scanStatus[edge.startNode] = -count;
+				count++;
+			}
 			
-			// add max incoming link to the higher cost segment of PAS
-			higherCostSegment[node] = maxIncomingLink;
+			count = 1;
+			scanStatus[ij.endNode] = count++;
 			
-			switch (scanStatus[node]) {
-				case 0: // nothing happened, continuing search
-					scanStatus[node] = 1;
-					break;
+			// path of max segment from tail to start of i->head, higherCostSegment[v] = edge starting in v
+			Network.Edge[] higherCostSegment = new Network.Edge[network.nodes];
+			
+			// now we back up along incoming links with max flow until we encounter node from mintree
+			int node = ij.startNode;
+			Network.Edge maxIncomingLink = ij;
+			while (true) {
 				
-				case -1: // encountered node from mintree, the node is PAS tail
-					PAS newPas = createPAS(ij, node, bush.root, minTree, higherCostSegment);
+				// not specified in paper, needed to avoid infinite loop
+				if (bush.getEdgeFlow(maxIncomingLink.index) == 0)
+					return null;
+				
+				// add max incoming link to the higher cost segment of PAS
+				higherCostSegment[node] = maxIncomingLink;
+				
+				if (scanStatus[node] == 0) { // nothing happened, continuing search
+					scanStatus[node] = count;
+					count++;
+					
+				} else if (scanStatus[node] < 0) { // encountered node from mintree, the node is PAS tail
+					
+					PAS newPas = createPAS(ij, node, -scanStatus[node],
+							scanStatus[maxIncomingLink.endNode], minTree, higherCostSegment);
+					newPas.origin = bush.root;
+					
 					shiftFlows(newPas);
 					return newPas;
-				
-				// exact implementation is not working, always ends up in infinite loop
-//					double reducedCost = costs[ij.index] + minDistance[ij.startNode] - minDistance[ij.endNode];
-//
-//					// if ij satisfies conditions (10)-(11) after flow shift,
-//					// return new PAS, otherwise try all over again
-//					if (bush.getEdgeFlow(ij.index) * reducedCost == 0 && reducedCost >= 0)
-//						return newPas;
-//					else
-//						return identifyPAS(ij, minTree, bush, minDistance);
-				
-				case 1: // encountered node which was already searched, higherCostSegment is cycle
-					removeCycleFlow(higherCostSegment, bush, node); // remove cycle flow and try all over again
-					return MFS(ij, minTree, bush);
-			}
-			
-			// find the incoming link with max flow
-			double maxIncomingLinkBushFlow = Double.NEGATIVE_INFINITY;
-			for (Network.Edge incomingEdge : network.incomingOf(node)) {
-				
-				if (bush.getEdgeFlow(incomingEdge.index) > maxIncomingLinkBushFlow) {
-					maxIncomingLinkBushFlow = bush.getEdgeFlow(incomingEdge.index);
-					maxIncomingLink = incomingEdge;
+					
+				} else if (scanStatus[node] > 0) { // encountered node which was already searched, higherCostSegment is cycle
+					
+					// remove cycle flow and try all over again
+					removeCycleFlow(higherCostSegment, bush, node);
+					continue restart;
+					
 				}
+				
+				// find the incoming link with max flow
+				double maxIncomingLinkBushFlow = Double.NEGATIVE_INFINITY;
+				for (Network.Edge incomingEdge : network.incomingOf(node)) {
+					
+					if (bush.getEdgeFlow(incomingEdge.index) > maxIncomingLinkBushFlow) {
+						maxIncomingLinkBushFlow = bush.getEdgeFlow(incomingEdge.index);
+						maxIncomingLink = incomingEdge;
+					}
+				}
+				
+				node = maxIncomingLink.startNode;
 			}
-			
-			node = maxIncomingLink.startNode;
 		}
 	}
 	
-	protected PAS createPAS(Network.Edge ij, int tail, int root,
+	protected PAS createPAS(Network.Edge ij, int tail, int minSegmentLen, int maxSegmentLen,
 							Network.Edge[] minTree, Network.Edge[] higherCostSegment) {
 		int head = ij.endNode;
 		
-		// TODO precompute in scanStatus
-		int minSegmentLength = 0;
-		for (Network.Edge edge = minTree[head]; ;
-			 edge = minTree[edge.startNode]) {
-			
-			minSegmentLength++;
-			if (edge.startNode == tail)
-				break;
-		}
-		
-		int maxSegmentLength = 0;
-		for (Network.Edge edge = higherCostSegment[tail]; ;
-			 edge = higherCostSegment[edge.endNode]) {
-			
-			maxSegmentLength++;
-			if (edge.endNode == head)
-				break;
-		}
-		
-		int[] minSegment = new int[minSegmentLength];
-		int i = minSegmentLength - 1;
+		int[] minSegment = new int[minSegmentLen];
+		int i = minSegmentLen - 1;
 		for (Network.Edge edge = minTree[head]; ;
 			 edge = minTree[edge.startNode]) {
 			
@@ -264,7 +181,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 				break;
 		}
 		
-		int[] maxSegment = new int[maxSegmentLength];
+		int[] maxSegment = new int[maxSegmentLen];
 		i = 0;
 		for (Network.Edge edge = higherCostSegment[tail]; ;
 			 edge = higherCostSegment[edge.endNode]) {
@@ -273,9 +190,9 @@ public class iTAPAS extends BushBasedAlgorithm {
 			if (edge.endNode == head)
 				break;
 		}
-		maxSegment[maxSegmentLength - 1] = ij.index;
+		maxSegment[maxSegmentLen - 1] = ij.index;
 		
-		return new PAS(root, minSegment, maxSegment);
+		return new PAS(minSegment, maxSegment);
 	}
 	
 	protected void removeCycleFlow(Network.Edge[] higherCostSegment, Bush bush, int cycleNode) {
@@ -304,15 +221,15 @@ public class iTAPAS extends BushBasedAlgorithm {
 		}
 	}
 	
+	//////////////////// Methods related to shifting flows ////////////////////
 	
 	protected boolean shiftFlows(PAS pas) {
-		// TODO get maxSegmentFlowBound and segmentsCostDifference from the condition
 		double flowShift = findFlowShift(pas);
 		if (flowShift == 0)
 			return false;
 		
 		Bush bush = bushes[pas.origin];
-		Network.Edge[] edges = network.getEdges();
+		var edges = network.getEdges();
 		
 		for (int edgeIndex : pas.minSegment) {
 			bush.addFlow(edgeIndex, flowShift);
@@ -369,20 +286,62 @@ public class iTAPAS extends BushBasedAlgorithm {
 	}
 	
 	
+	public static class PASManager implements Iterable<PAS> {
+		private final Network network;
+		private final List<PAS> P;
+		private final List<PAS>[] Pj;
+		
+		public PASManager(Network network) {
+			this.network = network;
+			this.P = new ArrayList<>();
+			this.Pj = new List[network.nodes];
+			for (int i = 0; i < Pj.length; i++)
+				Pj[i] = new ArrayList<>();
+		}
+		
+		public void addPAS(PAS newPas) {
+			List<PAS> Pj = this.Pj[newPas.head(network)];
+			
+			P.add(newPas);
+			Pj.add(newPas);
+		}
+		
+		public List<PAS> getPASes() {
+			return P;
+		}
+		
+		public List<PAS> getPASes(int head) {
+			return Pj[head];
+		}
+		
+		@Nonnull
+		public Iterator<PAS> iterator() {
+			return P.iterator();
+		}
+		
+		public void removePAS(Iterator<PAS> it, PAS pas) {
+			it.remove();
+			Pj[pas.head(network)].remove(pas);
+		}
+	}
+	
 	public static class PAS {
 		
 		public int origin;
 		public final int[] minSegment;
 		public final int[] maxSegment;
 		
-		public PAS(int origin, int[] minSegment, int[] maxSegment) {
-			this.origin = origin;
+		public PAS(int[] minSegment, int[] maxSegment) {
 			this.minSegment = minSegment;
 			this.maxSegment = maxSegment;
 		}
 		
 		public int maxSegmentLastEdge() {
 			return maxSegment[maxSegment.length - 1];
+		}
+		
+		public int minSegmentLastEdge() {
+			return minSegment[minSegment.length - 1];
 		}
 		
 		public boolean isEffective(double[] costs, Bush[] bushes, double cost, double flow) {
@@ -399,19 +358,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 			double flowBound = Double.POSITIVE_INFINITY;
 			
 			for (int edgeIndex : maxSegment) {
-				
-				double bushFlow = bushes[origin].getEdgeFlow(edgeIndex);
-				if (bushFlow < flowBound)
-					flowBound = bushFlow;
-			}
-			
-			return flowBound;
-		}
-		
-		public double minSegmentFlowBound(Bush[] bushes) {
-			double flowBound = Double.POSITIVE_INFINITY;
-			
-			for (int edgeIndex : minSegment) {
 				
 				double bushFlow = bushes[origin].getEdgeFlow(edgeIndex);
 				if (bushFlow < flowBound)
