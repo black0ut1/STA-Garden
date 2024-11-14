@@ -37,32 +37,42 @@ public class iTAPAS extends BushBasedAlgorithm {
 			Network.Edge[] minTree = pair.first();
 			double[] minDistance = pair.second();
 			
-			for (int node = 0; node < network.nodes; node++) {
-				if (minTree[node] == null)
-					continue;
+			for (Network.Edge edge : findPotentialLinks(minTree, bush)) {
+				PAS found = searchPASes(edge, minTree[edge.endNode]);
 				
-				for (Network.Edge edge : network.incomingOf(node)) {
-					if (edge == minTree[node] || bush.getEdgeFlow(edge.index) <= FLOW_EPSILON)
-						continue;
-					
-					PAS found = searchPASes(edge, minTree[node]);
-					
-					double cost = COST_EFFECTIVE_FACTOR *
-							(minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode]);
-					double flow = FLOW_EFFECTIVE_FACTOR * bush.getEdgeFlow(edge.index);
-					if (found != null && found.isEffective(costs, bushes, cost, flow)) {
-						shiftFlows(found);
-					} else {
-						PAS newPas = MFS(edge, minTree, bush);
-						if (newPas != null)
-							manager.addPAS(newPas);
-					}
+				double cost = COST_EFFECTIVE_FACTOR *
+						(minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode]);
+				double flow = FLOW_EFFECTIVE_FACTOR * bush.getEdgeFlow(edge.index);
+				if (found != null && found.isEffective(costs, bushes, cost, flow)) {
+					shiftFlows(found);
+				} else {
+					PAS newPas = MFS(edge, minTree, bush);
+					if (newPas != null)
+						manager.addPAS(newPas);
 				}
 			}
 		}
 		
 		eliminatePASes();
 //		System.out.println("no. of PASes: " + manager.getPASes().size());
+	}
+	
+	protected Vector<Network.Edge> findPotentialLinks(Network.Edge[] minTree, Bush bush) {
+		Vector<Network.Edge> potentialLinks = new Vector<>();
+		
+		for (int node = 0; node < network.nodes; node++) {
+			if (minTree[node] == null || node == bush.root)
+				continue;
+			
+			for (Network.Edge edge : network.incomingOf(node)) {
+				if (edge == minTree[node] || bush.getEdgeFlow(edge.index) <= FLOW_EPSILON)
+					continue;
+				
+				potentialLinks.add(edge);
+			}
+		}
+		
+		return potentialLinks;
 	}
 	
 	protected void eliminatePASes() {
