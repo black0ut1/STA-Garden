@@ -21,20 +21,10 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected static final double FLOW_EFFECTIVE_FACTOR = 0.25;
 	
 	protected final PASManager manager;
-	protected final double[] derivatives;
 	
 	public iTAPAS(Parameters parameters) {
 		super(parameters);
 		this.manager = new PASManager(parameters.network);
-		this.derivatives = new double[parameters.network.edges];
-	}
-	
-	@Override
-	protected void updateCosts() {
-		for (int i = 0; i < network.edges; i++) {
-			costs[i] = costFunction.function(network.getEdges()[i], flows[i]);
-			derivatives[i] = costFunction.derivative(network.getEdges()[i], flows[i]);
-		}
 	}
 	
 	@Override
@@ -125,7 +115,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		
 		for (PAS pas : manager.getPASes(potentialLink.endNode)) {
 			
-			pas.updateSegments(costs, derivatives);
+			pas.updateSegments(costs);
 			if (pas.maxSegmentLastEdge() == potentialLink.index
 					&& pas.segmentsCostDifference() > COST_EFFECTIVE_FACTOR * reducedCost) {
 				
@@ -265,8 +255,13 @@ public class iTAPAS extends BushBasedAlgorithm {
 	//////////////////// Methods related to shifting flows ////////////////////
 	
 	protected boolean shiftFlows(PAS pas) {
+		pas.updateSegments(costs);
+		pas.updateFlowBounds(bushes);
+		
 		double flowShift = findFlowShift(pas);
-		if (flowShift == 0)
+		flowShift = Math.min(flowShift, pas.maxSegmentFlowBound());
+		
+		if (flowShift <= FLOW_EPSILON)
 			return false;
 		
 		Bush bush = bushes[pas.origin];
@@ -371,15 +366,13 @@ public class iTAPAS extends BushBasedAlgorithm {
 		
 		public int origin;
 		private int minSegmentIndex = 0;
-		public final int[][] segments;
-		public final double[] costs;
-		public final double[] derivatives;
-		public final double[] flowBounds;
+		private final int[][] segments;
+		private final double[] costs;
+		private final double[] flowBounds;
 		
 		public PAS(int[] minSegment, int[] maxSegment) {
 			this.segments = new int[2][];
 			this.costs = new double[2];
-			this.derivatives = new double[2];
 			this.flowBounds = new double[2];
 			
 			segments[minSegmentIndex] = minSegment;
@@ -413,19 +406,15 @@ public class iTAPAS extends BushBasedAlgorithm {
 		/* Updates which segment is min and which max. Also updates
 		 * the costs and cost derivatives of both segments.
 		 */
-		public void updateSegments(double[] costs, double[] derivatives) {
+		public void updateSegments(double[] costs) {
 			this.costs[0] = 0;
-			this.derivatives[0] = 0;
 			for (int i : segments[0]) {
 				this.costs[0] += costs[i];
-				this.derivatives[0] += derivatives[i];
 			}
 			
 			this.costs[1] = 0;
-			this.derivatives[1] = 0;
 			for (int i : segments[1]) {
 				this.costs[1] += costs[i];
-				this.derivatives[1] += derivatives[i];
 			}
 			
 			minSegmentIndex = (this.costs[0] < this.costs[1]) ? 0 : 1;
@@ -448,26 +437,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 		
 		public int head(Network network) {
 			return network.getEdges()[minSegmentLastEdge()].endNode;
-		}
-		
-		private static double segmentCost(int[] segment, double[] costs) {
-			double cost = 0;
-			
-			for (int edgeIndex : segment)
-				cost += costs[edgeIndex];
-			
-			return cost;
-		}
-		
-		private static double segmentFlowBound(int[] segment, Bush bush) {
-			double flowBound = Double.POSITIVE_INFINITY;
-			
-			for (int edgeIndex : segment) {
-				double bushFlow = bush.getEdgeFlow(edgeIndex);
-				flowBound = Math.min(flowBound, bushFlow);
-			}
-			
-			return flowBound;
 		}
 	}
 }
