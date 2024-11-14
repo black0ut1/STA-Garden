@@ -2,6 +2,7 @@ package black0ut1.sta.assignment.bush;
 
 import black0ut1.data.Bush;
 import black0ut1.data.Network;
+import black0ut1.sta.Convergence;
 import black0ut1.util.SSSP;
 import black0ut1.util.Util;
 
@@ -28,6 +29,16 @@ public class iTAPAS extends BushBasedAlgorithm {
 	
 	@Override
 	protected void mainLoopIteration() {
+		double minReducedCost = switch (iteration) {
+			case 0:
+				yield 0.1;
+			case 1:
+				yield 0.001;
+			default:
+				double convIndicator = convergence.getData().getLast()[Convergence.Criterion.RELATIVE_GAP_1.ordinal()];
+				yield convIndicator / 100;
+		};
+		
 		for (int zone = 0; zone < network.zones; zone++) {
 			Bush bush = bushes[zone];
 //			System.out.print("\rzone: " + zone + ", no. of PASes: "
@@ -38,6 +49,10 @@ public class iTAPAS extends BushBasedAlgorithm {
 			double[] minDistance = pair.second();
 			
 			for (Network.Edge edge : findPotentialLinks(minTree, bush)) {
+				double reducedCost = minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode];
+				if (reducedCost < minReducedCost) // TODO check performance impact of this condition
+					continue;
+				
 				PAS found = searchPASes(edge, minTree[edge.endNode]);
 				
 				double cost = COST_EFFECTIVE_FACTOR *
@@ -57,6 +72,10 @@ public class iTAPAS extends BushBasedAlgorithm {
 //		System.out.println("no. of PASes: " + manager.getPASes().size());
 	}
 	
+	/* Potential link is every link in the network, which is not part of mintree from currently
+	 * processed origin, has nonzero (or bigger than some epsilon) origin flow and has
+	 * sufficently large reduced cost (this condition is checked during iteration over links).
+	 */
 	protected Vector<Network.Edge> findPotentialLinks(Network.Edge[] minTree, Bush bush) {
 		Vector<Network.Edge> potentialLinks = new Vector<>();
 		
