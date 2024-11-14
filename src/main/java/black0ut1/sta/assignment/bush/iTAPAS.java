@@ -231,13 +231,13 @@ public class iTAPAS extends BushBasedAlgorithm {
 		Bush bush = bushes[pas.origin];
 		var edges = network.getEdges();
 		
-		for (int edgeIndex : pas.minSegment) {
+		for (int edgeIndex : pas.minSegment()) {
 			bush.addFlow(edgeIndex, flowShift);
 			flows[edgeIndex] += flowShift;
 			costs[edgeIndex] = costFunction.function(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
-		for (int edgeIndex : pas.maxSegment) {
+		for (int edgeIndex : pas.maxSegment()) {
 			bush.addFlow(edgeIndex, -flowShift);
 			flows[edgeIndex] -= flowShift;
 			costs[edgeIndex] = costFunction.function(edges[edgeIndex], flows[edgeIndex]);
@@ -255,14 +255,14 @@ public class iTAPAS extends BushBasedAlgorithm {
 			
 			double minSegmentCost = 0;
 			double minSegmentCostDerivative = 0;
-			for (int edgeIndex : pas.minSegment) {
+			for (int edgeIndex : pas.minSegment()) {
 				minSegmentCost += costFunction.function(edges[edgeIndex], flows[edgeIndex] + flowShift);
 				minSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex] + flowShift);
 			}
 			
 			double maxSegmentCost = 0;
 			double maxSegmentCostDerivative = 0;
-			for (int edgeIndex : pas.maxSegment) {
+			for (int edgeIndex : pas.maxSegment()) {
 				maxSegmentCost += costFunction.function(edges[edgeIndex], flows[edgeIndex] - flowShift);
 				maxSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex] - flowShift);
 			}
@@ -328,20 +328,44 @@ public class iTAPAS extends BushBasedAlgorithm {
 	public static class PAS {
 		
 		public int origin;
-		public final int[] minSegment;
-		public final int[] maxSegment;
+		public int minSegmentIndex = 0;
+		public final int[][] segments;
+		public final double[] costs;
+		public final double[] derivatives;
+		public final double[] flowBounds;
 		
 		public PAS(int[] minSegment, int[] maxSegment) {
-			this.minSegment = minSegment;
-			this.maxSegment = maxSegment;
+			this.segments = new int[2][];
+			this.costs = new double[2];
+			this.derivatives = new double[2];
+			this.flowBounds = new double[2];
+			
+			segments[minSegmentIndex] = minSegment;
+			segments[1 - minSegmentIndex] = maxSegment;
 		}
 		
-		public int maxSegmentLastEdge() {
-			return maxSegment[maxSegment.length - 1];
+		public int[] minSegment() {
+			return segments[minSegmentIndex];
+		}
+		
+		public int[] maxSegment() {
+			return segments[1 - minSegmentIndex];
 		}
 		
 		public int minSegmentLastEdge() {
-			return minSegment[minSegment.length - 1];
+			return minSegment()[minSegment().length - 1];
+		}
+		
+		public int maxSegmentLastEdge() {
+			return maxSegment()[maxSegment().length - 1];
+		}
+		
+		public double minSegmentFlowBound(Bush[] bushes) {
+			return segmentFlowBound(minSegment(), bushes[origin]);
+		}
+		
+		public double maxSegmentFlowBound(Bush[] bushes) {
+			return segmentFlowBound(maxSegment(), bushes[origin]);
 		}
 		
 		public boolean isEffective(double[] costs, Bush[] bushes, double cost, double flow) {
@@ -351,20 +375,11 @@ public class iTAPAS extends BushBasedAlgorithm {
 		}
 		
 		public double segmentsCostDifference(double[] costs) {
-			return PAS.segmentCost(maxSegment, costs) - PAS.segmentCost(minSegment, costs);
+			return PAS.segmentCost(maxSegment(), costs) - PAS.segmentCost(minSegment(), costs);
 		}
 		
-		public double maxSegmentFlowBound(Bush[] bushes) {
-			double flowBound = Double.POSITIVE_INFINITY;
-			
-			for (int edgeIndex : maxSegment) {
-				
-				double bushFlow = bushes[origin].getEdgeFlow(edgeIndex);
-				if (bushFlow < flowBound)
-					flowBound = bushFlow;
-			}
-			
-			return flowBound;
+		public int head(Network network) {
+			return network.getEdges()[minSegmentLastEdge()].endNode;
 		}
 		
 		private static double segmentCost(int[] segment, double[] costs) {
@@ -376,8 +391,15 @@ public class iTAPAS extends BushBasedAlgorithm {
 			return cost;
 		}
 		
-		public int head(Network network) {
-			return network.getEdges()[minSegment[minSegment.length - 1]].endNode;
+		private static double segmentFlowBound(int[] segment, Bush bush) {
+			double flowBound = Double.POSITIVE_INFINITY;
+			
+			for (int edgeIndex : segment) {
+				double bushFlow = bush.getEdgeFlow(edgeIndex);
+				flowBound = Math.min(flowBound, bushFlow);
+			}
+			
+			return flowBound;
 		}
 	}
 }
