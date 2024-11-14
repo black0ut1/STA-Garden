@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class CriterionChartPanel extends JPanel {
 	
-	private static final double MIN_VALUE = 1e-4;
+	private double minvalue = 1e-4;
 	
 	private final DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 	private final Map<String, Integer> iterations = new HashMap<>();
@@ -26,7 +26,7 @@ public class CriterionChartPanel extends JPanel {
 		
 		yAxis.setAutoRange(false);
 		yAxis.setTickUnit(new NumberTickUnit(1));
-		yAxis.setRange(MIN_VALUE, 10);
+		yAxis.setRange(minvalue, 10);
 		
 		for (int i = 0; i < 10; i++)
 			dataset.addValue(0, "", Integer.valueOf(i));
@@ -46,7 +46,8 @@ public class CriterionChartPanel extends JPanel {
 		dataset.addValue(value, algorithmName, i);
 		iterations.put(algorithmName, i + 1);
 		
-		double logFloor = Math.pow(10, Math.floor(Math.log10(value)));
-		yAxis.setRange(Math.min(logFloor, MIN_VALUE), 10);
+		minvalue = Math.min(minvalue, value);
+		double logFloor = Math.pow(10, Math.floor(Math.log10(minvalue)));
+		yAxis.setRange(logFloor, 10);
 	}
 }
