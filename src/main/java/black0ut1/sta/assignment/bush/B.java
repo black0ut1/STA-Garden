@@ -10,6 +10,8 @@ public class B extends BushBasedAlgorithm {
 	protected static final int NEWTON_MAX_ITERATIONS = 100;
 	protected static final double NEWTON_EPSILON = 1e-10;
 	
+	protected static final double FLOW_EPSILON = 1e-10;
+	
 	protected final int[][] topologicalOrders = new int[network.zones][];
 	protected double bushRelativeGap = 0;
 	
@@ -392,7 +394,7 @@ public class B extends BushBasedAlgorithm {
 	protected void removeUnusedArcs(Bush bush, Network.Edge[] minTree) {
 		
 		for (int i = 0; i < network.getEdges().length; i++) {
-			if (bush.getEdgeFlow(i) <= 0)
+			if (bush.getEdgeFlow(i) <= FLOW_EPSILON)
 				bush.removeEdge(i);
 		}
 		
