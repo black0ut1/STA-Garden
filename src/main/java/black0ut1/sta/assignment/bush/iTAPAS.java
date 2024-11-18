@@ -20,6 +20,9 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected static final double COST_EFFECTIVE_FACTOR = 0.5;
 	protected static final double FLOW_EFFECTIVE_FACTOR = 0.25;
 	
+	protected static final int RANDOM_SHIFTS = 400;
+	
+	protected final Random rng = new Random(42);
 	protected final PASManager manager;
 	
 	public iTAPAS(Parameters parameters) {
@@ -56,16 +59,22 @@ public class iTAPAS extends BushBasedAlgorithm {
 				PAS found = matchPAS(edge, reducedCost, bush.getEdgeFlow(edge.index));
 				if (found != null) {
 					shiftFlows(found);
-				} else {
-					PAS newPas = MFS(edge, minTree, bush);
-					if (newPas != null)
-						manager.addPAS(newPas);
+					
+					if (found.maxSegmentFlowBound(bushes) > FLOW_EPSILON
+							&& found.minSegmentFlowBound(bushes) > FLOW_EPSILON)
+						continue;
 				}
+				
+				PAS newPas = MFS(edge, minTree, bush);
+				if (newPas != null)
+					manager.addPAS(newPas);
 			}
+			
+			randomShifts();
 		}
 		
 		eliminatePASes();
-//		System.out.println("no. of PASes: " + manager.getPASes().size());
+		System.out.println("no. of PASes: " + manager.getPASes().size());
 	}
 	
 	/* Potential link is every link in the network, which is not part of mintree from currently
@@ -91,20 +100,12 @@ public class iTAPAS extends BushBasedAlgorithm {
 	}
 	
 	protected void eliminatePASes() {
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 20; i++) {
 			
-			nextPAS:
 			for (Iterator<PAS> iterator = manager.getPASes().iterator(); iterator.hasNext(); ) {
 				PAS pas = iterator.next();
 				
 				if (!shiftFlows(pas)) {
-					
-					for (int j = 0; j < 50; j++) {
-						pas.origin = (pas.origin + 1) % network.zones;
-						if (shiftFlows(pas))
-							continue nextPAS;
-					}
-					
 					manager.removePAS(iterator, pas);
 				}
 			}
@@ -125,6 +126,13 @@ public class iTAPAS extends BushBasedAlgorithm {
 		}
 		
 		return null;
+	}
+	
+	protected void randomShifts() {
+		for (int i = 0; i < RANDOM_SHIFTS; i++) {
+			int j = rng.nextInt(manager.getPASes().size());
+			shiftFlows(manager.getPASes().get(j));
+		}
 	}
 	
 	//////////////////// Methods related to creating PASes ////////////////////
