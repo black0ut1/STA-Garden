@@ -12,9 +12,6 @@ import java.util.*;
 @SuppressWarnings("unchecked")
 public class iTAPAS extends BushBasedAlgorithm {
 	
-	protected static final int NEWTON_MAX_ITERATIONS = 100;
-	protected static final double NEWTON_EPSILON = 1e-10;
-	
 	protected static final double FLOW_EPSILON = 1e-12;
 	
 	protected static final double COST_EFFECTIVE_FACTOR = 0.5;
@@ -290,39 +287,19 @@ public class iTAPAS extends BushBasedAlgorithm {
 		double maxFlowShift = pas.maxSegmentFlowBound(bushes);
 		Network.Edge[] edges = network.getEdges();
 		
-		double flowShift = 0;
-		for (int i = 0; i < NEWTON_MAX_ITERATIONS; i++) {
-			
-			double minSegmentCost = 0;
-			double minSegmentCostDerivative = 0;
-			for (int edgeIndex : pas.minSegment()) {
-				minSegmentCost += costFunction.function(edges[edgeIndex], flows[edgeIndex] + flowShift);
-				minSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex] + flowShift);
-			}
-			
-			double maxSegmentCost = 0;
-			double maxSegmentCostDerivative = 0;
-			for (int edgeIndex : pas.maxSegment()) {
-				maxSegmentCost += costFunction.function(edges[edgeIndex], flows[edgeIndex] - flowShift);
-				maxSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex] - flowShift);
-			}
-			
-			// Newton's method might not converge if not for this condition
-			if (i == 0 && minSegmentCost > maxSegmentCost)
-				return 0;
-			
-			double newFlowShift = flowShift + (maxSegmentCost - minSegmentCost) /
-					(maxSegmentCostDerivative + minSegmentCostDerivative);
-			
-			if (Math.abs(flowShift - newFlowShift) < NEWTON_EPSILON) {
-				flowShift = newFlowShift;
-				break;
-			} else {
-				flowShift = newFlowShift;
-			}
+		
+		double minSegmentCostDerivative = 0;
+		for (int edgeIndex : pas.minSegment()) {
+			minSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
-		return Util.projectToInterval(flowShift, 0, maxFlowShift);
+		double maxSegmentCostDerivative = 0;
+		for (int edgeIndex : pas.maxSegment()) {
+			maxSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
+		}
+		
+		double flowShift = pas.segmentsCostDifference() / (maxSegmentCostDerivative + minSegmentCostDerivative);
+		return Math.min(flowShift, maxFlowShift);
 	}
 	
 	
