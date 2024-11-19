@@ -16,7 +16,7 @@ public class SSSP {
 		Network.Edge[] previous = new Network.Edge[network.nodes];
 		
 		PriorityQueue pq = new PriorityQueue();
-		int[] mark = new int[network.nodes];
+		byte[] mark = new byte[network.nodes];
 		
 		
 		pq.add(root, 0);
@@ -56,7 +56,7 @@ public class SSSP {
 		int[] pathLength = new int[network.nodes];
 		
 		PriorityQueue pq = new PriorityQueue();
-		int[] mark = new int[network.nodes];
+		byte[] mark = new byte[network.nodes];
 		
 		
 		pq.add(root, 0);
