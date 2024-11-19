@@ -76,9 +76,11 @@ public class iTAPAS extends BushBasedAlgorithm {
 		eliminatePASes();
 	}
 	
-	/* Potential link is every link in the network, which is not part of mintree from currently
-	 * processed origin, has nonzero (or bigger than some epsilon) origin flow and has
-	 * sufficently large reduced cost (this condition is checked during iteration over links).
+	/* Potential link is every link in the network, which:
+	 * 1) is not part of mintree from currently processed origin,
+	 * 2) has nonzero (or bigger than some epsilon) origin flow and
+	 * 3) sufficently large reduced cost.
+	 * Conditions 2) and 3) are checked in the main loop.
 	 */
 	protected Vector<Network.Edge> findPotentialLinks(Network.Edge[] minTree, Bush bush) {
 		Vector<Network.Edge> potentialLinks = new Vector<>();
@@ -98,6 +100,10 @@ public class iTAPAS extends BushBasedAlgorithm {
 		return potentialLinks;
 	}
 	
+	/* This method iterates over the set of PASes 20x, trying
+	 * to shift flows on each PAS. If PAS is equilibriated (shiftFlows
+	 * shifts zero), the PAS is removed.
+	 */
 	protected void eliminatePASes() {
 		for (int i = 0; i < 20; i++) {
 			
@@ -137,6 +143,10 @@ public class iTAPAS extends BushBasedAlgorithm {
 	
 	//////////////////// Methods related to creating PASes ////////////////////
 	
+	/* Most Flow Search - Creates a new PAS, where the min segment is
+	 * a segment of a min tree and max segment is found by backing up
+	 * by the links with most origin flow.
+	 */
 	protected PAS MFS(Network.Edge ij, Network.Edge[] minTree, Bush bush) {
 		restart:
 		while (true) {
