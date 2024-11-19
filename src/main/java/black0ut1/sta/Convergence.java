@@ -115,6 +115,10 @@ public class Convergence {
 		}
 	}
 	
+	public Vector<double[]> getData() {
+		return data;
+	}
+	
 	private double calculateSPTT(double[] costs) {
 		double sum = 0;
 		
