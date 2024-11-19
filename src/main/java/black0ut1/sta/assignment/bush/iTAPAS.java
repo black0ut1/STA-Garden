@@ -4,7 +4,6 @@ import black0ut1.data.Bush;
 import black0ut1.data.Network;
 import black0ut1.sta.Convergence;
 import black0ut1.util.SSSP;
-import black0ut1.util.Util;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -15,7 +14,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected static final double FLOW_EPSILON = 1e-12;
 	
 	protected static final double COST_EFFECTIVE_FACTOR = 0.5;
-	protected static final double FLOW_EFFECTIVE_FACTOR = 0.25;
 	
 	protected static final int RANDOM_SHIFTS = 400;
 	
@@ -53,7 +51,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 				if (reducedCost < minReducedCost) // TODO check performance impact of this condition
 					continue;
 				
-				PAS found = matchPAS(edge, reducedCost, bush.getEdgeFlow(edge.index));
+				PAS found = matchPAS(edge, reducedCost);
 				if (found != null) {
 					shiftFlows(found);
 					
@@ -109,7 +107,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		}
 	}
 	
-	protected PAS matchPAS(Network.Edge potentialLink, double reducedCost, double flow) {
+	protected PAS matchPAS(Network.Edge potentialLink, double reducedCost) {
 		
 		for (PAS pas : manager.getPASes(potentialLink.endNode)) {
 			
@@ -117,8 +115,9 @@ public class iTAPAS extends BushBasedAlgorithm {
 			if (pas.maxSegmentLastEdge() == potentialLink.index
 					&& pas.segmentsCostDifference() > COST_EFFECTIVE_FACTOR * reducedCost) {
 				
-				if (pas.maxSegmentFlowBound(bushes) > FLOW_EFFECTIVE_FACTOR * flow)
-					return pas;
+				// evaluating this condition is expensive, it is better to left it out (FLOW_EFFECTIVE_FACTOR = 0.25)
+				// if (pas.maxSegmentFlowBound(bushes) > FLOW_EFFECTIVE_FACTOR * flow)
+				return pas;
 			}
 		}
 		
