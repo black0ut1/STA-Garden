@@ -12,13 +12,17 @@ import java.util.*;
 public class iTAPAS extends BushBasedAlgorithm {
 	
 	protected static final double FLOW_EPSILON = 1e-12;
-	
 	protected static final double COST_EFFECTIVE_FACTOR = 0.5;
-	
 	protected static final int RANDOM_SHIFTS = 400;
 	
 	protected final Random rng = new Random(42);
 	protected final PASManager manager;
+	
+	/* Arrays specific for MFS method, extracted outside of the method
+	 * to avoid unnecessary allocation.
+	 */
+	protected Network.Edge[] higherCostSegment = new Network.Edge[network.nodes];
+	protected int[] scanStatus = new int[network.nodes];
 	
 	public iTAPAS(Parameters parameters) {
 		super(parameters);
@@ -39,14 +43,15 @@ public class iTAPAS extends BushBasedAlgorithm {
 		
 		for (int zone = 0; zone < network.zones; zone++) {
 			Bush bush = bushes[zone];
-			System.out.print("\rzone: " + zone + ", no. of PASes: "
-					+ manager.getPASes().size() + "-------");
 			
 			var pair = SSSP.minTree(network, zone, costs);
 			Network.Edge[] minTree = pair.first();
 			double[] minDistance = pair.second();
 			
 			for (Network.Edge edge : findPotentialLinks(minTree, bush)) {
+				if (bush.getEdgeFlow(edge.index) <= FLOW_EPSILON)
+					continue;
+				
 				double reducedCost = minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode];
 				if (reducedCost < minReducedCost) // TODO check performance impact of this condition
 					continue;
@@ -69,7 +74,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 		}
 		
 		eliminatePASes();
-		System.out.println("no. of PASes: " + manager.getPASes().size());
 	}
 	
 	/* Potential link is every link in the network, which is not part of mintree from currently
@@ -84,7 +88,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 				continue;
 			
 			for (Network.Edge edge : network.incomingOf(node)) {
-				if (edge == minTree[node] || bush.getEdgeFlow(edge.index) <= FLOW_EPSILON)
+				if (edge == minTree[node])
 					continue;
 				
 				potentialLinks.add(edge);
@@ -136,7 +140,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected PAS MFS(Network.Edge ij, Network.Edge[] minTree, Bush bush) {
 		restart:
 		while (true) {
-			int[] scanStatus = new int[network.nodes];
+			Arrays.fill(scanStatus, 0);
 			
 			// set scanStatus of nodes on minTree path from j to root to -(distance from j)
 			int count = 1;
@@ -149,9 +153,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 			
 			count = 1;
 			scanStatus[ij.endNode] = count++;
-			
-			// path of max segment from tail to start of i->head, higherCostSegment[v] = edge starting in v
-			Network.Edge[] higherCostSegment = new Network.Edge[network.nodes];
 			
 			// now we back up along incoming links with max flow until we encounter node from mintree
 			int node = ij.startNode;
