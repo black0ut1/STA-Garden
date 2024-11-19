@@ -16,6 +16,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 	
 	@Override
 	protected void init() {
+		updateCosts();
 		for (int zone = 0; zone < bushes.length; zone++)
 			bushes[zone] = createBush(zone);
 		
@@ -29,7 +30,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 	protected Bush createBush(int zone) {
 		Bush bush = new Bush(network.edges, zone);
 		
-		var pair = SSSP.minTree(network, zone);
+		var pair = SSSP.dijkstra(network, zone, costs);
 		var minTree = pair.first();
 		var minDistance = pair.second();
 		

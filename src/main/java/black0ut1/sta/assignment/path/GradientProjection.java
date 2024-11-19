@@ -20,9 +20,10 @@ public class GradientProjection extends Algorithm {
 	
 	@Override
 	protected void init() {
+		updateCosts();
 		for (int origin = 0; origin < network.zones; origin++) {
 			
-			var a = SSSP.minTreeLen(network, origin);
+			var a = SSSP.dijkstraLen(network, origin, costs);
 			Network.Edge[] minTree = a.first();
 			int[] pathLengths = a.second();
 			
@@ -51,7 +52,7 @@ public class GradientProjection extends Algorithm {
 	protected void mainLoopIteration() {
 		for (int origin = 0; origin < network.zones; origin++) {
 			
-			var a = SSSP.minTreeLen(network, origin, costs);
+			var a = SSSP.dijkstraLen(network, origin, costs);
 			Network.Edge[] minTree = a.first();
 			int[] pathLengths = a.second();
 			

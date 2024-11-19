@@ -123,7 +123,7 @@ public class Convergence {
 		double sum = 0;
 		
 		for (int startZone = 0; startZone < network.zones; startZone++) {
-			double[] minDistance = SSSP.minTree(network, startZone, costs).second();
+			double[] minDistance = SSSP.dijkstra(network, startZone, costs).second();
 			
 			for (int endZone = 0; endZone < network.zones; endZone++) {
 				if (odMatrix.get(startZone, endZone) == 0)

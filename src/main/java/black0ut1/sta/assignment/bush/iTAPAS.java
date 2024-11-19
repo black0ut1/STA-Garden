@@ -44,7 +44,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		for (int zone = 0; zone < network.zones; zone++) {
 			Bush bush = bushes[zone];
 			
-			var pair = SSSP.minTree(network, zone, costs);
+			var pair = SSSP.dijkstra(network, zone, costs);
 			Network.Edge[] minTree = pair.first();
 			double[] minDistance = pair.second();
 			

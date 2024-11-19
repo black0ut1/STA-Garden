@@ -9,9 +9,7 @@ public class AON {
 	public static void assign(Network network, DoubleMatrix odMatrix, double[] costs, double[] flows) {
 		
 		for (int zone = 0; zone < network.zones; zone++) {
-			Network.Edge[] previous = (costs == null)
-					? SSSP.minTree(network, zone).first()
-					: SSSP.minTree(network, zone, costs).first();
+			Network.Edge[] previous = SSSP.dijkstra(network, zone, costs).first();
 			
 			for (int node = 0; node < network.zones; node++) {
 				double trips = odMatrix.get(zone, node);
