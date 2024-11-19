@@ -24,7 +24,7 @@ public class SSSP {
 			int fromVertex = pq.popMin();
 			mark[fromVertex] = 2;
 			
-			for (Network.Edge edge : network.neighborsOf(fromVertex)) {
+			for (Network.Edge edge : network.forwardStar(fromVertex)) {
 				int toVertex = edge.endNode;
 				if (mark[toVertex] == 2)
 					continue;
@@ -69,7 +69,7 @@ public class SSSP {
 				pathLength[fromVertex] = pathLength[prev] + 1;
 			}
 			
-			for (Network.Edge edge : network.neighborsOf(fromVertex)) {
+			for (Network.Edge edge : network.forwardStar(fromVertex)) {
 				int toVertex = edge.endNode;
 				if (mark[toVertex] == 2)
 					continue;

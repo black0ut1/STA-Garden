@@ -60,11 +60,11 @@ public class Network {
 		inverseIndices[inverseIndices.length - 1] = offset;
 	}
 	
-	public ArrayView<Edge> neighborsOf(int node) {
+	public ArrayView<Edge> forwardStar(int node) {
 		return new ArrayView<>(edgesArr, indices[node], indices[node + 1]);
 	}
 	
-	public ArrayView<Edge> incomingOf(int node) {
+	public ArrayView<Edge> backwardStar(int node) {
 		return new ArrayView<>(inverseEdgesArr, inverseIndices[node], inverseIndices[node + 1]);
 	}
 	

@@ -71,14 +71,14 @@ public class OBA extends BushBasedAlgorithm {
 			int n = topOrd2[i];
 			
 			nFlows[n] = odMatrix.get(bush.root, n);
-			for (Network.Edge edge : network.neighborsOf(n)) {
+			for (Network.Edge edge : network.forwardStar(n)) {
 				if (!bush.edgeExists(edge.index))
 					continue;
 				
 				nFlows[n] += bush.getEdgeFlow(edge.index);
 			}
 			
-			for (Network.Edge edge : network.incomingOf(n)) {
+			for (Network.Edge edge : network.backwardStar(n)) {
 				if (!bush.edgeExists(edge.index))
 					continue;
 				
@@ -89,7 +89,7 @@ public class OBA extends BushBasedAlgorithm {
 	}
 	
 	protected void updateAlpha(double[] alpha, double[] nFlows, int node, Bush bush) {
-		for (Network.Edge edge : network.incomingOf(node)) {
+		for (Network.Edge edge : network.backwardStar(node)) {
 			if (!bush.edgeExists(edge.index))
 				continue;
 			
@@ -113,7 +113,7 @@ public class OBA extends BushBasedAlgorithm {
 		Network.Edge basic = null;
 		
 		double basicDist = Double.POSITIVE_INFINITY;
-		for (Network.Edge edge : network.incomingOf(node)) {
+		for (Network.Edge edge : network.backwardStar(node)) {
 			if (!bush.edgeExists(edge.index))
 				continue;
 			
@@ -129,7 +129,7 @@ public class OBA extends BushBasedAlgorithm {
 	
 	protected Pair<Vector<Network.Edge>, Vector<Network.Edge>[]> getPaths(
 			int node, Network.Edge basicApproach, int[] topologicalOrder, Bush bush) {
-		var approaches = network.incomingOf(node);
+		var approaches = network.backwardStar(node);
 		
 		// edges of basic path from root to node (reversed)
 		Vector<Network.Edge> basicPath = new Vector<>();
@@ -145,7 +145,7 @@ public class OBA extends BushBasedAlgorithm {
 			
 			Network.Edge next = null;
 			int minOrder = Integer.MAX_VALUE;
-			for (Network.Edge edge1 : network.incomingOf(edge.startNode)) {
+			for (Network.Edge edge1 : network.backwardStar(edge.startNode)) {
 				if (!bush.edgeExists(edge1.index))
 					continue;
 				
@@ -174,7 +174,7 @@ public class OBA extends BushBasedAlgorithm {
 				
 				Network.Edge next = null;
 				int minOrder = Integer.MAX_VALUE;
-				for (Network.Edge edge1 : network.incomingOf(edge.startNode)) {
+				for (Network.Edge edge1 : network.backwardStar(edge.startNode)) {
 					if (!bush.edgeExists(edge1.index))
 						continue;
 					
@@ -260,7 +260,7 @@ public class OBA extends BushBasedAlgorithm {
 			topOrder2[i] = startNode;
 			i++;
 			
-			for (Network.Edge edge : network.neighborsOf(startNode)) {
+			for (Network.Edge edge : network.forwardStar(startNode)) {
 				if (!bush.edgeExists(edge.index))
 					continue;
 				
@@ -307,7 +307,7 @@ public class OBA extends BushBasedAlgorithm {
 		while (!queue.isEmpty()) {
 			int startNode = queue.dequeue();
 			
-			for (Network.Edge edge : network.neighborsOf(startNode)) {
+			for (Network.Edge edge : network.forwardStar(startNode)) {
 				if (!bush.edgeExists(edge.index))
 					continue;
 				

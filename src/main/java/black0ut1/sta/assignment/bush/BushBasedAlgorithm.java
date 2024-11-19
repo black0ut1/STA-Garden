@@ -76,11 +76,11 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 				
 				double balance = 0;
 				
-				for (Network.Edge edge : network.incomingOf(node)) {
+				for (Network.Edge edge : network.backwardStar(node)) {
 					balance += bush.getEdgeFlow(edge.index);
 				}
 				
-				for (Network.Edge edge : network.neighborsOf(node)) {
+				for (Network.Edge edge : network.forwardStar(node)) {
 					balance -= bush.getEdgeFlow(edge.index);
 				}
 				

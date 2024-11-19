@@ -181,7 +181,7 @@ public class B extends BushBasedAlgorithm {
 			if (node == -1)
 				continue;
 			
-			for (Network.Edge edge : network.neighborsOf(node)) {
+			for (Network.Edge edge : network.forwardStar(node)) {
 				if (!bush.edgeExists(edge.index))
 					continue;
 				
@@ -233,7 +233,7 @@ public class B extends BushBasedAlgorithm {
 			int startNode = queue.dequeue();
 			topologicalOrder[counter++] = startNode;
 			
-			for (Network.Edge edge : network.neighborsOf(startNode)) {
+			for (Network.Edge edge : network.forwardStar(startNode)) {
 				if (!bush.edgeExists(edge.index))
 					continue;
 				

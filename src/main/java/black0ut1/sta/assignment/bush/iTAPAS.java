@@ -89,7 +89,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 			if (minTree[node] == null || node == bush.root)
 				continue;
 			
-			for (Network.Edge edge : network.incomingOf(node)) {
+			for (Network.Edge edge : network.backwardStar(node)) {
 				if (edge == minTree[node])
 					continue;
 				
@@ -209,7 +209,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		double maxIncomingLinkBushFlow = Double.NEGATIVE_INFINITY;
 		Network.Edge maxIncomingLink = null;
 		
-		for (Network.Edge incomingEdge : network.incomingOf(node)) {
+		for (Network.Edge incomingEdge : network.backwardStar(node)) {
 			
 			if (bush.getEdgeFlow(incomingEdge.index) > maxIncomingLinkBushFlow) {
 				maxIncomingLinkBushFlow = bush.getEdgeFlow(incomingEdge.index);
