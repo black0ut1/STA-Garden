@@ -188,18 +188,26 @@ public class iTAPAS extends BushBasedAlgorithm {
 				}
 				
 				// find the incoming link with max flow
-				double maxIncomingLinkBushFlow = Double.NEGATIVE_INFINITY;
-				for (Network.Edge incomingEdge : network.incomingOf(node)) {
-					
-					if (bush.getEdgeFlow(incomingEdge.index) > maxIncomingLinkBushFlow) {
-						maxIncomingLinkBushFlow = bush.getEdgeFlow(incomingEdge.index);
-						maxIncomingLink = incomingEdge;
-					}
-				}
+				maxIncomingLink = mostFlowIncomingEdge(node, bush);
 				
 				node = maxIncomingLink.startNode;
 			}
 		}
+	}
+	
+	protected Network.Edge mostFlowIncomingEdge(int node, Bush bush) {
+		double maxIncomingLinkBushFlow = Double.NEGATIVE_INFINITY;
+		Network.Edge maxIncomingLink = null;
+		
+		for (Network.Edge incomingEdge : network.incomingOf(node)) {
+			
+			if (bush.getEdgeFlow(incomingEdge.index) > maxIncomingLinkBushFlow) {
+				maxIncomingLinkBushFlow = bush.getEdgeFlow(incomingEdge.index);
+				maxIncomingLink = incomingEdge;
+			}
+		}
+		
+		return maxIncomingLink;
 	}
 	
 	protected PAS createPAS(Network.Edge ij, int tail, int minSegmentLen, int maxSegmentLen,
