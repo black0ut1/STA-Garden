@@ -48,7 +48,11 @@ public class iTAPAS extends BushBasedAlgorithm {
 			Network.Edge[] minTree = pair.first();
 			double[] minDistance = pair.second();
 			
-			for (Network.Edge edge : findPotentialLinks(minTree, bush)) {
+			Network.Edge[] potentialLinks = findPotentialLinks(minTree, bush);
+			for (Network.Edge edge : potentialLinks) {
+				if (edge == null)
+					break;
+				
 				if (bush.getEdgeFlow(edge.index) <= FLOW_EPSILON)
 					continue;
 				
@@ -82,8 +86,9 @@ public class iTAPAS extends BushBasedAlgorithm {
 	 * 3) sufficently large reduced cost.
 	 * Conditions 2) and 3) are checked in the main loop.
 	 */
-	protected Vector<Network.Edge> findPotentialLinks(Network.Edge[] minTree, Bush bush) {
-		Vector<Network.Edge> potentialLinks = new Vector<>();
+	protected Network.Edge[] findPotentialLinks(Network.Edge[] minTree, Bush bush) {
+		Network.Edge[] potentialLinks = new Network.Edge[network.edges];
+		int i = 0;
 		
 		for (int node = 0; node < network.nodes; node++) {
 			if (minTree[node] == null || node == bush.root)
@@ -93,7 +98,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 				if (edge == minTree[node])
 					continue;
 				
-				potentialLinks.add(edge);
+				potentialLinks[i++] = edge;
 			}
 		}
 		
