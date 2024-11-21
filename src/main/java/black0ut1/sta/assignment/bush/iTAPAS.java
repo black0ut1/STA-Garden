@@ -69,7 +69,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 						continue;
 				}
 				
-				PAS newPas = MFS(edge, minTree, bush);
+				PAS newPas = MFS(edge, minTree, bush, zone);
 				if (newPas != null)
 					manager.addPAS(newPas);
 			}
@@ -82,9 +82,10 @@ public class iTAPAS extends BushBasedAlgorithm {
 	
 	/* Potential link is every link in the network, which:
 	 * 1) is not part of mintree from currently processed origin,
-	 * 2) has nonzero (or bigger than some epsilon) origin flow and
-	 * 3) sufficently large reduced cost.
+	 * 2) has nonzero (or bigger than some epsilon) origin flow,
+	 * 3) has sufficently large reduced cost.
 	 * Conditions 2) and 3) are checked in the main loop.
+	 * - Array potentialLinks serves as sort of stack and is terminated with null.
 	 */
 	protected Network.Edge[] findPotentialLinks(Network.Edge[] minTree, Bush bush) {
 		Network.Edge[] potentialLinks = new Network.Edge[network.edges];
@@ -122,6 +123,14 @@ public class iTAPAS extends BushBasedAlgorithm {
 		}
 	}
 	
+	/* This method tries to find existing effective PAS for a potential link.
+	 * It iterates over all PASes whose head is potentialLink.endNode.
+	 * The qualifications for an effective PAS are:
+	 * 1) pot. link is the last link in max segment,
+	 * 2) cost of max segment - cost of min segment > 0.5 * reduced cost of pot. link,
+	 * 3) flow bound on max segment > 0.25 * origin flow on pot. link.
+	 * - Evaluating 3) is expensive, it is better to leave it out.
+	 */
 	protected PAS matchPAS(Network.Edge potentialLink, double reducedCost) {
 		
 		for (PAS pas : manager.getPASes(potentialLink.endNode)) {
@@ -130,7 +139,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 			if (pas.maxSegmentLastEdge() == potentialLink.index
 					&& pas.segmentsCostDifference() > COST_EFFECTIVE_FACTOR * reducedCost) {
 				
-				// evaluating this condition is expensive, it is better to left it out (FLOW_EFFECTIVE_FACTOR = 0.25)
 				// if (pas.maxSegmentFlowBound(bushes) > FLOW_EFFECTIVE_FACTOR * flow)
 				return pas;
 			}
@@ -139,6 +147,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		return null;
 	}
 	
+	/* Takes 400 random PASes and shifts flow on them. Simple as. */
 	protected void randomShifts() {
 		for (int i = 0; i < RANDOM_SHIFTS; i++) {
 			int j = rng.nextInt(manager.getPASes().size());
@@ -151,13 +160,18 @@ public class iTAPAS extends BushBasedAlgorithm {
 	/* Most Flow Search - Creates a new PAS, where the min segment is
 	 * a segment of a min tree and max segment is found by backing up
 	 * by the links with most origin flow.
+	 * - The PAS's head is ij.endNode.
+	 * - PAS's tail will be found when the backing up along most flow
+	 *   links encounter a node which is part of min tree.
 	 */
-	protected PAS MFS(Network.Edge ij, Network.Edge[] minTree, Bush bush) {
+	protected PAS MFS(Network.Edge ij, Network.Edge[] minTree, Bush bush, int origin) {
 		restart:
 		while (true) {
 			Arrays.fill(scanStatus, 0);
 			
-			// set scanStatus of nodes on minTree path from j to root to -(distance from j)
+			// set scanStatus of nodes on minTree path to negative numbers
+			// the number indicates distance in links from ij.endNode - this
+			// is useful for creating array for minSegment (it is its length)
 			int count = 1;
 			for (Network.Edge edge = minTree[ij.endNode];
 				 edge != null;
@@ -185,11 +199,12 @@ public class iTAPAS extends BushBasedAlgorithm {
 					scanStatus[node] = count;
 					count++;
 					
-				} else if (scanStatus[node] < 0) { // encountered node from mintree, the node is PAS tail
+				} else if (scanStatus[node] < 0) { // encountered node from mintree, PAS can now be constructed
 					
-					PAS newPas = createPAS(ij, node, -scanStatus[node],
-							scanStatus[maxIncomingLink.endNode], minTree, higherCostSegment);
-					newPas.origin = bush.root;
+					int minSegmentLen = -scanStatus[node];
+					int maxSegmentLen = scanStatus[maxIncomingLink.endNode];
+					
+					PAS newPas = createPAS(ij, node, minSegmentLen, maxSegmentLen, minTree, origin);
 					
 					shiftFlows(newPas);
 					return newPas;
@@ -225,8 +240,8 @@ public class iTAPAS extends BushBasedAlgorithm {
 		return maxIncomingLink;
 	}
 	
-	protected PAS createPAS(Network.Edge ij, int tail, int minSegmentLen, int maxSegmentLen,
-							Network.Edge[] minTree, Network.Edge[] higherCostSegment) {
+	protected PAS createPAS(Network.Edge ij, int tail, int minSegmentLen,
+							int maxSegmentLen, Network.Edge[] minTree, int origin) {
 		int head = ij.endNode;
 		
 		int[] minSegment = new int[minSegmentLen];
@@ -250,7 +265,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		}
 		maxSegment[maxSegmentLen - 1] = ij.index;
 		
-		return new PAS(minSegment, maxSegment);
+		return new PAS(minSegment, maxSegment, origin);
 	}
 	
 	protected void removeCycleFlow(Network.Edge[] higherCostSegment, Bush bush, int cycleNode) {
@@ -326,15 +341,15 @@ public class iTAPAS extends BushBasedAlgorithm {
 	}
 	
 	
-	public static class PASManager implements Iterable<PAS> {
+	protected static class PASManager implements Iterable<PAS> {
 		private final Network network;
-		private final List<PAS> P;
-		private final List<PAS>[] Pj;
+		private final ArrayList<PAS> P;
+		private final ArrayList<PAS>[] Pj;
 		
 		public PASManager(Network network) {
 			this.network = network;
 			this.P = new ArrayList<>();
-			this.Pj = new List[network.nodes];
+			this.Pj = new ArrayList[network.nodes];
 			for (int i = 0; i < Pj.length; i++)
 				Pj[i] = new ArrayList<>();
 		}
@@ -365,14 +380,15 @@ public class iTAPAS extends BushBasedAlgorithm {
 		}
 	}
 	
-	public static class PAS {
+	protected static class PAS {
 		
-		public int origin;
+		public final int origin;
 		private int minSegmentIndex = 0;
 		private final int[][] segments;
 		private final double[] costs;
 		
-		public PAS(int[] minSegment, int[] maxSegment) {
+		public PAS(int[] minSegment, int[] maxSegment, int origin) {
+			this.origin = origin;
 			this.segments = new int[2][];
 			this.costs = new double[2];
 			
