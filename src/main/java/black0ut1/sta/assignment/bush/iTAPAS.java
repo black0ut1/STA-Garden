@@ -14,6 +14,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected static final double FLOW_EPSILON = 1e-12;
 	protected static final double COST_EFFECTIVE_FACTOR = 0.5;
 	protected static final int RANDOM_SHIFTS = 400;
+	protected static final double POSTPROCESS_FLOW_PRECISION = 1e-6;
 	
 	protected final Random rng = new Random(42);
 	protected final PASManager manager;
@@ -69,7 +70,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 						continue;
 				}
 				
-				PAS newPas = MFS(edge, minTree, bush, zone);
+				PAS newPas = MFS(edge, minTree, bush);
 				if (newPas != null)
 					manager.addPAS(newPas);
 			}
@@ -164,7 +165,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 	 * - PAS's tail will be found when the backing up along most flow
 	 *   links encounter a node which is part of min tree.
 	 */
-	protected PAS MFS(Network.Edge ij, Network.Edge[] minTree, Bush bush, int origin) {
+	protected PAS MFS(Network.Edge ij, Network.Edge[] minTree, Bush bush) {
 		restart:
 		while (true) {
 			Arrays.fill(scanStatus, 0);
@@ -204,7 +205,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 					int minSegmentLen = -scanStatus[node];
 					int maxSegmentLen = scanStatus[maxIncomingLink.endNode];
 					
-					PAS newPas = createPAS(ij, node, minSegmentLen, maxSegmentLen, minTree, origin);
+					PAS newPas = createPAS(ij, node, minSegmentLen, maxSegmentLen, minTree, bush.root);
 					
 					shiftFlows(newPas);
 					return newPas;
@@ -340,6 +341,87 @@ public class iTAPAS extends BushBasedAlgorithm {
 		return Math.min(flowShift, maxFlowShift);
 	}
 	
+	//////////////////// Methods related to postprocessing ////////////////////
+	
+	@Override
+	protected void postProcess() {
+		for (int origin = 0; origin < network.zones; origin++) {
+			Bush bush = bushes[origin];
+			
+			// calculate origin-based node flow for each node
+			double[] nodeFlow = new double[network.nodes];
+			for (Network.Edge edge : network.getEdges())
+				nodeFlow[edge.endNode] += bush.getEdgeFlow(edge.index);
+			
+			// calculate origin-based approach proportions for each link
+			double[] approachProportions = new double[network.edges];
+			for (Network.Edge edge : network.getEdges())
+				approachProportions[edge.index] = bush.getEdgeFlow(edge.index) / nodeFlow[edge.endNode];
+			
+			double[] minDistance = SSSP.minTree(network, origin, costs).second();
+			for (Network.Edge edge : network.getEdges()) {
+				
+				double reducedCost = minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode];
+				if (bush.getEdgeFlow(edge.index) < FLOW_EPSILON && reducedCost < 1e-14) {
+				
+				}
+			}
+		}
+	}
+	
+	protected PAS postprocessMFS(Network.Edge ij, Network.Edge[] minTree, Bush bush) {
+		restart:
+		while (true) {
+			Arrays.fill(scanStatus, 0);
+			
+			scanStatus[ij.startNode] = -1;
+			
+			int count = 2;
+			for (Network.Edge edge = minTree[ij.endNode];
+				 edge != null;
+				 edge = minTree[edge.startNode]) {
+				scanStatus[edge.startNode] = -count;
+				count++;
+			}
+			
+			count = 1;
+			scanStatus[ij.endNode] = count++;
+			
+			int node = ij.endNode;
+			while (true) {
+				
+				Network.Edge maxIncomingLink = mostFlowIncomingEdge(node, bush);
+				
+				if (bush.getEdgeFlow(maxIncomingLink.index) == 0)
+					return null;
+				
+				higherCostSegment[node] = maxIncomingLink;
+				
+				if (scanStatus[node] == 0) {
+					scanStatus[node] = count;
+					count++;
+					
+				} else if (scanStatus[node] < 0) {
+					
+					int minSegmentLen = -scanStatus[node];
+					int maxSegmentLen = scanStatus[maxIncomingLink.endNode];
+					
+					PAS newPas = createPAS(ij, node, minSegmentLen, maxSegmentLen, minTree, bush.root);
+					
+					shiftFlows(newPas);
+					return newPas;
+					
+				} else if (scanStatus[node] > 0) {
+					
+					removeCycleFlow(higherCostSegment, bush, node);
+					continue restart;
+					
+				}
+				
+				node = maxIncomingLink.startNode;
+			}
+		}
+	}
 	
 	protected static class PASManager implements Iterable<PAS> {
 		private final Network network;
