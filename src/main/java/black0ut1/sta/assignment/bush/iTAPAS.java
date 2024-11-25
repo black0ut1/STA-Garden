@@ -242,7 +242,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 					
 					PAS newPas = createPAS(ij, node, minSegmentLen, maxSegmentLen, minTree, bush.root, postEdge);
 					
-					if (postEdge != null) // we don't shift flows in postprocessing
+					if (postEdge == null) // we don't shift flows in postprocessing
 						shiftFlows(newPas);
 					
 					return newPas;
@@ -291,12 +291,14 @@ public class iTAPAS extends BushBasedAlgorithm {
 			minSegment[i--] = postEdge.index;
 			start = postEdge.startNode;
 		}
-		for (Network.Edge edge = minTree[start]; ;
-			 edge = minTree[edge.startNode]) {
-			
-			minSegment[i--] = edge.index;
-			if (edge.startNode == tail)
-				break;
+		if (i != -1) {
+			for (Network.Edge edge = minTree[start]; ;
+				 edge = minTree[edge.startNode]) {
+				
+				minSegment[i--] = edge.index;
+				if (edge.startNode == tail)
+					break;
+			}
 		}
 		
 		
@@ -403,7 +405,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		System.out.println(calculateEntropy(nodeFlows));
 		for (int j = 0; j < 5; j++) {
 			
-			addPASes();
+			addPASes(nodeFlows);
 			
 			for (PAS pas : manager) {
 				int head = pas.head(network);
@@ -491,7 +493,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		return new Pair<>(nodeFlows, approachProportions);
 	}
 	
-	protected void addPASes() {
+	protected void addPASes(double[][] nodeFlows) {
 		for (int origin = 0; origin < network.zones; origin++) {
 			Bush bush = bushes[origin];
 			
@@ -503,17 +505,18 @@ public class iTAPAS extends BushBasedAlgorithm {
 			// 1) origin flow < epsilon
 			// 2) reduced cost < omega
 			for (Network.Edge edge : network.getEdges()) {
+				if (nodeFlows[origin][edge.endNode] == 0)
+					continue;
 				
 				double reducedCost = minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode];
 				if (bush.getEdgeFlow(edge.index) < FLOW_EPSILON && reducedCost < 1e-14) {
 					
-					// the flow from origin to destination edge.endNode is zero
-					if (odMatrix.get(origin, edge.endNode) == 0)
+					Network.Edge e = mostFlowIncomingEdge(edge.endNode, bush);
+					if (bush.getEdgeFlow(e.index) < FLOW_EPSILON)
 						continue;
 					
-					Network.Edge e = mostFlowIncomingEdge(edge.endNode, bush);
 					PAS pas = MFS(e, minTree, bush, edge);
-					manager.addPAS(pas);
+					manager.addPAS(pas); // PAS should not be null
 				}
 			}
 		}
@@ -557,7 +560,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 				entropy += (x == 0) // 0 * ln(0) = 0
 						? 0
 						: x * Math.log(x / n);
-				System.out.print("");
 			}
 		}
 		
