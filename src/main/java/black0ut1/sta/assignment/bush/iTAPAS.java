@@ -2,7 +2,7 @@ package black0ut1.sta.assignment.bush;
 
 import black0ut1.data.Bush;
 import black0ut1.data.Network;
-import black0ut1.data.Pair;
+import black0ut1.data.Triplet;
 import black0ut1.sta.Convergence;
 import black0ut1.util.SSSP;
 
@@ -15,6 +15,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected static final double FLOW_EPSILON = 1e-12;
 	protected static final double COST_EFFECTIVE_FACTOR = 0.5;
 	protected static final int RANDOM_SHIFTS = 400;
+	private static final double POSTPROCESS_COST_EPSILON = 1e-10;
 	
 	private final int maxPostprocessIterations;
 	private final double minProportionGap;
@@ -396,58 +397,53 @@ public class iTAPAS extends BushBasedAlgorithm {
 	
 	//////////////////// Methods related to postprocessing ////////////////////
 	
+	protected double[][] nodeFlows, approachProportions;
+	
 	@Override
 	protected void postProcess() {
 		if (maxPostprocessIterations == 0)
 			return;
 		
-		var pair = calculateNodeFlowAndApproachProportions();
-		double[][] nodeFlows = pair.first();
-		double[][] approachProportions = pair.second();
+		calculateNodeFlowAndApproachProportions();
+		
+		LinkedHashMap<PAS, int[]> pasSet = new LinkedHashMap<>();
+		for (PAS pas : manager) {
+			
+			int[] origins = collectOrigins(pas);
+			if (origins.length > 1)
+				pasSet.put(pas, origins);
+		}
 		
 		System.out.println("===================================");
 		System.out.println("iTAPAS proportionality postprocessing");
 		System.out.printf("Entropy: %.15f%n", calculateEntropy(nodeFlows));
-		double averageProportionGap = calculateAverageProportionGap(nodeFlows, approachProportions);
+		double averageProportionGap = Double.POSITIVE_INFINITY;
 		System.out.printf("Average proportion gap: %.15f%n", averageProportionGap);
 		System.out.println("===================================");
 		
-		addPASes(nodeFlows);
-		
 		for (int j = 0; j < maxPostprocessIterations && minProportionGap < averageProportionGap; j++) {
 			System.out.println("Iteration " + (j + 1));
+			System.out.println("No. of PASes: " + pasSet.size());
 			
-			for (PAS pas : manager) {
-				var pair1 = collectOrigins(pas, nodeFlows, approachProportions);
-				Vector<PropData> pasData = pair1.first();
-				double proportion = pair1.second();
+			addPASes(pasSet);
+			
+			for (Map.Entry<PAS, int[]> entry : pasSet.entrySet()) {
+				PAS pas = entry.getKey();
+				int[] origins = entry.getValue();
 				
-				for (PropData data : pasData) {
-					Bush bush = bushes[data.origin];
-					
-					double flowAdjustment = proportion *
-							(data.minSegmentFlow + data.maxSegmentFlow) - data.minSegmentFlow;
-					
-					for (int i : pas.minSegment())
-						bush.addFlow(i, flowAdjustment);
-					
-					for (int i : pas.maxSegment())
-						bush.addFlow(i, -flowAdjustment);
-				}
-				
-				updateNodeFlowsAndApproachProportions(nodeFlows, approachProportions, pas, pasData);
+				shiftFlowsProportionally(pas, origins);
 			}
 			
 			System.out.printf("Entropy: %.15f%n", calculateEntropy(nodeFlows));
-			averageProportionGap = calculateAverageProportionGap(nodeFlows, approachProportions);
+			averageProportionGap = calculateAverageProportionGap(pasSet);
 			System.out.printf("Average proportion gap: %.15f%n", averageProportionGap);
 			System.out.println("-----------------------------------");
 		}
 	}
 	
-	protected Pair<double[][], double[][]> calculateNodeFlowAndApproachProportions() {
-		double[][] nodeFlows = new double[network.zones][];
-		double[][] approachProportions = new double[network.zones][];
+	protected void calculateNodeFlowAndApproachProportions() {
+		nodeFlows = new double[network.zones][];
+		approachProportions = new double[network.zones][];
 		
 		for (int origin = 0; origin < network.zones; origin++) {
 			Bush bush = bushes[origin];
@@ -468,13 +464,9 @@ public class iTAPAS extends BushBasedAlgorithm {
 			}
 			approachProportions[origin] = approachProportion;
 		}
-		
-		return new Pair<>(nodeFlows, approachProportions);
 	}
 	
-	protected void addPASes(double[][] nodeFlows) {
-		int added = 0, removed = 0;
-		
+	protected void addPASes(LinkedHashMap<PAS, int[]> pasSet) {
 		for (int origin = 0; origin < network.zones; origin++) {
 			Bush bush = bushes[origin];
 			
@@ -482,139 +474,138 @@ public class iTAPAS extends BushBasedAlgorithm {
 			Network.Edge[] minTree = pair1.first();
 			double[] minDistance = pair1.second();
 			
-			// create new PAS for every edge for which:
-			// 1) origin flow < epsilon
-			// 2) reduced cost < omega
 			for (Network.Edge edge : network.getEdges()) {
-				if (nodeFlows[origin][edge.endNode] == 0)
-					continue;
 				
 				double reducedCost = minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode];
-				if (bush.getEdgeFlow(edge.index) < FLOW_EPSILON && reducedCost < 1e-14) {
+				if (reducedCost <= POSTPROCESS_COST_EPSILON) {
 					
-					Network.Edge e = mostFlowIncomingEdge(edge.endNode, bush);
-					if (bush.getEdgeFlow(e.index) < FLOW_EPSILON)
+					Network.Edge maxEdge = mostFlowIncomingEdge(edge.endNode, bush);
+					if (edge == maxEdge)
 						continue;
 					
-					PAS pas = MFS(e, minTree, bush, edge);
+					PAS pas = MFS(maxEdge, minTree, bush, edge);
 					if (pas != null) {
-						manager.addPAS(pas);
-						added++;
+						int[] origins = collectOrigins(pas);
+						
+						if (origins.length > 1)
+							pasSet.put(pas, origins);
 					}
 				}
 			}
 		}
-		
-		
-		for (Iterator<PAS> iterator = manager.getPASes().iterator(); iterator.hasNext(); ) {
-			PAS pas = iterator.next();
-			
-			int numViable = 0;
-			for (int origin = 0; origin < network.zones; origin++) {
-				
-				boolean isViable = true;
-				for (int i : pas.maxSegment()) {
-					if (bushes[origin].getEdgeFlow(i) < 1e-8) {
-						isViable = false;
-						break;
-					}
-				}
-				if (isViable)
-					numViable++;
-				if (numViable == 2)
-					break;
-			}
-			if (numViable == 1) {
-				manager.removePAS(iterator, pas);
-				removed++;
-			}
-		}
-		
-		System.out.println("Added: " + added + ", removed: " + removed);
 	}
 	
-	protected Pair<Vector<PropData>, Double>
-	collectOrigins(PAS pas, double[][] nodeFlows, double[][] approachProportions) {
+	protected int[] collectOrigins(PAS pas) {
+		int[] origins = new int[network.zones];
+		int count = 0;
+		
+		for (int origin = 0; origin < network.zones; origin++) {
+			pas.origin = origin;
+			double minSFB = pas.minSegmentFlowBound(bushes);
+			double maxSFB = pas.maxSegmentFlowBound(bushes);
+			if (minSFB + maxSFB > 1e-8) {
+				origins[count++] = origin;
+			}
+		}
+		
+		return Arrays.copyOf(origins, count);
+	}
+	
+	//////// Shifting flows
+	
+	protected void shiftFlowsProportionally(PAS pas, int[] origins) {
+		
+		var triplet = flowsAndProportion(pas, origins);
+		double[] minSegmentFlows = triplet.first();
+		double[] maxSegmentFlows = triplet.second();
+		double proportion = triplet.third();
+		
+		for (int i = 0; i < origins.length; i++) {
+			int origin = origins[i];
+			Bush bush = bushes[origin];
+			
+			double flowAdjustment = proportion *
+					(minSegmentFlows[i] + maxSegmentFlows[i]) - minSegmentFlows[i];
+			
+			for (int k : pas.minSegment())
+				bush.addFlow(k, flowAdjustment);
+			
+			for (int k : pas.maxSegment())
+				bush.addFlow(k, -flowAdjustment);
+			
+			updateNodeFlowsAndApproachProportions(pas, origin);
+		}
+	}
+	
+	protected Triplet<double[], double[], Double> flowsAndProportion(PAS pas, int[] origins) {
 		int head = pas.head(network);
-		Vector<PropData> pasData = new Vector<>();
 		
 		double totalMinSegmentFlow = 0;
 		double totalMaxSegmentFlow = 0;
 		
-		for (int origin = 0; origin < network.zones; origin++) {
+		double[] minSegmentFlows = new double[origins.length];
+		double[] maxSegmentFlows = new double[origins.length];
+		
+		for (int i = 0; i < origins.length; i++) {
+			int origin = origins[i];
 			
-			boolean isViable = true;
-			for (int i : pas.maxSegment()) {
-				if (bushes[origin].getEdgeFlow(i) < 1e-7) {
-					isViable = false;
-					break;
-				}
-			}
+			double minSegmentFlow = nodeFlows[origin][head];
+			for (int k : pas.minSegment())
+				minSegmentFlow *= approachProportions[origin][k];
 			
-			if (isViable) {
-				
-				double minSegmentFlow = nodeFlows[origin][head];
-				for (int i : pas.minSegment())
-					minSegmentFlow *= approachProportions[origin][i];
-				
-				double maxSegmentFlow = nodeFlows[origin][head];
-				for (int i : pas.maxSegment())
-					maxSegmentFlow *= approachProportions[origin][i];
-				
-				totalMinSegmentFlow += minSegmentFlow;
-				totalMaxSegmentFlow += maxSegmentFlow;
-				
-				pasData.add(new PropData(
-						origin, minSegmentFlow, maxSegmentFlow
-				));
-			}
+			double maxSegmentFlow = nodeFlows[origin][head];
+			for (int k : pas.maxSegment())
+				maxSegmentFlow *= approachProportions[origin][k];
+			
+			minSegmentFlows[i] = minSegmentFlow;
+			maxSegmentFlows[i] = maxSegmentFlow;
+			totalMinSegmentFlow += minSegmentFlow;
+			totalMaxSegmentFlow += maxSegmentFlow;
 		}
 		
 		double proportion = totalMinSegmentFlow / (totalMinSegmentFlow + totalMaxSegmentFlow);
 		
-		return new Pair<>(pasData, proportion);
+		return new Triplet<>(minSegmentFlows, maxSegmentFlows, proportion);
 	}
 	
-	protected void updateNodeFlowsAndApproachProportions(
-			double[][] nodeFlows, double[][] approachProportions, PAS pas, Vector<PropData> pasData) {
+	protected void updateNodeFlowsAndApproachProportions(PAS pas, int origin) {
 		Network.Edge[] edges = network.getEdges();
+		Bush bush = bushes[origin];
 		
-		for (PropData data : pasData) {
-			Bush bush = bushes[data.origin];
+		for (int i : pas.maxSegment()) {
+			int node = edges[i].endNode;
 			
-			for (int i : pas.maxSegment()) {
-				int node = edges[i].endNode;
-				
-				double newNodeFlow = 0;
-				for (Network.Edge edge : network.incomingOf(node)) {
-					newNodeFlow += bush.getEdgeFlow(edge.index);
-				}
-				nodeFlows[data.origin][node] = newNodeFlow;
-				
-				for (Network.Edge edge : network.incomingOf(node)) {
-					approachProportions[data.origin][edge.index] = (newNodeFlow == 0)
-							? 0
-							: bush.getEdgeFlow(edge.index) / newNodeFlow;
-				}
+			double newNodeFlow = 0;
+			for (Network.Edge edge : network.incomingOf(node)) {
+				newNodeFlow += bush.getEdgeFlow(edge.index);
 			}
+			nodeFlows[origin][node] = newNodeFlow;
 			
-			for (int i : pas.minSegment()) {
-				int node = edges[i].endNode;
-				
-				double newNodeFlow = 0;
-				for (Network.Edge edge : network.incomingOf(node)) {
-					newNodeFlow += bush.getEdgeFlow(edge.index);
-				}
-				nodeFlows[data.origin][node] = newNodeFlow;
-				
-				for (Network.Edge edge : network.incomingOf(node)) {
-					approachProportions[data.origin][edge.index] = (newNodeFlow == 0)
-							? 0
-							: bush.getEdgeFlow(edge.index) / newNodeFlow;
-				}
+			for (Network.Edge edge : network.incomingOf(node)) {
+				approachProportions[origin][edge.index] = (newNodeFlow == 0)
+						? 0
+						: bush.getEdgeFlow(edge.index) / newNodeFlow;
+			}
+		}
+		
+		for (int i : pas.minSegment()) {
+			int node = edges[i].endNode;
+			
+			double newNodeFlow = 0;
+			for (Network.Edge edge : network.incomingOf(node)) {
+				newNodeFlow += bush.getEdgeFlow(edge.index);
+			}
+			nodeFlows[origin][node] = newNodeFlow;
+			
+			for (Network.Edge edge : network.incomingOf(node)) {
+				approachProportions[origin][edge.index] = (newNodeFlow == 0)
+						? 0
+						: bush.getEdgeFlow(edge.index) / newNodeFlow;
 			}
 		}
 	}
+	
+	//////// Convergence criterions
 	
 	protected double calculateEntropy(double[][] nodeFlows) {
 		double entropy = 0;
@@ -634,26 +625,31 @@ public class iTAPAS extends BushBasedAlgorithm {
 		return -entropy;
 	}
 	
-	protected double calculateAverageProportionGap(double[][] nodeFlows, double[][] approachProportions) {
+	protected double calculateAverageProportionGap(LinkedHashMap<PAS, int[]> pasSet) {
 		double averageProportionGap = 0;
 		
-		for (PAS pas : manager) {
-			var pair = collectOrigins(pas, nodeFlows, approachProportions);
-			Vector<PropData> pasData = pair.first();
-			double proportion = pair.second();
+		for (Map.Entry<PAS, int[]> entry : pasSet.entrySet()) {
+			PAS pas = entry.getKey();
+			int[] origins = entry.getValue();
+			
+			var triplet = flowsAndProportion(pas, origins);
+			double[] minSegmentFlows = triplet.first();
+			double[] maxSegmentFlows = triplet.second();
+			double proportion = triplet.third();
 			
 			double maxGap = 0;
-			for (PropData data : pasData) {
-				double originProportion = data.minSegmentFlow / (data.maxSegmentFlow + data.minSegmentFlow);
+			for (int i = 0; i < origins.length; i++) {
+				double originProportion = minSegmentFlows[i] / (maxSegmentFlows[i] + minSegmentFlows[i]);
 				double gap = Math.abs(originProportion - proportion);
 				maxGap = Math.max(maxGap, gap);
 			}
 			averageProportionGap += maxGap;
 		}
 		
-		return averageProportionGap / manager.getPASes().size();
+		return averageProportionGap / pasSet.size();
 	}
 	
+	////////////////////////////////////////////////////////////
 	
 	protected static class PASManager implements Iterable<PAS> {
 		private final Network network;
@@ -771,10 +767,4 @@ public class iTAPAS extends BushBasedAlgorithm {
 			return network.getEdges()[minSegmentLastEdge()].endNode;
 		}
 	}
-	
-	protected record PropData(
-			int origin,
-			double minSegmentFlow,
-			double maxSegmentFlow
-	) {}
 }
