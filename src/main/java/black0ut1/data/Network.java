@@ -3,6 +3,7 @@ package black0ut1.data;
 import java.util.List;
 import java.util.Vector;
 
+@SuppressWarnings("unchecked")
 public class Network {
 
 	private final int[] indices;
@@ -10,11 +11,19 @@ public class Network {
 	private final Edge[] edgesArr;
 	private final Edge[] inverseEdgesArr;
 	
+	private final Node[] nodesArr;
+	
 	public final int nodes;
 	public final int zones;
 	public final int edges;
 	
 	public Network(List<Edge>[] adjacencyList, int zones) {
+		this(adjacencyList, zones, null);
+	}
+	
+	public Network(List<Edge>[] adjacencyList, int zones, Node[] nodes) {
+		this.nodesArr = nodes;
+		
 		int numOfEdges = 0;
 		for (List<Edge> edgeVector : adjacencyList)
 			numOfEdges += edgeVector.size();
@@ -72,6 +81,10 @@ public class Network {
 		return edgesArr;
 	}
 	
+	public Node[] getNodes() {
+		return nodesArr;
+	}
+	
 	public static class Edge {
 		
 		public final int endNode;
@@ -108,4 +121,6 @@ public class Network {
 			return startNode + "->" + endNode;
 		}
 	}
+	
+	public record Node(int id, double x, double y) {}
 }

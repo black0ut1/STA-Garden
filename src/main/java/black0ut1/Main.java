@@ -14,13 +14,14 @@ import black0ut1.sta.cost.*;
 public class Main {
 	
 	public static void main(String[] argv) {
-		String map = "ChicagoRegional";
+		String map = "SiouxFalls";
 		String networkFile = "data/" + map + "/" + map + "_net.tntp";
 		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
+		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
 		String flowsFile = "data/" + map + "/" + map + "_flow.tntp";
 		
 		// load network and OD matrix
-		var pair = loadData(networkFile, odmFile);
+		var pair = loadData(networkFile, odmFile, nodeFile);
 		Network network = pair.first();
 		DoubleMatrix odMatrix = pair.second();
 		
@@ -65,10 +66,10 @@ public class Main {
 		TNTP.writeFlows(flowsFile, network, fw.getFlows(), fw.getCosts());
 	}
 	
-	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile) {
+	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {
 		System.out.print("Loading network... ");
 		long startTime = System.currentTimeMillis();
-		Network network = TNTP.parseNetwork(networkFile);
+		Network network = TNTP.parseNetwork(networkFile, nodeFile);
 		long endTime = System.currentTimeMillis();
 		System.out.println("OK (" + (endTime - startTime) + "ms)");
 		
