@@ -3,40 +3,42 @@ package black0ut1.sta.assignment.link;
 import black0ut1.sta.assignment.Algorithm;
 import black0ut1.sta.assignment.AON;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
-
 public class FukushimaFrankWolfe extends FrankWolfe {
 	
-	protected static final int L = 3;
-	protected int k = 1;
+	protected final int L;
+	protected int currL = 0;
+	protected int queueEnd = 0;
 	
-	protected final Queue<double[]> aonQueue = new ArrayDeque<>(L);
+	protected final double[][] queue;
 	
-	public FukushimaFrankWolfe(Algorithm.Parameters parameters) {
+	public FukushimaFrankWolfe(Algorithm.Parameters parameters, int L) {
 		super(parameters);
+		this.L = L;
+		this.queue = new double[L][];
 	}
 	
 	@Override
 	protected double[] calculateTarget() {
 		double[] aonFlows = new double[network.edges];
 		AON.assign(network, odMatrix, costs, aonFlows);
-		aonQueue.add(aonFlows);
 		
-		if (k++ < L) // queue must contain L past AON flows
-			return aonFlows;
-		// TODO this is not exactly as described in paper - in the paper,
-		// the weighted sum of past AONs starts immediately
-		// TODO using queue is not optimal - use array as circular queue
-		
-		double weight = 1.0 / L;
-		
-		double[] target = new double[network.edges]; // sum of past L weighted AONs
-		for (double[] AONs : aonQueue) {
-			for (int i = 0; i < AONs.length; i++)
-				target[i] += weight * AONs[i];
+		// add the AON flow to queue
+		if (currL < L) { // the queue is filling up
+			queue[currL++] = aonFlows;
+		} else { // the queue if filled up, we replace last element
+			queue[queueEnd] = aonFlows;
+			queueEnd = (queueEnd + 1) % L;
 		}
 		
+		// compute arithmetic mean of flows in queue
+		double[] target = new double[network.edges];
+		for (int j = 0; j < network.edges; j++) {
+			for (int i = 0; i < currL; i++)
+				target[j] += queue[i][j];
+			target[j] /= currL;
+		}
+		
+		// determine if target or aonFlows is better direction
 		double derivative1Numer = 0, derivative1Denom = 0;
 		double derivative2Numer = 0, derivative2Denom = 0;
 		for (int i = 0; i < network.edges; i++) {
@@ -49,11 +51,10 @@ public class FukushimaFrankWolfe extends FrankWolfe {
 		double derivative1 = derivative1Numer / derivative1Denom;
 		double derivative2 = derivative2Numer / derivative2Denom;
 		
-		aonQueue.poll();
 		
-//		System.out.println(derivative1 + " " + derivative2 + " -> " +
-//				((derivative1 <= derivative2) ? "Fukushima direction" : "FW direction"));
-		if (derivative1 <= derivative2)
+		System.out.println(derivative1 + " " + derivative2 + " -> " +
+				((derivative1 < derivative2) ? "Fukushima direction" : "FW direction"));
+		if (derivative1 < derivative2)
 			return target;
 		else
 			return aonFlows;
