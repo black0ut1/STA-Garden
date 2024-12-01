@@ -14,7 +14,7 @@ application {
 }
 
 dependencies {
+    implementation 'org.jfree:jfreechart:1.5.3'
     implementation "com.google.guava:guava:32.1.3-jre"
     implementation "org.jcommander:jcommander:1.83"
-    implementation project(":gui")
 }
