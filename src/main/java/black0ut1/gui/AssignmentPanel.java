@@ -16,8 +16,8 @@ public class AssignmentPanel extends JPanel {
 	private static final float EDGE_WIDTH = 4;
 	
 	private final Network network;
-	private final Network.Node[] normalizedNodes;
-	private final Network.Node[] scaledNodes;
+	private final double[] normalizedNodesX, normalizedNodesY;
+	private final double[] scaledNodesX, scaledNodesY;
 	private double[] costs = null;
 	private final ColorSpectrum costSpectrum
 			= new ColorSpectrum(Color.GREEN, Color.YELLOW, Color.RED);
@@ -28,8 +28,11 @@ public class AssignmentPanel extends JPanel {
 	private Point dragStartPos = null;
 	
 	public AssignmentPanel(Network network) {
-		this.normalizedNodes = new Network.Node[network.nodes];
-		this.scaledNodes = new Network.Node[network.nodes];
+		this.normalizedNodesX = new double[network.nodes];
+		this.normalizedNodesY = new double[network.nodes];
+		this.scaledNodesX = new double[network.nodes];
+		this.scaledNodesY = new double[network.nodes];
+		
 		this.network = network;
 		assert network.getNodes() != null;
 		
@@ -79,6 +82,7 @@ public class AssignmentPanel extends JPanel {
 		});
 	}
 	
+	/* Normalized coordinates of nodes of input network */
 	private void computeNormalizedNodes() {
 		double minX = Double.POSITIVE_INFINITY;
 		double minY = Double.POSITIVE_INFINITY;
@@ -97,18 +101,16 @@ public class AssignmentPanel extends JPanel {
 		
 		for (int i = 0; i < network.nodes; i++) {
 			Network.Node node = network.getNodes()[i];
-			double normX = (node.x() - midX) / lenX;
-			double normY = (node.y() - midY) / lenY;
-			normalizedNodes[i] = new Network.Node(i, normX, normY);
+			normalizedNodesX[i] = (node.x() - midX) / lenX;
+			normalizedNodesY[i] = (node.y() - midY) / lenY;
 		}
 	}
 	
+	/* Scales and shifts normalized nodes according to current scale and offset */
 	private void recomputeNodes() {
 		for (int i = 0; i < network.nodes; i++) {
-			Network.Node normalizedNode = normalizedNodes[i];
-			double scaledX = (normalizedNode.x() + offset.x) * scale + getWidth() / 2.0;
-			double scaledY = (normalizedNode.y() + offset.y) * scale + getHeight() / 2.0;
-			scaledNodes[i] = new Network.Node(i, scaledX, scaledY);
+			scaledNodesX[i] = (normalizedNodesX[i] + offset.x) * scale + getWidth() / 2.0;
+			scaledNodesY[i] = (normalizedNodesY[i] + offset.y) * scale + getHeight() / 2.0;
 		}
 	}
 	
@@ -121,7 +123,6 @@ public class AssignmentPanel extends JPanel {
 	public void paint(Graphics g) {
 		super.paint(g);
 		Graphics2D g2 = (Graphics2D) g;
-		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		g2.setColor(Color.WHITE);
@@ -136,13 +137,10 @@ public class AssignmentPanel extends JPanel {
 		g.setStroke(new BasicStroke(EDGE_WIDTH));
 		
 		for (Network.Edge edge : network.getEdges()) {
-			Network.Node startNode = scaledNodes[edge.startNode];
-			Network.Node endNode = scaledNodes[edge.endNode];
-			
-			double x1 = startNode.x();
-			double y1 = startNode.y();
-			double x2 = endNode.x();
-			double y2 = endNode.y();
+			double x1 = scaledNodesX[edge.startNode];
+			double y1 = scaledNodesY[edge.startNode];
+			double x2 = scaledNodesX[edge.endNode];
+			double y2 = scaledNodesY[edge.endNode];
 			
 			double len = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 			double xOffset = EDGE_OFFSET * (-y2 + y1) / len;
@@ -163,8 +161,8 @@ public class AssignmentPanel extends JPanel {
 	private void drawNodes(Graphics2D g) {
 		g.setColor(Color.BLACK);
 		
-		for (Network.Node node : scaledNodes) {
-			g.fillOval((int) node.x() - NODE_RADIUS, (int) node.y() - NODE_RADIUS,
+		for (int i = 0; i < network.nodes; i++) {
+			g.fillOval((int) scaledNodesX[i] - NODE_RADIUS, (int) scaledNodesY[i] - NODE_RADIUS,
 					2 * NODE_RADIUS, 2 * NODE_RADIUS);
 		}
 	}
