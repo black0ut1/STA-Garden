@@ -1,5 +1,6 @@
 package black0ut1.gui;
 
+import black0ut1.data.ColorSpectrum;
 import black0ut1.data.Network;
 
 import javax.swing.*;
@@ -11,14 +12,18 @@ public class AssignmentPanel extends JPanel {
 	
 	private static final int NODE_RADIUS = 7;
 	private static final int WHEEL_ROTATION_SCALE_FACTOR = 50;
+	private static final double EDGE_OFFSET = 3;
+	private static final float EDGE_WIDTH = 4;
 	
 	private final Network network;
 	private final Network.Node[] normalizedNodes;
 	private final Network.Node[] scaledNodes;
+	private double[] costs = null;
+	private final ColorSpectrum costSpectrum
+			= new ColorSpectrum(Color.GREEN, Color.YELLOW, Color.RED);
 	
 	private double scale = 500;
 	private final Point2D.Double offset = new Point2D.Double(0, 0);
-	
 	private Point2D.Double tmpOffset = null;
 	private Point dragStartPos = null;
 	
@@ -106,7 +111,12 @@ public class AssignmentPanel extends JPanel {
 			scaledNodes[i] = new Network.Node(i, scaledX, scaledY);
 		}
 	}
-
+	
+	public void setCosts(double[] costs) {
+		this.costs = costs;
+		repaint();
+	}
+	
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
@@ -123,13 +133,30 @@ public class AssignmentPanel extends JPanel {
 	
 	private void drawEdges(Graphics2D g) {
 		g.setColor(Color.BLACK);
+		g.setStroke(new BasicStroke(EDGE_WIDTH));
 		
 		for (Network.Edge edge : network.getEdges()) {
 			Network.Node startNode = scaledNodes[edge.startNode];
 			Network.Node endNode = scaledNodes[edge.endNode];
 			
-			g.drawLine((int) startNode.x(), (int) startNode.y(),
-					(int) endNode.x(), (int) endNode.y());
+			double x1 = startNode.x();
+			double y1 = startNode.y();
+			double x2 = endNode.x();
+			double y2 = endNode.y();
+			
+			double len = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+			double xOffset = EDGE_OFFSET * (-y2 + y1) / len;
+			double yOffset = EDGE_OFFSET * (x2 - x1) / len;
+			
+			if (costs != null) {
+				double costRatio = costs[edge.index] / edge.freeFlow;
+				double colorValue = Math.min(costRatio - 1, 3) / 3;
+				g.setColor(costSpectrum.getColor(colorValue));
+			}
+			
+			g.drawLine(
+					(int) (x1 + xOffset), (int) (y1 + yOffset),
+					(int) (x2 + xOffset), (int) (y2 + yOffset));
 		}
 	}
 	
