@@ -15,6 +15,10 @@ public class AssignmentPanel extends JPanel {
 	private static final double EDGE_OFFSET = 3;
 	private static final float EDGE_WIDTH = 4;
 	
+	// if MAX_COST_FACTOR is 4, then the cost freeFlow * 4 and
+	// above is colored using the max color in costSpectrum
+	private static final double MAX_COST_FACTOR = 4;
+	
 	private final Network network;
 	private final double[] normalizedNodesX, normalizedNodesY;
 	private final double[] scaledNodesX, scaledNodesY;
@@ -130,6 +134,7 @@ public class AssignmentPanel extends JPanel {
 		
 		drawEdges(g2);
 		drawNodes(g2);
+		drawLegend(g2);
 	}
 	
 	private void drawEdges(Graphics2D g) {
@@ -148,7 +153,7 @@ public class AssignmentPanel extends JPanel {
 			
 			if (costs != null) {
 				double costRatio = costs[edge.index] / edge.freeFlow;
-				double colorValue = Math.min(costRatio - 1, 3) / 3;
+				double colorValue = Math.min(costRatio - 1, MAX_COST_FACTOR - 1) / (MAX_COST_FACTOR - 1);
 				g.setColor(costSpectrum.getColor(colorValue));
 			}
 			
@@ -165,5 +170,30 @@ public class AssignmentPanel extends JPanel {
 			g.fillOval((int) scaledNodesX[i] - NODE_RADIUS, (int) scaledNodesY[i] - NODE_RADIUS,
 					2 * NODE_RADIUS, 2 * NODE_RADIUS);
 		}
+	}
+	
+	private void drawLegend(Graphics2D g) {
+		g.setColor(Color.BLACK);
+		g.setStroke(new BasicStroke(1));
+		
+		int width = 50;
+		int height = 300;
+		int offset = 20;
+		
+		int y = offset + height;
+		int x1 = getWidth() - width - offset;
+		int x2 = getWidth() - offset;
+		
+		for (int i = 0; i <= y - offset; i++) {
+			double colorVal = i / (double) (y - offset);
+			g.setColor(costSpectrum.getColor(colorVal));
+			
+			g.drawLine(x1, y - i, x2, y - i);
+		}
+		
+		int textShiftLeft = 27, textShiftDown = 5;
+		g.setColor(Color.BLACK);
+		g.drawString("1.0x", x1 - textShiftLeft, y + textShiftDown);
+		g.drawString(MAX_COST_FACTOR + "x", x1 - textShiftLeft, offset + textShiftDown);
 	}
 }

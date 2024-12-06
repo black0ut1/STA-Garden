@@ -20,7 +20,7 @@ public class ColorSpectrum {
 		
 		double segmentLen = 1.0 / (colors.length - 1);
 		int segment = (int) (value / segmentLen);
-		double segmentValue = value - segment * segmentLen;
+		double segmentValue = value / segmentLen - segment;
 		
 		int r = interpolateColor(colors[segment].getRed(), colors[segment + 1].getRed(), segmentValue);
 		int g = interpolateColor(colors[segment].getGreen(), colors[segment + 1].getGreen(), segmentValue);
