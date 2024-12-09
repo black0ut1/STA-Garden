@@ -6,10 +6,8 @@ import black0ut1.data.Triplet;
 import black0ut1.sta.Convergence;
 import black0ut1.util.SSSP;
 
-import javax.annotation.Nonnull;
 import java.util.*;
 
-@SuppressWarnings("unchecked")
 public class iTAPAS extends BushBasedAlgorithm {
 	
 	protected static final double FLOW_EPSILON = 1e-12;
@@ -22,12 +20,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 	
 	protected final Random rng = new Random(42);
 	protected final PASManager manager;
-	
-	/* Arrays specific for MFS method, extracted outside of the method
-	 * to avoid unnecessary allocation.
-	 */
-	protected Network.Edge[] higherCostSegment = new Network.Edge[network.nodes];
-	protected int[] scanStatus = new int[network.nodes];
 	
 	public iTAPAS(Parameters parameters) {
 		this(parameters, 0, 0);
@@ -122,16 +114,21 @@ public class iTAPAS extends BushBasedAlgorithm {
 	 * shifts zero), the PAS is removed.
 	 */
 	protected void eliminatePASes() {
+		boolean[] toBeRemoved = new boolean[manager.getCountP()];
+		
 		for (int i = 0; i < 20; i++) {
 			
-			for (Iterator<PAS> iterator = manager.getPASes().iterator(); iterator.hasNext(); ) {
-				PAS pas = iterator.next();
+			for (int j = 0; j < manager.getCountP(); j++) {
+				if (toBeRemoved[j])
+					continue;
 				
-				if (!shiftFlows(pas)) {
-					manager.removePAS(iterator, pas);
-				}
+				PAS pas = manager.getPASes()[j];
+				if (!shiftFlows(pas))
+					toBeRemoved[j] = true;
 			}
 		}
+		
+		manager.removePASes(toBeRemoved);
 	}
 	
 	/* This method tries to find existing effective PAS for a potential link.
@@ -144,7 +141,8 @@ public class iTAPAS extends BushBasedAlgorithm {
 	 */
 	protected PAS matchPAS(Network.Edge potentialLink, double reducedCost) {
 		
-		for (PAS pas : manager.getPASes(potentialLink.endNode)) {
+		for (int i = 0; i < manager.getCountPj(potentialLink.endNode); i++) {
+			PAS pas = manager.getPASes(potentialLink.endNode)[i];
 			
 			pas.updateSegments(costs);
 			if (pas.maxSegmentLastEdge() == potentialLink.index
@@ -161,12 +159,22 @@ public class iTAPAS extends BushBasedAlgorithm {
 	/* Takes 400 random PASes and shifts flow on them. Simple as. */
 	protected void randomShifts() {
 		for (int i = 0; i < RANDOM_SHIFTS; i++) {
-			int j = rng.nextInt(manager.getPASes().size());
-			shiftFlows(manager.getPASes().get(j));
+			int j = rng.nextInt(manager.getCountP());
+			shiftFlows(manager.getPASes()[j]);
 		}
 	}
 	
 	//////////////////// Methods related to creating PASes ////////////////////
+	
+	/* These two arrays are local for MFS() method. The reason why they
+	 * are extracted out is because this method is called many many times
+	 * and if it would allocate these arrays each time, it would consume
+	 * large amount of memory which would be taxing on garbage collector.
+	 * Experiments on Sydney network shown decrease from 470GB to 25GB of
+	 * allocated memory (during the whole run of the algorithm).
+	 */
+	protected Network.Edge[] higherCostSegment = new Network.Edge[network.nodes];
+	protected int[] scanStatus = new int[network.nodes];
 	
 	/* Most Flow Search - Creates a new PAS, where the min segment is
 	 * a segment of a min tree and max segment is found by backing up
@@ -407,7 +415,8 @@ public class iTAPAS extends BushBasedAlgorithm {
 		calculateNodeFlowAndApproachProportions();
 		
 		LinkedHashMap<PAS, int[]> pasSet = new LinkedHashMap<>();
-		for (PAS pas : manager) {
+		for (int i = 0; i < manager.getCountP(); i++) {
+			PAS pas = manager.getPASes()[i];
 			
 			int[] origins = collectOrigins(pas);
 			if (origins.length > 1)
@@ -651,45 +660,93 @@ public class iTAPAS extends BushBasedAlgorithm {
 	
 	////////////////////////////////////////////////////////////
 	
-	protected static class PASManager implements Iterable<PAS> {
+	protected static class PASManager {
+		
 		private final Network network;
-		private final ArrayList<PAS> P;
-		private final ArrayList<PAS>[] Pj;
+		
+		private PAS[] P;
+		private int countP = 0;
+		
+		private final PAS[][] Pj;
+		private final int[] countsPj;
 		
 		public PASManager(Network network) {
 			this.network = network;
-			this.P = new ArrayList<>();
-			this.Pj = new ArrayList[network.nodes];
-			for (int i = 0; i < Pj.length; i++)
-				Pj[i] = new ArrayList<>();
+			this.P = new PAS[network.edges];
+			this.Pj = new PAS[network.nodes][10];
+			this.countsPj = new int[network.nodes];
 		}
 		
 		public void addPAS(PAS newPas) {
-			List<PAS> Pj = this.Pj[newPas.head(network)];
+			if (countP == P.length) {
+				PAS[] newArray = new PAS[(int) (P.length * 1.5)];
+				System.arraycopy(P, 0, newArray, 0, P.length);
+				P = newArray;
+			}
+			P[countP++] = newPas;
 			
-			P.add(newPas);
-			Pj.add(newPas);
+			int head = newPas.head(network);
+			if (countsPj[head] == Pj[head].length) {
+				PAS[] newArray = new PAS[(int) (Pj[head].length * 1.5)];
+				System.arraycopy(Pj[head], 0, newArray, 0, Pj[head].length);
+				Pj[head] = newArray;
+			}
+			Pj[head][countsPj[head]++] = newPas;
 		}
 		
-		public List<PAS> getPASes() {
+		public PAS[] getPASes() {
 			return P;
 		}
 		
-		public List<PAS> getPASes(int head) {
+		public int getCountP() {
+			return countP;
+		}
+		
+		public PAS[] getPASes(int head) {
 			return Pj[head];
 		}
 		
-		@Nonnull
-		public Iterator<PAS> iterator() {
-			return P.iterator();
+		public int getCountPj(int head) {
+			return countsPj[head];
 		}
 		
-		public void removePAS(Iterator<PAS> it, PAS pas) {
-			it.remove();
-			Pj[pas.head(network)].remove(pas);
+		public void removePASes(boolean[] toBeRemoved) {
+			int count = 0;
+			for (int i = 0; i < countP; i++) {
+				if (toBeRemoved[i])
+					continue;
+				
+				P[count++] = P[i];
+			}
+			countP = count;
+			
+			Arrays.fill(countsPj, 0);
+			for (int i = 0; i < countP; i++) {
+				int head = P[i].head(network);
+				Pj[head][countsPj[head]++] = P[i];
+			}
 		}
 	}
 	
+	/**
+	 * Pair of Alternative Segments.
+	 * A segment is a sequence of consecutive edges - essentially a
+	 * path, but connecting any two nodes, not just origin and destination.
+	 * A pair of alternative segments (PAS) is exactly what it means,
+	 * but with three conditions:
+	 * 1) both segments start in the same node - the tail,
+	 * 2) both segments end in the same node - the head,
+	 * 3) the segments do not share any edges and any nodes, apart from
+	 *    tail and head.
+	 * PAS also has an origin associated with it.
+	 * <p>
+	 * When PAS is created, one of the segments (minSegment) has lesser
+	 * cost than the other (maxSegment). However, these roles can switch
+	 * as the algorithm shift flows. That's why there is field minSegmentIndex
+	 * which point to the minSegment in array segments. To update the
+	 * roles, call updateSegments(), which computes the costs of both
+	 * segments and compares them to determine the roles.
+	 */
 	protected static class PAS {
 		
 		public int origin;
@@ -742,9 +799,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 			return flowBound;
 		}
 		
-		/* Updates which segment is min and which max. Also updates
-		 * the costs of both segments.
-		 */
 		public void updateSegments(double[] costs) {
 			this.costs[0] = 0;
 			for (int i : segments[0]) {
