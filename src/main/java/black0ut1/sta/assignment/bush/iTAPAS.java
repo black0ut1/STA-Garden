@@ -783,7 +783,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 			Bush bush = bushes[origin];
 			
 			double flowBound = Double.POSITIVE_INFINITY;
-			for (int i : maxSegment())
+			for (int i : minSegment())
 				flowBound = Math.min(flowBound, bush.getEdgeFlow(i));
 			
 			return flowBound;
