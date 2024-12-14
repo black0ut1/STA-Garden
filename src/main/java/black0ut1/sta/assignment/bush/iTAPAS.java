@@ -1,8 +1,8 @@
 package black0ut1.sta.assignment.bush;
 
-import black0ut1.data.Bush;
-import black0ut1.data.Network;
-import black0ut1.data.Triplet;
+import black0ut1.data.network.Bush;
+import black0ut1.data.network.Network;
+import black0ut1.data.tuple.Triplet;
 import black0ut1.sta.Convergence;
 import black0ut1.util.SSSP;
 

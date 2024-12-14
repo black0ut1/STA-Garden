@@ -1,7 +1,7 @@
 package black0ut1.sta;
 
 import black0ut1.data.DoubleMatrix;
-import black0ut1.data.Network;
+import black0ut1.data.network.Network;
 import black0ut1.sta.assignment.Algorithm;
 import black0ut1.sta.assignment.AON;
 import black0ut1.sta.cost.CostFunction;

@@ -1,6 +1,6 @@
 package black0ut1.sta.cost;
 
-import black0ut1.data.Network;
+import black0ut1.data.network.Network;
 
 public interface CostFunction {
 	

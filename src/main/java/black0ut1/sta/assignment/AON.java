@@ -1,7 +1,7 @@
 package black0ut1.sta.assignment;
 
 import black0ut1.data.DoubleMatrix;
-import black0ut1.data.Network;
+import black0ut1.data.network.Network;
 import black0ut1.util.SSSP;
 
 public class AON {

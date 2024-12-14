@@ -1,7 +1,7 @@
 package black0ut1.gui;
 
 import black0ut1.data.ColorSpectrum;
-import black0ut1.data.Network;
+import black0ut1.data.network.Network;
 
 import javax.swing.*;
 import java.awt.*;

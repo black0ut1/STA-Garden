@@ -1,7 +1,7 @@
 package black0ut1.util;
 
-import black0ut1.data.Network;
-import black0ut1.data.Pair;
+import black0ut1.data.network.Network;
+import black0ut1.data.tuple.Pair;
 import black0ut1.data.PriorityQueue;
 
 import java.util.Arrays;

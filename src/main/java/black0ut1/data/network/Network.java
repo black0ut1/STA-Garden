@@ -1,4 +1,6 @@
-package black0ut1.data;
+package black0ut1.data.network;
+
+import black0ut1.data.ArrayView;
 
 import java.util.List;
 import java.util.Vector;

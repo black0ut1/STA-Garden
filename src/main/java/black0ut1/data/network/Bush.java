@@ -1,4 +1,4 @@
-package black0ut1.data;
+package black0ut1.data.network;
 
 public class Bush {
 	

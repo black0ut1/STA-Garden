@@ -1,8 +1,8 @@
 package black0ut1.io;
 
 import black0ut1.data.DoubleMatrix;
-import black0ut1.data.Network;
-import black0ut1.data.Pair;
+import black0ut1.data.network.Network;
+import black0ut1.data.tuple.Pair;
 
 import java.io.*;
 import java.util.HashMap;
