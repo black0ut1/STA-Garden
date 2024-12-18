@@ -9,9 +9,12 @@ import java.util.Vector;
 public class Network {
 
 	private final int[] indices;
-	private final int[] inverseIndices;
 	private final Edge[] edgesArr;
+	
+	private final int[] inverseIndices;
 	private final Edge[] inverseEdgesArr;
+	
+	private final Edge[] mirrorEdgesArr;
 	
 	private final Node[] nodesArr;
 	
@@ -37,6 +40,7 @@ public class Network {
 		this.inverseIndices = new int[this.nodes + 1];
 		this.edgesArr = new Edge[numOfEdges];
 		this.inverseEdgesArr = new Edge[numOfEdges];
+		this.mirrorEdgesArr = new Edge[numOfEdges];
 		
 		int offset = 0;
 		for (int startNode = 0; startNode < adjacencyList.length; startNode++) {
@@ -69,6 +73,19 @@ public class Network {
 			offset += incoming.size();
 		}
 		inverseIndices[inverseIndices.length - 1] = offset;
+		
+		
+		for (Edge edge : edgesArr) {
+			
+			Network.Edge mirror = null;
+			for (Edge edge1 : forwardStar(edge.endNode))
+				if (edge1.endNode == edge.startNode) {
+					mirror = edge1;
+					break;
+				}
+			
+			mirrorEdgesArr[edge.index] = mirror;
+		}
 	}
 	
 	public ArrayView<Edge> forwardStar(int node) {
@@ -77,6 +94,10 @@ public class Network {
 	
 	public ArrayView<Edge> backwardStar(int node) {
 		return new ArrayView<>(inverseEdgesArr, inverseIndices[node], inverseIndices[node + 1]);
+	}
+	
+	public Network.Edge mirrorEdgeOf(int edgeIndex) {
+		return mirrorEdgesArr[edgeIndex];
 	}
 	
 	public Edge[] getEdges() {
