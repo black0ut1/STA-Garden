@@ -2,18 +2,18 @@ package black0ut1.sta.assignment.path;
 
 import black0ut1.data.Matrix;
 import black0ut1.data.network.Network;
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 import black0ut1.util.SSSP;
 import black0ut1.util.Util;
 
 import java.util.Vector;
 
 // TODO under construction
-public class GradientProjection extends Algorithm {
+public class GradientProjection extends STAAlgorithm {
 	
 	protected final Matrix<Vector<Path>> odPairs;
 	
-	public GradientProjection(Algorithm.Parameters parameters) {
+	public GradientProjection(STAAlgorithm.Parameters parameters) {
 		super(parameters);
 		this.odPairs = new Matrix<>(network.zones);
 	}

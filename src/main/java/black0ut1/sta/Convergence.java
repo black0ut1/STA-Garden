@@ -2,7 +2,7 @@ package black0ut1.sta;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 import black0ut1.sta.assignment.AON;
 import black0ut1.sta.cost.CostFunction;
 import black0ut1.util.SSSP;
@@ -35,7 +35,7 @@ public class Convergence {
 	private double gap = 0;
 	private double beckmannFunction = 0;
 	
-	private Convergence(Algorithm.Parameters algorithmParameters,
+	private Convergence(STAAlgorithm.Parameters algorithmParameters,
 						Map<Criterion, Double> criteria,
 						Consumer<double[]> callback) {
 		this.criteria = criteria;
@@ -209,7 +209,7 @@ public class Convergence {
 			return this;
 		}
 		
-		public Convergence build(Algorithm.Parameters algorithmParameters) {
+		public Convergence build(STAAlgorithm.Parameters algorithmParameters) {
 			return new Convergence(algorithmParameters, criteria, callback);
 		}
 	}

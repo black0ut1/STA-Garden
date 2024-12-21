@@ -1,6 +1,6 @@
 package black0ut1.sta.assignment.link;
 
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 import black0ut1.sta.assignment.AON;
 import black0ut1.util.Util;
 
@@ -11,7 +11,7 @@ public class ConjugateFrankWolfe extends FrankWolfe {
 	protected double[] oldTarget;
 	protected double oldStepSize;
 	
-	public ConjugateFrankWolfe(Algorithm.Parameters parameters) {
+	public ConjugateFrankWolfe(STAAlgorithm.Parameters parameters) {
 		super(parameters);
 	}
 	

@@ -5,19 +5,19 @@ import black0ut1.data.network.Network;
 import black0ut1.data.network.Path;
 import black0ut1.data.tuple.Pair;
 import black0ut1.data.tuple.Triplet;
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 import black0ut1.util.SSSP;
 
 import java.util.Stack;
 import java.util.Vector;
 
-public abstract class BushBasedAlgorithm extends Algorithm {
+public abstract class BushBasedAlgorithm extends STAAlgorithm {
 	
 	protected static final double FLOW_CHECK_ERROR = 1e-9;
 	
 	protected final Bush[] bushes;
 	
-	public BushBasedAlgorithm(Algorithm.Parameters parameters) {
+	public BushBasedAlgorithm(STAAlgorithm.Parameters parameters) {
 		super(parameters);
 		this.bushes = new Bush[network.zones];
 	}

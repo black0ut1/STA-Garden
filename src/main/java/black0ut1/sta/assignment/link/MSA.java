@@ -1,13 +1,13 @@
 package black0ut1.sta.assignment.link;
 
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 import black0ut1.sta.assignment.AON;
 
 public class MSA extends LinkBasedAlgorithm {
 	
 	protected int i = 2;
 	
-	public MSA(Algorithm.Parameters parameters) {
+	public MSA(STAAlgorithm.Parameters parameters) {
 		super(parameters);
 	}
 	

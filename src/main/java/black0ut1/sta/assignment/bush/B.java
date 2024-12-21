@@ -4,7 +4,7 @@ import black0ut1.data.*;
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Quadruplet;
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 
 import java.util.Arrays;
 
@@ -18,7 +18,7 @@ public class B extends BushBasedAlgorithm {
 	protected final int[][] topologicalOrders = new int[network.zones][];
 	protected double bushRelativeGap = 0;
 	
-	public B(Algorithm.Parameters parameters) {
+	public B(STAAlgorithm.Parameters parameters) {
 		super(parameters);
 		for (int i = 0; i < network.zones; i++)
 			topologicalOrders[i] = new int[network.nodes];

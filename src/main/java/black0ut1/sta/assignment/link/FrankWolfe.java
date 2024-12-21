@@ -1,7 +1,7 @@
 package black0ut1.sta.assignment.link;
 
 import black0ut1.data.network.Network;
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 import black0ut1.sta.assignment.AON;
 import black0ut1.util.Util;
 
@@ -10,7 +10,7 @@ public class FrankWolfe extends LinkBasedAlgorithm {
 	protected static final int NEWTON_MAX_ITERATIONS = 100;
 	protected static final double NEWTON_EPSILON = 1e-10;
 	
-	public FrankWolfe(Algorithm.Parameters parameters) {
+	public FrankWolfe(STAAlgorithm.Parameters parameters) {
 		super(parameters);
 	}
 	

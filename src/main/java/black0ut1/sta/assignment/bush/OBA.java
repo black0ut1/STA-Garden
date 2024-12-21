@@ -5,7 +5,7 @@ import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Pair;
 import black0ut1.data.tuple.Triplet;
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 
 import java.util.Arrays;
 import java.util.Vector;
@@ -15,7 +15,7 @@ public class OBA extends BushBasedAlgorithm {
 	protected static final int NEWTON_MAX_ITERATIONS = 100;
 	protected static final double NEWTON_EPSILON = 1e-10;
 	
-	public OBA(Algorithm.Parameters parameters) {
+	public OBA(STAAlgorithm.Parameters parameters) {
 		super(parameters);
 	}
 	

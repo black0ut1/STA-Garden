@@ -1,6 +1,6 @@
 package black0ut1.sta.assignment.link;
 
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 import black0ut1.sta.assignment.AON;
 
 public class FukushimaFrankWolfe extends FrankWolfe {
@@ -11,7 +11,7 @@ public class FukushimaFrankWolfe extends FrankWolfe {
 	
 	protected final double[][] queue;
 	
-	public FukushimaFrankWolfe(Algorithm.Parameters parameters, int L) {
+	public FukushimaFrankWolfe(STAAlgorithm.Parameters parameters, int L) {
 		super(parameters);
 		this.L = L;
 		this.queue = new double[L][];

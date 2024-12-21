@@ -1,11 +1,11 @@
 package black0ut1.sta.assignment.link;
 
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 import black0ut1.sta.assignment.AON;
 
-public abstract class LinkBasedAlgorithm extends Algorithm {
+public abstract class LinkBasedAlgorithm extends STAAlgorithm {
 	
-	public LinkBasedAlgorithm(Algorithm.Parameters parameters) {
+	public LinkBasedAlgorithm(STAAlgorithm.Parameters parameters) {
 		super(parameters);
 	}
 	

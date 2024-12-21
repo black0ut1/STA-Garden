@@ -1,7 +1,7 @@
 //package black0ut1.sta.assignment.bush;
 //
 //import black0ut1.data.*;
-//import black0ut1.sta.assignment.Algorithm;
+//import black0ut1.sta.assignment.STAAlgorithm;
 //import black0ut1.util.Util;
 //
 //import java.util.concurrent.ExecutorService;
@@ -14,7 +14,7 @@
 //	protected final int threads;
 //	protected final ExecutorService executor;
 //
-//	public ParallelB(Algorithm.Parameters parameters, int threads) {
+//	public ParallelB(STAAlgorithm.Parameters parameters, int threads) {
 //		super(parameters);
 //		this.threads = threads;
 //		this.executor = Executors.newFixedThreadPool(threads);
