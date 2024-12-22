@@ -6,7 +6,7 @@ import black0ut1.data.tuple.Pair;
 import black0ut1.gui.CriterionChartPanel;
 import black0ut1.gui.GUI;
 import black0ut1.io.TNTP;
-import black0ut1.sta.assignment.Algorithm;
+import black0ut1.sta.assignment.STAAlgorithm;
 import black0ut1.sta.assignment.link.*;
 import black0ut1.sta.Convergence;
 import black0ut1.sta.cost.*;
@@ -35,14 +35,14 @@ public class Main {
 				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1, 0.001);
 		
 		// parameters are same apart from updating the chart
-		Algorithm.Parameters parametersFW = new Algorithm.Parameters(
+		STAAlgorithm.Parameters parametersFW = new STAAlgorithm.Parameters(
 				network, odMatrix, new BPR(), 50, builder
 				.setCallback(iterationData -> {
 					int i = Convergence.Criterion.RELATIVE_GAP_1.ordinal();
 					relativeGapChart.addValue(iterationData[i], "Frank-Wolfe");
 				}));
 		
-		Algorithm.Parameters parametersCFW = new Algorithm.Parameters(
+		STAAlgorithm.Parameters parametersCFW = new STAAlgorithm.Parameters(
 				network, odMatrix, new BPR(), 50, builder
 				.setCallback(iterationData -> {
 					int i = Convergence.Criterion.RELATIVE_GAP_1.ordinal();
@@ -50,15 +50,15 @@ public class Main {
 				}));
 		
 		// execute both algorithms
-		Algorithm fw = new FrankWolfe(parametersFW);
+		STAAlgorithm fw = new FrankWolfe(parametersFW);
 		long startTime = System.currentTimeMillis();
-		fw.run();
+		fw.assignFlows();
 		long endTime = System.currentTimeMillis();
 		System.out.println("Static traffic assigment computation time is " + (endTime - startTime) + " ms.");
 		
-		Algorithm cfw = new ConjugateFrankWolfe(parametersCFW);
+		STAAlgorithm cfw = new ConjugateFrankWolfe(parametersCFW);
 		startTime = System.currentTimeMillis();
-		cfw.run();
+		cfw.assignFlows();
 		endTime = System.currentTimeMillis();
 		System.out.println("Static traffic assigment computation time is " + (endTime - startTime) + " ms.");
 		
