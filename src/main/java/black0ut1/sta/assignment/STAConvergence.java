@@ -1,9 +1,7 @@
-package black0ut1.sta;
+package black0ut1.sta.assignment;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
-import black0ut1.sta.assignment.STAAlgorithm;
-import black0ut1.sta.assignment.AON;
 import black0ut1.sta.cost.CostFunction;
 import black0ut1.util.SSSP;
 
@@ -12,7 +10,7 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.function.Consumer;
 
-public class Convergence {
+public class STAConvergence {
 	
 	private final Network network;
 	private final DoubleMatrix odMatrix;
@@ -35,9 +33,9 @@ public class Convergence {
 	private double gap = 0;
 	private double beckmannFunction = 0;
 	
-	private Convergence(STAAlgorithm.Parameters algorithmParameters,
-						Map<Criterion, Double> criteria,
-						Consumer<double[]> callback) {
+	private STAConvergence(STAAlgorithm.Parameters algorithmParameters,
+						   Map<Criterion, Double> criteria,
+						   Consumer<double[]> callback) {
 		this.criteria = criteria;
 		this.callback = callback;
 		this.network = algorithmParameters.network;
@@ -209,8 +207,8 @@ public class Convergence {
 			return this;
 		}
 		
-		public Convergence build(STAAlgorithm.Parameters algorithmParameters) {
-			return new Convergence(algorithmParameters, criteria, callback);
+		public STAConvergence build(STAAlgorithm.Parameters algorithmParameters) {
+			return new STAConvergence(algorithmParameters, criteria, callback);
 		}
 	}
 	

@@ -2,7 +2,6 @@ package black0ut1.sta.assignment;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
-import black0ut1.sta.Convergence;
 import black0ut1.sta.cost.CostFunction;
 
 public abstract class STAAlgorithm {
@@ -11,7 +10,7 @@ public abstract class STAAlgorithm {
 	protected final DoubleMatrix odMatrix;
 	protected final CostFunction costFunction;
 	protected final int maxIterations;
-	protected final Convergence convergence;
+	protected final STAConvergence convergence;
 	
 	protected int iteration = 0;
 	
@@ -79,10 +78,10 @@ public abstract class STAAlgorithm {
 		public final DoubleMatrix odMatrix;
 		public final CostFunction costFunction;
 		public final int maxIterations;
-		public final Convergence convergence;
+		public final STAConvergence convergence;
 		
 		public Parameters(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-			int maxIterations, Convergence.Builder convergenceBuilder) {
+			int maxIterations, STAConvergence.Builder convergenceBuilder) {
 			this.network = network;
 			this.odMatrix = odMatrix;
 			this.costFunction = costFunction;

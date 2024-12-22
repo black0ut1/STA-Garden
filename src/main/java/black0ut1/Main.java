@@ -7,8 +7,8 @@ import black0ut1.gui.CriterionChartPanel;
 import black0ut1.gui.GUI;
 import black0ut1.io.TNTP;
 import black0ut1.sta.assignment.STAAlgorithm;
+import black0ut1.sta.assignment.STAConvergence;
 import black0ut1.sta.assignment.link.*;
-import black0ut1.sta.Convergence;
 import black0ut1.sta.cost.*;
 
 public class Main {
@@ -30,22 +30,22 @@ public class Main {
 		new GUI(relativeGapChart);
 		
 		// common convergence criteria for both algorithms
-		Convergence.Builder builder = new Convergence.Builder()
-				.addCriterion(Convergence.Criterion.BECKMANN_FUNCTION)
-				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1, 0.001);
+		STAConvergence.Builder builder = new STAConvergence.Builder()
+				.addCriterion(STAConvergence.Criterion.BECKMANN_FUNCTION)
+				.addCriterion(STAConvergence.Criterion.RELATIVE_GAP_1, 0.001);
 		
 		// parameters are same apart from updating the chart
 		STAAlgorithm.Parameters parametersFW = new STAAlgorithm.Parameters(
 				network, odMatrix, new BPR(), 50, builder
 				.setCallback(iterationData -> {
-					int i = Convergence.Criterion.RELATIVE_GAP_1.ordinal();
+					int i = STAConvergence.Criterion.RELATIVE_GAP_1.ordinal();
 					relativeGapChart.addValue(iterationData[i], "Frank-Wolfe");
 				}));
 		
 		STAAlgorithm.Parameters parametersCFW = new STAAlgorithm.Parameters(
 				network, odMatrix, new BPR(), 50, builder
 				.setCallback(iterationData -> {
-					int i = Convergence.Criterion.RELATIVE_GAP_1.ordinal();
+					int i = STAConvergence.Criterion.RELATIVE_GAP_1.ordinal();
 					relativeGapChart.addValue(iterationData[i], "Conjugate Frank-Wolfe");
 				}));
 		
