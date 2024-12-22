@@ -1,7 +1,7 @@
-package black0ut1.sta.assignment.link;
+package black0ut1.static_.assignment.link;
 
-import black0ut1.sta.assignment.STAAlgorithm;
-import black0ut1.sta.assignment.AON;
+import black0ut1.static_.assignment.STAAlgorithm;
+import black0ut1.static_.assignment.AON;
 
 public class FukushimaFrankWolfe extends FrankWolfe {
 	

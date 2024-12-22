@@ -1,19 +1,19 @@
-package black0ut1.sta.assignment.path;
+package black0ut1.static_.assignment.path;
 
 import black0ut1.data.Matrix;
 import black0ut1.data.network.Network;
-import black0ut1.sta.assignment.STAAlgorithm;
+import black0ut1.static_.assignment.STAAlgorithm;
 import black0ut1.util.SSSP;
 import black0ut1.util.Util;
 
 import java.util.Vector;
 
 // TODO under construction
-public class GradientProjection extends STAAlgorithm {
+public class ProjectedGradient extends STAAlgorithm {
 	
 	protected final Matrix<Vector<Path>> odPairs;
 	
-	public GradientProjection(STAAlgorithm.Parameters parameters) {
+	public ProjectedGradient(STAAlgorithm.Parameters parameters) {
 		super(parameters);
 		this.odPairs = new Matrix<>(network.zones);
 	}
@@ -39,6 +39,7 @@ public class GradientProjection extends STAAlgorithm {
 					edgeIndices[i++] = edge.index;
 				
 				Path minPath = new Path(edgeIndices);
+				minPath.updateCost();
 				minPath.addFlow(odMatrix.get(origin, destination));
 				
 				odPairs.get(origin, destination).add(minPath);
@@ -64,15 +65,13 @@ public class GradientProjection extends STAAlgorithm {
 				for (Path path : paths)
 					path.updateCost();
 				
-				Path minPath = findMinPath(minTree, pathLengths, destination, paths);
+				double avgCost = getAveragePathCost(paths);
+				double stepSize = getStepSize(paths, avgCost);
 				
 				for (Path path : paths) {
-					if (path == minPath)
-						continue;
+					double deltaX = path.cost - avgCost;
 					
-					double delta = findFlowDelta(path, minPath);
-					path.addFlow(-delta);
-					minPath.addFlow(delta);
+					path.addFlow(stepSize * deltaX);
 				}
 			}
 			
@@ -80,66 +79,30 @@ public class GradientProjection extends STAAlgorithm {
 		}
 	}
 	
-	protected double findFlowDelta(Path path, Path minPath) {
-		double numerator = path.cost - minPath.cost;
-		double denominator = 0;
+	protected double getStepSize(Vector<Path> paths, double avgCost) {
 		
-		int i = 0, j = 0;
-		while (i < path.edgeIndices.length && j < minPath.edgeIndices.length) {
-			if (path.edgeIndices[i] == minPath.edgeIndices[j]) {
-				i++;
-				j++;
-			} else if (path.edgeIndices[i] < minPath.edgeIndices[j]) {
-				int index = path.edgeIndices[i];
-				denominator += costFunction.derivative(network.getEdges()[index], flows[index]);
-				i++;
-			} else {
-				int index = minPath.edgeIndices[j];
-				denominator += costFunction.derivative(network.getEdges()[index], flows[index]);
-				j++;
-			}
+		
+		double maxStepSize = 0;
+		for (Path path : paths) {
+			double a = path.flow / (path.cost - avgCost);
+			if (a > maxStepSize)
+				maxStepSize = a;
 		}
 		
-		while (i < path.edgeIndices.length) {
-			int index = path.edgeIndices[i];
-			denominator += costFunction.derivative(network.getEdges()[index], flows[index]);
-			i++;
-		}
+		double stepSize = maxStepSize / 2;
 		
-		while (j < minPath.edgeIndices.length) {
-			int index = minPath.edgeIndices[j];
-			denominator += costFunction.derivative(network.getEdges()[index], flows[index]);
-			j++;
-		}
 		
-		return Util.projectToInterval(numerator / denominator, 0, path.flow);
+		return Util.projectToInterval(stepSize, 0, maxStepSize);
 	}
 	
-	protected Path findMinPath(Network.Edge[] minTree, int[] pathLengths, int destination, Vector<Path> paths) {
-		double minPathCost = 0;
-		for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.startNode])
-			minPathCost += costFunction.function(edge, flows[edge.index]);
+	protected double getAveragePathCost(Vector<Path> paths) {
+		int numPaths = paths.size();
 		
-		Path minPath = null;
-		
+		double totalTT = 0;
 		for (Path path : paths)
-			if (path.cost == minPathCost) {
-				minPath = path;
-				break;
-			}
+			totalTT += path.cost;
 		
-		if (minPath == null) {
-			int[] edgeIndices = new int[pathLengths[destination]];
-			int i = 0;
-			for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.startNode])
-				edgeIndices[i++] = edge.index;
-			minPath = new Path(edgeIndices);
-			minPath.cost = minPathCost;
-			
-			paths.add(minPath);
-		}
-		
-		return minPath;
+		return totalTT / numPaths;
 	}
 	
 	protected class Path {

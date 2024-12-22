@@ -1,11 +1,11 @@
-package black0ut1.sta.assignment.bush;
+package black0ut1.static_.assignment.bush;
 
 import black0ut1.data.*;
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Pair;
 import black0ut1.data.tuple.Triplet;
-import black0ut1.sta.assignment.STAAlgorithm;
+import black0ut1.static_.assignment.STAAlgorithm;
 
 import java.util.Arrays;
 import java.util.Vector;

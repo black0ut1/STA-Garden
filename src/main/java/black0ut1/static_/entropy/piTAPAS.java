@@ -1,9 +1,9 @@
-package black0ut1.sta.entropy;
+package black0ut1.static_.entropy;
 
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Triplet;
-import black0ut1.sta.assignment.bush.iTAPAS;
+import black0ut1.static_.assignment.bush.iTAPAS;
 import black0ut1.util.SSSP;
 
 import java.util.Arrays;

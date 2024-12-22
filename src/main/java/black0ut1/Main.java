@@ -6,10 +6,10 @@ import black0ut1.data.tuple.Pair;
 import black0ut1.gui.CriterionChartPanel;
 import black0ut1.gui.GUI;
 import black0ut1.io.TNTP;
-import black0ut1.sta.assignment.STAAlgorithm;
-import black0ut1.sta.assignment.STAConvergence;
-import black0ut1.sta.assignment.link.*;
-import black0ut1.sta.cost.*;
+import black0ut1.static_.assignment.STAAlgorithm;
+import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.assignment.link.*;
+import black0ut1.static_.cost.*;
 
 public class Main {
 	

@@ -1,4 +1,4 @@
-package black0ut1.sta.cost;
+package black0ut1.static_.cost;
 
 import black0ut1.data.network.Network;
 

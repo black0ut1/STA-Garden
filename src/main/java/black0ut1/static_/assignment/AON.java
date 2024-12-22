@@ -1,4 +1,4 @@
-package black0ut1.sta.assignment;
+package black0ut1.static_.assignment;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;

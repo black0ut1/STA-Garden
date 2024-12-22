@@ -1,4 +1,4 @@
-package black0ut1.sta.entropy;
+package black0ut1.static_.entropy;
 
 public interface ProportionalityAlgorithm {
 	
