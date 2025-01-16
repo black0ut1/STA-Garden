@@ -24,7 +24,6 @@ public abstract class BushBasedAlgorithm extends STAAlgorithm {
 	
 	@Override
 	protected void init() {
-		updateCosts();
 		for (int zone = 0; zone < bushes.length; zone++)
 			bushes[zone] = createBush(zone);
 		
@@ -73,7 +72,7 @@ public abstract class BushBasedAlgorithm extends STAAlgorithm {
 				if (bush.getEdgeFlow(i) < 0) {
 					System.err.println("Negative flow: edge "
 							+ edge.startNode + "->" + edge.endNode
-							+ ", bush " + origin + ", flow " + flows[i]);
+							+ ", bush " + origin + ", flow " + bush.getEdgeFlow(i));
 				}
 				flowCheck[i] += bush.getEdgeFlow(i);
 			}
