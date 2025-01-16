@@ -4,10 +4,13 @@ import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.SSSP;
+import black0ut1.util.Util;
+import com.google.common.util.concurrent.AtomicDouble;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 public class STAConvergence {
@@ -19,6 +22,7 @@ public class STAConvergence {
 	private final Map<Criterion, Double> criteria;
 	private final Vector<double[]> data;
 	private final Consumer<double[]> callback;
+	private final ExecutorService executor;
 	
 	private double maxLowerBound = Double.NEGATIVE_INFINITY;
 	
@@ -33,15 +37,15 @@ public class STAConvergence {
 	private double gap = 0;
 	private double beckmannFunction = 0;
 	
-	private STAConvergence(STAAlgorithm.Parameters algorithmParameters,
-						   Map<Criterion, Double> criteria,
-						   Consumer<double[]> callback) {
+	private STAConvergence(STAAlgorithm.Parameters algorithmParameters, Map<Criterion, Double> criteria,
+						   Consumer<double[]> callback, ExecutorService executor) {
 		this.criteria = criteria;
 		this.callback = callback;
 		this.network = algorithmParameters.network;
 		this.odMatrix = algorithmParameters.odMatrix;
 		this.costFunction = algorithmParameters.costFunction;
 		this.data = new Vector<>();
+		this.executor = executor;
 		
 		if (criteria.containsKey(Criterion.AVERAGE_EXCESS_COST)) {
 			for (int startZone = 0; startZone < network.zones; startZone++)
@@ -117,21 +121,43 @@ public class STAConvergence {
 		return data;
 	}
 	
+	public void close() {
+		if (executor != null)
+			executor.shutdown();
+	}
+	
 	private double calculateSPTT(double[] costs) {
-		double sum = 0;
-		
-		for (int startZone = 0; startZone < network.zones; startZone++) {
-			double[] minDistance = SSSP.dijkstra(network, startZone, costs).second();
+		if (executor == null) {
+			double sum = 0;
 			
-			for (int endZone = 0; endZone < network.zones; endZone++) {
-				if (odMatrix.get(startZone, endZone) == 0)
-					continue;
+			for (int startZone = 0; startZone < network.zones; startZone++) {
+				double[] minDistance = SSSP.dijkstra(network, startZone, costs).second();
 				
-				sum += minDistance[endZone] * odMatrix.get(startZone, endZone);
+				for (int endZone = 0; endZone < network.zones; endZone++) {
+					if (odMatrix.get(startZone, endZone) == 0)
+						continue;
+					
+					sum += minDistance[endZone] * odMatrix.get(startZone, endZone);
+				}
 			}
+			
+			return sum;
+		} else {
+			AtomicDouble sum = new AtomicDouble(0);
+			
+			Util.parallelLoop(executor, network.zones, startZone -> {
+				double[] minDistance = SSSP.dijkstra(network, startZone, costs).second();
+				
+				for (int endZone = 0; endZone < network.zones; endZone++) {
+					if (odMatrix.get(startZone, endZone) == 0)
+						continue;
+					
+					sum.getAndAdd(minDistance[endZone] * odMatrix.get(startZone, endZone));
+				}
+			});
+			
+			return sum.get();
 		}
-		
-		return sum;
 	}
 	
 	private double calculateTSTT(double[] flows, double[] costs) {
@@ -189,8 +215,8 @@ public class STAConvergence {
 	public static class Builder {
 		
 		private final Map<Criterion, Double> criteria = new LinkedHashMap<>();
-		
 		private Consumer<double[]> callback = null;
+		private ExecutorService executor;
 		
 		public Builder addCriterion(Criterion criterion, double convergenceValue) {
 			criteria.put(criterion, convergenceValue);
@@ -207,8 +233,13 @@ public class STAConvergence {
 			return this;
 		}
 		
+		public Builder parallelize(ExecutorService executor) {
+			this.executor = executor;
+			return this;
+		}
+		
 		public STAConvergence build(STAAlgorithm.Parameters algorithmParameters) {
-			return new STAConvergence(algorithmParameters, criteria, callback);
+			return new STAConvergence(algorithmParameters, criteria, callback, executor);
 		}
 	}
 	

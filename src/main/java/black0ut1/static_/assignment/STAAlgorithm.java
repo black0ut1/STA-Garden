@@ -57,7 +57,9 @@ public abstract class STAAlgorithm {
 	
 	protected abstract void mainLoopIteration();
 	
-	protected void postProcess() {}
+	protected void postProcess() {
+		convergence.close();
+	}
 	
 	public double[] getFlows() {
 		return flows;
