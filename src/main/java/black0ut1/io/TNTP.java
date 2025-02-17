@@ -94,20 +94,16 @@ public final class TNTP {
 				double alpha = Double.parseDouble(split[5]);
 				double beta = Double.parseDouble(split[6]);
 				
-				if (freeFlow == 0) {
-					freeFlow = .0001;
+				if (freeFlow == 0)
 					zeroFreeFlowEdges++;
-				}
 				
 				adjacencyList[fromNode].add(new Network.Edge(
 						fromNode, endNode, capacity, freeFlow, alpha, beta
 				));
 			}
 			
-			if (zeroFreeFlowEdges > 0) {
-				System.out.println("Warning! Found " + zeroFreeFlowEdges +
-						" edges with zero free flow, setting the free flow to 0.0001");
-			}
+			if (zeroFreeFlowEdges > 0)
+				System.out.println("Warning! Found " + zeroFreeFlowEdges + " edges with zero free flow.");
 			
 			return new Pair<>(adjacencyList, zones);
 		} catch (IOException e) {
