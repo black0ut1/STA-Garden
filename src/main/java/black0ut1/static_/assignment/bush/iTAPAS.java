@@ -349,8 +349,11 @@ public class iTAPAS extends BushBasedAlgorithm {
 	
 	protected boolean shiftFlows(PAS pas) {
 		pas.updateSegments(costs);
+		double maxFlowShift = pas.maxSegmentFlowBound(bushes);
+		if (maxFlowShift <= FLOW_EPSILON)
+			return false;
 		
-		double flowShift = findFlowShift(pas);
+		double flowShift = Math.min(findFlowShift(pas), maxFlowShift);
 		if (flowShift <= FLOW_EPSILON)
 			return false;
 		
@@ -373,7 +376,6 @@ public class iTAPAS extends BushBasedAlgorithm {
 	}
 	
 	protected double findFlowShift(PAS pas) {
-		double maxFlowShift = pas.maxSegmentFlowBound(bushes);
 		Network.Edge[] edges = network.getEdges();
 		
 		
@@ -387,8 +389,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 			maxSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
-		double flowShift = pas.segmentsCostDifference() / (maxSegmentCostDerivative + minSegmentCostDerivative);
-		return Math.min(flowShift, maxFlowShift);
+		return pas.segmentsCostDifference() / (maxSegmentCostDerivative + minSegmentCostDerivative);
 	}
 	
 	////////////////////////////////////////////////////////////
