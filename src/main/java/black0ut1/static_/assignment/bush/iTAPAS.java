@@ -6,6 +6,13 @@ import black0ut1.util.SSSP;
 
 import java.util.*;
 
+/**
+ * Improved Assignment by Paired Alternative Segments algorithm.
+ * Bibliography:
+ *  - original TAPAS: (Bar-Gera 2010) Traffic assignment by paired alternative segments
+ *  - first paper: (Xie et Xie, 2014) An improved TAPAS algorithm for the traffic assignment problem
+ *  - second paper: (Xie et Xie, 2016) New insights and improvements of using paired alternative segments for traffic assignment
+ */
 public class iTAPAS extends BushBasedAlgorithm {
 	
 	protected static final double FLOW_EPSILON = 1e-12;
@@ -39,7 +46,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 			Network.Edge[] minTree = pair.first();
 			double[] minDistance = pair.second();
 			
-			Network.Edge[] potentialLinks = findPotentialLinks(minTree, bush);
+			Network.Edge[] potentialLinks = findPotentialLinks(minTree, zone);
 			for (Network.Edge edge : potentialLinks) {
 				if (edge == null)
 					break;
@@ -78,12 +85,12 @@ public class iTAPAS extends BushBasedAlgorithm {
 	 * Conditions 2) and 3) are checked in the main loop.
 	 * - Array potentialLinks serves as sort of stack and is terminated with null.
 	 */
-	protected Network.Edge[] findPotentialLinks(Network.Edge[] minTree, Bush bush) {
+	protected Network.Edge[] findPotentialLinks(Network.Edge[] minTree, int origin) {
 		Network.Edge[] potentialLinks = new Network.Edge[network.edges];
 		int i = 0;
 		
 		for (int node = 0; node < network.nodes; node++) {
-			if (minTree[node] == null || node == bush.root)
+			if (minTree[node] == null || node == origin)
 				continue;
 			
 			for (Network.Edge edge : network.backwardStar(node)) {
@@ -126,6 +133,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 	 * 2) cost of max segment - cost of min segment > 0.5 * reduced cost of pot. link,
 	 * 3) flow bound on max segment > 0.25 * origin flow on pot. link.
 	 * - Evaluating 3) is expensive, it is better to leave it out.
+	 * - Average matched PASes (Sydney, 8it): 97.81
 	 */
 	protected PAS matchPAS(Network.Edge potentialLink, double reducedCost) {
 		
@@ -242,7 +250,8 @@ public class iTAPAS extends BushBasedAlgorithm {
 					int minSegmentLen = -scanStatus[node];
 					int maxSegmentLen = scanStatus[maxIncomingLink.endNode];
 					
-					PAS newPas = createPAS(ij, node, minSegmentLen, maxSegmentLen, minTree, bush.root, postEdge);
+					PAS newPas = createPAS(ij, node, minSegmentLen, maxSegmentLen,
+							minTree, bush.root, higherCostSegment, postEdge);
 					
 					if (postEdge == null) // we don't shift flows in postprocessing
 						shiftFlows(newPas);
@@ -281,7 +290,8 @@ public class iTAPAS extends BushBasedAlgorithm {
 	}
 	
 	protected PAS createPAS(Network.Edge ij, int tail, int minSegmentLen, int maxSegmentLen,
-							Network.Edge[] minTree, int origin, Network.Edge postEdge) {
+							Network.Edge[] minTree, int origin, Network.Edge[] higherCostSegment,
+							Network.Edge postEdge) {
 		int head = ij.endNode;
 		
 		
