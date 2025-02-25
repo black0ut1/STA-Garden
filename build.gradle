@@ -18,3 +18,17 @@ dependencies {
     implementation "com.google.guava:guava:32.1.3-jre"
     implementation "org.jcommander:jcommander:1.83"
 }
+
+jar {
+    manifest {
+        attributes(
+                "Main-Class": "black0ut1.Main"
+        )
+    }
+
+    from {
+        configurations.runtimeClasspath
+                .filter { it.exists() }
+                .collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
