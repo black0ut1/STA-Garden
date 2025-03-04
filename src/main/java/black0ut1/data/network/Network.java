@@ -114,15 +114,17 @@ public class Network {
 		public final int startNode;
 		public final int index;
 		public final double capacity;
+		public final double length;
 		public final double freeFlow;
 		public final double alpha;
 		public final double beta;
 
-		public Edge(int startNode, int endNode, double capacity,
+		public Edge(int startNode, int endNode, double capacity, double length,
 					double freeFlow, double alpha, double beta) {
 			this.startNode = startNode;
 			this.endNode = endNode;
 			this.capacity = capacity;
+			this.length = length;
 			this.freeFlow = freeFlow;
 			this.alpha = alpha;
 			this.beta = beta;
@@ -133,6 +135,7 @@ public class Network {
 			this.startNode = copy.startNode;
 			this.endNode = copy.endNode;
 			this.capacity = copy.capacity;
+			this.length = copy.length;
 			this.freeFlow = copy.freeFlow;
 			this.alpha = copy.alpha;
 			this.beta = copy.beta;

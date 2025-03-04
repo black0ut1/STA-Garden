@@ -90,6 +90,7 @@ public final class TNTP {
 				int fromNode = Integer.parseInt(split[0]) - 1;
 				int endNode = Integer.parseInt(split[1]) - 1;
 				double capacity = Double.parseDouble(split[2]);
+				double length = Double.parseDouble(split[3]);
 				double freeFlow = Double.parseDouble(split[4]);
 				double alpha = Double.parseDouble(split[5]);
 				double beta = Double.parseDouble(split[6]);
@@ -98,7 +99,7 @@ public final class TNTP {
 					zeroFreeFlowEdges++;
 				
 				adjacencyList[fromNode].add(new Network.Edge(
-						fromNode, endNode, capacity, freeFlow, alpha, beta
+						fromNode, endNode, capacity, length, freeFlow, alpha, beta
 				));
 			}
 			
