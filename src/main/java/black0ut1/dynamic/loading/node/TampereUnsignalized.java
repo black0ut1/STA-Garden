@@ -58,12 +58,12 @@ public class TampereUnsignalized extends Node {
 		
 		
 		// 2. Determine oriented capacities
+		// TODO orientedCapacities must be either 0 or inf (not nan)
 		double[][] orientedCapacities = new double[incomingLinks.length][outgoingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++)
 			for (int j = 0; j < outgoingLinks.length; j++) {
-				orientedCapacities[i][j] =
-						orientedSendingFlow[i][j]
-								/ incomingLinks[i].getReceivingFlow()
+				orientedCapacities[i][j] = orientedSendingFlow[i][j]
+								/ incomingLinks[i].getSendingFlow()
 								* incomingLinks[i].capacity;
 			}
 		

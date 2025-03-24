@@ -2,6 +2,7 @@ package black0ut1.dynamic;
 
 import black0ut1.data.network.Network;
 import black0ut1.dynamic.loading.Clock;
+import black0ut1.dynamic.loading.link.Connector;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.node.Node;
@@ -16,11 +17,11 @@ public class DynamicNetwork {
 	public final Destination[] destinations;
 	
 	public final Link[] links;
-	public final Link[] originConnectors;
-	public final Link[] destinationConnectors;
+	public final Connector[] originConnectors;
+	public final Connector[] destinationConnectors;
 	
 	public DynamicNetwork(Node[] intersections, Origin[] origins, Destination[] destinations,
-						  Link[] links, Link[] originConnectors, Link[] destinationConnectors) {
+						  Link[] links, Connector[] originConnectors, Connector[] destinationConnectors) {
 		this.intersections = intersections;
 		this.origins = origins;
 		this.destinations = destinations;
@@ -34,13 +35,13 @@ public class DynamicNetwork {
 		// 1. Create array of regular link and arrays of connectors -
 		// links connecting virtual origins and destinations
 		Link[] linkArray = new Link[network.edges];
-		Link[] originConnectors = new Link[network.zones];
-		Link[] destinationConnectors = new Link[network.zones];
+		Connector[] originConnectors = new Connector[network.zones];
+		Connector[] destinationConnectors = new Connector[network.zones];
 		
 		// 1.1. Create connectors
 		for (int i = 0; i < network.zones; i++) {
-			originConnectors[i] = LTM.createConnector(-1, clock);
-			destinationConnectors[i] = LTM.createConnector(-1, clock);
+			originConnectors[i] = new Connector(-1, clock);
+			destinationConnectors[i] = new Connector(-1, clock);
 		}
 		
 		// 1.2. Create classic links

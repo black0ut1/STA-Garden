@@ -85,6 +85,12 @@ public abstract class Link {
 	}
 	
 	public MixtureFlow getOutgoingMixtureFlow() {
+		MixtureFlow first = mixtureFlowQueue.removeFirst();
+		if (first.totalFlow() == 0 && !mixtureFlowQueue.isEmpty()) {
+			return mixtureFlowQueue.getFirst();
+		}
+		
+		mixtureFlowQueue.addFirst(first);
 		return mixtureFlowQueue.getFirst();
 	}
 	

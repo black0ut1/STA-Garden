@@ -17,50 +17,17 @@ public class Origin extends Node {
 	
 	protected final TimeDependentODM odm;
 	
-	/** Queue of waiting flows, should the outgoingLink be congested. */
-	protected final Deque<MixtureFlow> waitingFlows;
-	
 	public Origin(int index, Link outgoingLink, TimeDependentODM odm) {
 		super(index, null, new Link[]{outgoingLink});
 		this.odm = odm;
-		this.waitingFlows = new ArrayDeque<>();
 	}
 	
 	@Override
 	public void shiftOrientedMixtureFlows(int timeStep) {
 		Link outgoingLink = outgoingLinks[0];
-		double R = outgoingLink.getReceivingFlow();
 		
 		MixtureFlow mf = createMixtureFlowFromODM(timeStep);
-		
-		if (waitingFlows.isEmpty() && R >= mf.totalFlow()) {
-			// outgoingLink is uncongested
-			outgoingLink.enterFlow(mf);
-			
-		} else {
-			// outgoingLink is congested, we must first process the
-			// flows that are waiting
-			waitingFlows.addLast(mf);
-			
-			MixtureFlow totalOutgoing = new MixtureFlow(0, new HashMap<>());
-			while (!waitingFlows.isEmpty() && R > 0) {
-				MixtureFlow mf2 = waitingFlows.removeFirst();
-				
-				if (mf2.totalFlow() > R) {
-					var pair = mf2.splitFlow(R);
-					MixtureFlow first = pair.first();
-					MixtureFlow second = pair.second();
-					
-					waitingFlows.addFirst(second);
-					mf2 = first;
-				}
-				
-				totalOutgoing = totalOutgoing.plus(mf2);
-				R -= mf2.totalFlow();
-			}
-			
-			outgoingLink.enterFlow(totalOutgoing);
-		}
+		outgoingLink.enterFlow(mf);
 	}
 	
 	@Override

@@ -49,6 +49,7 @@ public class Main {
 			for (Link link : network.links)
 				link.computeReceivingAndSendingFlows();
 			
+			System.out.println();
 			// execute node models
 			for (Node node : network.origins)
 				node.shiftOrientedMixtureFlows(clock.getCurrentStep());
