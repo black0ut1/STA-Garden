@@ -3,13 +3,14 @@ package black0ut1;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Pair;
-import black0ut1.gui.CriterionChartPanel;
-import black0ut1.gui.GUI;
+import black0ut1.dynamic.DynamicNetwork;
+import black0ut1.dynamic.TimeDependentODM;
+import black0ut1.dynamic.equilibrium.DestinationAON;
+import black0ut1.dynamic.loading.Clock;
+import black0ut1.dynamic.loading.link.Link;
+import black0ut1.dynamic.loading.node.Node;
 import black0ut1.io.TNTP;
-import black0ut1.static_.assignment.STAAlgorithm;
-import black0ut1.static_.assignment.STAConvergence;
-import black0ut1.static_.assignment.link.*;
-import black0ut1.static_.cost.*;
+
 
 public class Main {
 	
@@ -18,52 +19,50 @@ public class Main {
 		String networkFile = "data/" + map + "/" + map + "_net.tntp";
 		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
 		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
-		String flowsFile = "data/" + map + "/" + map + "_flow.tntp";
 		
-		// load network and OD matrix
 		var pair = loadData(networkFile, odmFile, nodeFile);
-		Network network = pair.first();
-		DoubleMatrix odMatrix = pair.second();
+//		new GUI(new AssignmentPanel(pair.first()));
 		
-		// prepare chart for plotting relative gap
-		CriterionChartPanel relativeGapChart = new CriterionChartPanel("Relative gap");
-		new GUI(relativeGapChart);
+		double smallestFreeFlow = Double.POSITIVE_INFINITY;
+		for (Network.Edge edge : pair.first().getEdges())
+			smallestFreeFlow = Math.min(smallestFreeFlow, edge.freeFlow);
+		System.out.println("Smallest free flow time: " + smallestFreeFlow);
 		
-		// common convergence criteria for both algorithms
-		STAConvergence.Builder builder = new STAConvergence.Builder()
-				.addCriterion(STAConvergence.Criterion.BECKMANN_FUNCTION)
-				.addCriterion(STAConvergence.Criterion.RELATIVE_GAP_1, 0.001);
 		
-		// parameters are same apart from updating the chart
-		STAAlgorithm.Parameters parametersFW = new STAAlgorithm.Parameters(
-				network, odMatrix, new BPR(), 50, builder
-				.setCallback(iterationData -> {
-					int i = STAConvergence.Criterion.RELATIVE_GAP_1.ordinal();
-					relativeGapChart.addValue(iterationData[i], "Frank-Wolfe");
-				}));
+		Clock clock = new Clock(smallestFreeFlow, 10);
+		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), clock.steps);
+		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), clock, odm);
 		
-		STAAlgorithm.Parameters parametersCFW = new STAAlgorithm.Parameters(
-				network, odMatrix, new BPR(), 50, builder
-				.setCallback(iterationData -> {
-					int i = STAConvergence.Criterion.RELATIVE_GAP_1.ordinal();
-					relativeGapChart.addValue(iterationData[i], "Conjugate Frank-Wolfe");
-				}));
+		DestinationAON aon = new DestinationAON(pair.first(), network, pair.second());
+		var mfs = aon.computeTurningFractions(clock.steps);
 		
-		// execute both algorithms
-		STAAlgorithm fw = new FrankWolfe(parametersFW);
-		long startTime = System.currentTimeMillis();
-		fw.assignFlows();
-		long endTime = System.currentTimeMillis();
-		System.out.println("Static traffic assigment computation time is " + (endTime - startTime) + " ms.");
+		for (int i = 0; i < network.intersections.length; i++)
+			network.intersections[i].setTurningFractions(mfs[i]);
 		
-		STAAlgorithm cfw = new ConjugateFrankWolfe(parametersCFW);
-		startTime = System.currentTimeMillis();
-		cfw.assignFlows();
-		endTime = System.currentTimeMillis();
-		System.out.println("Static traffic assigment computation time is " + (endTime - startTime) + " ms.");
+		while (clock.ticking()) {
+			
+			// execute link models
+			for (Link link : network.originConnectors)
+				link.computeReceivingAndSendingFlows();
+			for (Link link : network.destinationConnectors)
+				link.computeReceivingAndSendingFlows();
+			for (Link link : network.links)
+				link.computeReceivingAndSendingFlows();
+			
+			// execute node models
+			for (Node node : network.origins)
+				node.shiftOrientedMixtureFlows(clock.getCurrentStep());
+			for (Node node : network.destinations)
+				node.shiftOrientedMixtureFlows(clock.getCurrentStep());
+			for (Node node : network.intersections)
+				node.shiftOrientedMixtureFlows(clock.getCurrentStep());
+			
+			clock.nextStep();
+		}
+		// TODO abstract class for Intersection
+		// TODO implement connector link
 		
-		// write assigned flows to file
-		TNTP.writeFlows(flowsFile, network, fw.getFlows(), fw.getCosts());
+		System.out.println(mfs);
 	}
 	
 	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {

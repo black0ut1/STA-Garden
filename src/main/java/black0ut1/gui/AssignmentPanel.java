@@ -38,7 +38,8 @@ public class AssignmentPanel extends JPanel {
 		this.scaledNodesY = new double[network.nodes];
 		
 		this.network = network;
-		assert network.getNodes() != null;
+		if (network.getNodes() == null)
+			throw new RuntimeException("Network doesn't contain node information");
 		
 		setPreferredSize(new Dimension(600, 600));
 		setSize(600, 600);

@@ -90,4 +90,42 @@ public class SSSP {
 		
 		return new Pair<>(previous, pathLength);
 	}
+	
+	public static Network.Edge[] dijkstraDest(Network network, int destination, double[] costs) {
+		double[] distance = new double[network.nodes];
+		Arrays.fill(distance, Double.POSITIVE_INFINITY);
+		distance[destination] = 0;
+		
+		Network.Edge[] next = new Network.Edge[network.nodes];
+		
+		PriorityQueue pq = new PriorityQueue();
+		byte[] mark = new byte[network.nodes];
+		
+		
+		pq.add(destination, 0);
+		while (!pq.isEmpty()) {
+			int toVertex = pq.popMin();
+			mark[toVertex] = 2;
+			
+			for (Network.Edge edge : network.backwardStar(toVertex)) {
+				int fromVertex = edge.startNode;
+				if (mark[fromVertex] == 2)
+					continue;
+				
+				double newDistance = distance[toVertex] + costs[edge.index];
+				if (mark[fromVertex] == 0) {
+					mark[fromVertex] = 1;
+					distance[fromVertex] = newDistance;
+					next[fromVertex] = edge;
+					pq.add(fromVertex, newDistance);
+				} else if (mark[fromVertex] == 1 && newDistance < distance[fromVertex]) {
+					distance[fromVertex] = newDistance;
+					next[fromVertex] = edge;
+					pq.decreasePriority(fromVertex, newDistance);
+				}
+			}
+		}
+		
+		return next;
+	}
 }
