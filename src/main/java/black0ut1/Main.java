@@ -40,6 +40,7 @@ public class Main {
 			network.intersections[i].setTurningFractions(mfs[i]);
 		
 		while (clock.ticking()) {
+			System.out.println(clock.getCurrentStep());
 			
 			// execute link models
 			for (Link link : network.originConnectors)
@@ -49,7 +50,6 @@ public class Main {
 			for (Link link : network.links)
 				link.computeReceivingAndSendingFlows();
 			
-			System.out.println();
 			// execute node models
 			for (Node node : network.origins)
 				node.shiftOrientedMixtureFlows(clock.getCurrentStep());
@@ -62,8 +62,6 @@ public class Main {
 		}
 		// TODO abstract class for Intersection
 		// TODO implement connector link
-		
-		System.out.println(mfs);
 	}
 	
 	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {

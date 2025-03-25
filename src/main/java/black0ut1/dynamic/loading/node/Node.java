@@ -66,8 +66,8 @@ public abstract class Node {
 		// 4. Compute the mixture flows and shift them accordingly
 		// 4.1. Exit flow from incoming links
 		MixtureFlow[] incomingMixtureFlows = new MixtureFlow[incomingLinks.length];
-		for (int j = 0; j < incomingLinks.length; j++)
-			incomingMixtureFlows[j] = incomingLinks[j].exitFlow(incomingFlows[j]);
+		for (int i = 0; i < incomingLinks.length; i++)
+			incomingMixtureFlows[i] = incomingLinks[i].exitFlow(incomingFlows[i]);
 		
 		// 4.2. Enter flows to outgoing links
 		for (int j = 0; j < outgoingLinks.length; j++) {
@@ -83,14 +83,16 @@ public abstract class Node {
 				
 				double sum = 0;
 				for (int i = 0; i < incomingLinks.length; i++) {
-					sum += incomingMixtureFlows[i].getDestinationFlow(destination)
-							* destinationFractions[i][j];
+					sum += incomingMixtureFlows[i].getDestinationFlow(destination) * destinationFractions[i][j];
 				}
 				
-				proportions.put(destination, sum / outgoingFlows[j]);
+				if (sum > 0)
+					proportions.put(destination, sum / outgoingFlows[j]);
 			}
 			
-			outgoingLinks[j].enterFlow(new MixtureFlow(outgoingFlows[j], proportions));
+			MixtureFlow a = new MixtureFlow(outgoingFlows[j], proportions);
+			a.checkPortions(1e-4, timeStep + " " + index);
+			outgoingLinks[j].enterFlow(a);
 		}
 	}
 	

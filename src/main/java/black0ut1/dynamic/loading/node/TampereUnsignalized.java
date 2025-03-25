@@ -79,15 +79,17 @@ public class TampereUnsignalized extends Node {
 				a[j] = R[j] / denominator;
 			}
 			
+			// TODO merge ^ and v into one loop
+			
 			double minA = Double.POSITIVE_INFINITY;
 			int minJ = -1;
-			for (int j = 0; j < outgoingLinks.length; j++)
-				if (a[j] < minA) {
+			for (int j : J)
+				if (a[j] <= minA) {
 					minA = a[j];
 					minJ = j;
 				}
 			
-			// 3. Determine flows of corresponding set U[minJ] and
+			// 4. Determine flows of corresponding set U[minJ] and
 			// recalculate Rj
 			boolean exists = false;
 			for (int i : U[minJ])
@@ -99,10 +101,11 @@ public class TampereUnsignalized extends Node {
 			// (a) at least one i in U[minJ] is constrained
 			if (exists) {
 				
-				for (int i : U[minJ]) {
+				for (int i : new HashSet<>(U[minJ])) {
 					if (incomingLinks[i].getSendingFlow() <= minA * incomingLinks[i].capacity) {
+						
 						for (int j = 0; j < outgoingLinks.length; j++)
-							orientedFlows[i][j] = orientedCapacities[i][j];
+							orientedFlows[i][j] = orientedSendingFlow[i][j];
 						
 						Vector<Integer> remove = new Vector<>();
 						for (int j : J) {

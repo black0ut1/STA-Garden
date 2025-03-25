@@ -5,7 +5,7 @@ import black0ut1.dynamic.loading.Clock;
 public class Connector extends Link {
 	
 	public Connector(int index, Clock clock) {
-		super(index, clock, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY,
+		super(index, clock, Double.POSITIVE_INFINITY, 10_000,
 				Double.POSITIVE_INFINITY, 1, 1);
 	}
 	

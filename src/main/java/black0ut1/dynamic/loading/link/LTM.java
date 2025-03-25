@@ -45,8 +45,4 @@ public class LTM extends Link {
 						- cumulativeDownstreamCount.get(clock.getCurrentStep())
 		);
 	}
-	
-	public static LTM createConnector(int index, Clock clock) {
-		return new LTM(index, clock, 2, Double.POSITIVE_INFINITY, 0, 1, 1);
-	}
 }

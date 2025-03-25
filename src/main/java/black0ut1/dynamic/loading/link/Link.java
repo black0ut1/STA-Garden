@@ -89,6 +89,7 @@ public abstract class Link {
 		if (first.totalFlow() == 0 && !mixtureFlowQueue.isEmpty()) {
 			return mixtureFlowQueue.getFirst();
 		}
+		// TODO if queue empty return zero
 		
 		mixtureFlowQueue.addFirst(first);
 		return mixtureFlowQueue.getFirst();
@@ -125,6 +126,12 @@ public abstract class Link {
 		MixtureFlow exitingMf = new MixtureFlow(0, new HashMap<>());
 		
 		while (flow > 0) {
+			if (mixtureFlowQueue.isEmpty()) { // TODO
+				if (flow > 1)
+					System.out.println("Exiting flow but queue is empty: " + flow);
+				break;
+			}
+			
 			MixtureFlow mf = mixtureFlowQueue.removeFirst();
 			
 			if (mf.totalFlow() > flow) {
@@ -139,7 +146,7 @@ public abstract class Link {
 		
 		outflow.add(exitingMf);
 		cumulativeDownstreamCount.add(
-				cumulativeDownstreamCount.getLast() + flow
+				cumulativeDownstreamCount.getLast() + exitingMf.totalFlow()
 		);
 		
 		return exitingMf;
