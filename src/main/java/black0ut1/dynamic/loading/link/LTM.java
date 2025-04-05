@@ -1,7 +1,5 @@
 package black0ut1.dynamic.loading.link;
 
-import black0ut1.dynamic.loading.Clock;
-
 
 /**
  * Link transmission model.
@@ -13,36 +11,38 @@ import black0ut1.dynamic.loading.Clock;
  */
 public class LTM extends Link {
 	
-	public LTM(int index, Clock clock, double length,
-			   double capacity, double jamDensity,
-			   double freeFlowSpeed, double backwardWaveSpeed) {
-		super(index, clock, length, capacity, jamDensity,
-				freeFlowSpeed, backwardWaveSpeed);
+	protected final double timeStep;
+	
+	public LTM(int index, double length, double capacity,
+			   double jamDensity, double freeFlowSpeed,
+			   double backwardWaveSpeed, double timeStep) {
+		super(index, length, capacity, jamDensity, freeFlowSpeed, backwardWaveSpeed);
+		this.timeStep = timeStep;
 	}
 	
 	@Override
-	public void computeReceivingAndSendingFlows() {
+	public void computeReceivingAndSendingFlows(int time) {
 		// TODO do not floor, interpolate, also precompute
-		int t1 = (int) (clock.getCurrentStep() + 1 - length / backwardWaveSpeed / clock.timeStep);
+		int t1 = (int) (time + 1 - length / backwardWaveSpeed / timeStep);
 		if (t1 < 0)
 			t1 = 0;
 		
 		this.receivingFlow = Math.min(
-				capacity * clock.timeStep,
+				capacity * timeStep,
 				cumulativeDownstreamCount.get(t1)
-						- cumulativeUpstreamCount.get(clock.getCurrentStep())
+						- cumulativeUpstreamCount.get(time)
 						+ jamDensity * length
 		);
 		
 		
-		int t2 = (int) (clock.getCurrentStep() + 1 - length / freeFlowSpeed / clock.timeStep);
+		int t2 = (int) (time + 1 - length / freeFlowSpeed / timeStep);
 		if (t2 < 0)
 			t2 = 0;
 		
 		this.sendingFlow = Math.min(
-				capacity * clock.timeStep,
+				capacity * timeStep,
 				cumulativeUpstreamCount.get(t2)
-						- cumulativeDownstreamCount.get(clock.getCurrentStep())
+						- cumulativeDownstreamCount.get(time)
 		);
 	}
 }

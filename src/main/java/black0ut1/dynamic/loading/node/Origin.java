@@ -23,10 +23,10 @@ public class Origin extends Node {
 	}
 	
 	@Override
-	public void shiftOrientedMixtureFlows(int timeStep) {
+	public void shiftOrientedMixtureFlows(int time) {
 		Link outgoingLink = outgoingLinks[0];
 		
-		MixtureFlow mf = createMixtureFlowFromODM(timeStep);
+		MixtureFlow mf = createMixtureFlowFromODM(time);
 		outgoingLink.enterFlow(mf);
 	}
 	

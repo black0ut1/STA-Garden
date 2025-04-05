@@ -1,6 +1,5 @@
 package black0ut1.dynamic.loading.link;
 
-import black0ut1.dynamic.loading.Clock;
 import black0ut1.dynamic.loading.MixtureFlow;
 import black0ut1.dynamic.loading.node.Node;
 
@@ -19,8 +18,6 @@ public abstract class Link {
 	public Node head;
 	public Node tail;
 	
-	protected final Clock clock;
-	
 	///// Fundamental diagram parameters //////
 	
 	/** Length of the link [km] */
@@ -32,7 +29,7 @@ public abstract class Link {
 	public final double jamDensity;
 	/** The speed of free flow on the link [km/h] */
 	public final double freeFlowSpeed;
-	/** The backward wave speed [km/h] (is not negative) */
+	/** The backward wave speed [km/h] (must be positive) */
 	public final double backwardWaveSpeed;
 	
 	///// Flow variables //////
@@ -42,9 +39,9 @@ public abstract class Link {
 	/** The sending flow of this link - see definition */
 	protected double sendingFlow;
 	/** The flow that entered this link at each time step. */
-	protected final Vector<MixtureFlow> inflow = new Vector<>();
+	public final Vector<MixtureFlow> inflow = new Vector<>();
 	/** The flow that exited this link at each time step. */
-	protected final Vector<MixtureFlow> outflow = new Vector<>();
+	public final Vector<MixtureFlow> outflow = new Vector<>();
 	/** How many vehicles passed the upstream end up until now. */
 	protected final Vector<Double> cumulativeUpstreamCount = new Vector<>();
 	/** How many vehicles passed the downstream end up until now. */
@@ -52,8 +49,7 @@ public abstract class Link {
 	/** Queue of mixture flows that currently reside on this link. */
 	protected final Deque<MixtureFlow> mixtureFlowQueue = new ArrayDeque<>();
 	
-	public Link(int index, Clock clock, double length,
-				double capacity, double jamDensity,
+	public Link(int index, double length, double capacity, double jamDensity,
 				double freeFlowSpeed, double backwardWaveSpeed) {
 		this.index = index;
 		
@@ -65,16 +61,14 @@ public abstract class Link {
 		// creates triangular fundamental diagram
 		this.backwardWaveSpeed = (backwardWaveSpeed != 0)
 				? backwardWaveSpeed
-				: (capacity * freeFlowSpeed) / (capacity - freeFlowSpeed * jamDensity);
-		
-		this.clock = clock;
+				: - (capacity * freeFlowSpeed) / (capacity - freeFlowSpeed * jamDensity);
 		
 		cumulativeUpstreamCount.add(0.0);
 		cumulativeDownstreamCount.add(0.0);
 		mixtureFlowQueue.addLast(new MixtureFlow(0, new HashMap<>()));
 	}
 	
-	public abstract void computeReceivingAndSendingFlows();
+	public abstract void computeReceivingAndSendingFlows(int time);
 	
 	public double getReceivingFlow() {
 		return receivingFlow;
@@ -126,8 +120,8 @@ public abstract class Link {
 		MixtureFlow exitingMf = new MixtureFlow(0, new HashMap<>());
 		
 		while (flow > 0) {
-			if (mixtureFlowQueue.isEmpty()) { // TODO
-				if (flow > 1)
+			if (mixtureFlowQueue.isEmpty()) {
+				if (flow > 1) // TODO remove
 					System.out.println("Exiting flow but queue is empty: " + flow);
 				break;
 			}
@@ -150,5 +144,18 @@ public abstract class Link {
 		);
 		
 		return exitingMf;
+	}
+	
+	public void reset() {
+		inflow.clear();
+		outflow.clear();
+		
+		cumulativeUpstreamCount.clear();
+		cumulativeDownstreamCount.clear();
+		cumulativeUpstreamCount.add(0.0);
+		cumulativeDownstreamCount.add(0.0);
+		
+		mixtureFlowQueue.clear();
+		mixtureFlowQueue.addLast(new MixtureFlow(0, new HashMap<>()));
 	}
 }

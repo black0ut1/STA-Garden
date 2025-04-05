@@ -6,9 +6,7 @@ import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.equilibrium.DestinationAON;
-import black0ut1.dynamic.loading.Clock;
-import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.node.Node;
+import black0ut1.dynamic.loading.DynamicNetworkLoading;
 import black0ut1.io.TNTP;
 
 
@@ -23,45 +21,28 @@ public class Main {
 		var pair = loadData(networkFile, odmFile, nodeFile);
 //		new GUI(new AssignmentPanel(pair.first()));
 		
-		double smallestFreeFlow = Double.POSITIVE_INFINITY;
+		double smallestFreeFlowTime = Double.POSITIVE_INFINITY;
 		for (Network.Edge edge : pair.first().getEdges())
-			smallestFreeFlow = Math.min(smallestFreeFlow, edge.freeFlow);
-		System.out.println("Smallest free flow time: " + smallestFreeFlow);
+			smallestFreeFlowTime = Math.min(smallestFreeFlowTime, edge.freeFlow);
+		smallestFreeFlowTime = Math.max(smallestFreeFlowTime, 0.1);
+		System.out.println("Smallest free flow time: " + smallestFreeFlowTime);
 		
+		// The ODM will generate flow for only first 10 time steps
+		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), 10);
+		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, smallestFreeFlowTime);
 		
-		Clock clock = new Clock(smallestFreeFlow, 10);
-		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), clock.steps);
-		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), clock, odm);
+		System.out.println("a");
 		
 		DestinationAON aon = new DestinationAON(pair.first(), network, pair.second());
-		var mfs = aon.computeTurningFractions(clock.steps);
+		var mfs = aon.computeTurningFractions(10);
 		
-		for (int i = 0; i < network.intersections.length; i++)
-			network.intersections[i].setTurningFractions(mfs[i]);
+		System.out.println("b");
 		
-		while (clock.ticking()) {
-			System.out.println(clock.getCurrentStep());
-			
-			// execute link models
-			for (Link link : network.originConnectors)
-				link.computeReceivingAndSendingFlows();
-			for (Link link : network.destinationConnectors)
-				link.computeReceivingAndSendingFlows();
-			for (Link link : network.links)
-				link.computeReceivingAndSendingFlows();
-			
-			// execute node models
-			for (Node node : network.origins)
-				node.shiftOrientedMixtureFlows(clock.getCurrentStep());
-			for (Node node : network.destinations)
-				node.shiftOrientedMixtureFlows(clock.getCurrentStep());
-			for (Node node : network.intersections)
-				node.shiftOrientedMixtureFlows(clock.getCurrentStep());
-			
-			clock.nextStep();
-		}
-		// TODO abstract class for Intersection
-		// TODO implement connector link
+		DynamicNetworkLoading DNL = new DynamicNetworkLoading(network, odm, smallestFreeFlowTime, 10);
+		DNL.setTurningFractions(mfs);
+		DNL.loadNetwork();
+		
+		// TODO abstract class for Intersection, repair FD
 	}
 	
 	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {

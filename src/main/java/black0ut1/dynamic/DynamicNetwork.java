@@ -1,7 +1,6 @@
 package black0ut1.dynamic;
 
 import black0ut1.data.network.Network;
-import black0ut1.dynamic.loading.Clock;
 import black0ut1.dynamic.loading.link.Connector;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.link.LTM;
@@ -31,7 +30,31 @@ public class DynamicNetwork {
 		this.destinationConnectors = destinationConnectors;
 	}
 	
-	public static DynamicNetwork fromStaticNetwork(Network network, Clock clock, TimeDependentODM odm) {
+	/**
+	 * Determines, network changed in a given time. I.e. if any flow
+	 * has moved on any link.
+	 * @param time The time in which it is tested if network changed.
+	 * Must not be higher than the time the DNL is currently in.
+	 * @return True, if network changed, otherwise false.
+	 */
+	public boolean changed(int time) {
+		for (Link link : originConnectors) {
+			if (link.inflow.get(time).totalFlow() != 0 || link.outflow.get(time).totalFlow() != 0)
+				return true;
+		}
+		for (Link link : destinationConnectors) {
+			if (link.inflow.get(time).totalFlow() != 0 || link.outflow.get(time).totalFlow() != 0)
+				return true;
+		}
+		for (Link link : links) {
+			if (link.inflow.get(time).totalFlow() != 0 || link.outflow.get(time).totalFlow() != 0)
+				return true;
+		}
+		
+		return false;
+	}
+	
+	public static DynamicNetwork fromStaticNetwork(Network network, TimeDependentODM odm, double timeStep) {
 		// 1. Create array of regular link and arrays of connectors -
 		// links connecting virtual origins and destinations
 		Link[] linkArray = new Link[network.edges];
@@ -40,8 +63,8 @@ public class DynamicNetwork {
 		
 		// 1.1. Create connectors
 		for (int i = 0; i < network.zones; i++) {
-			originConnectors[i] = new Connector(-1, clock);
-			destinationConnectors[i] = new Connector(-1, clock);
+			originConnectors[i] = new Connector(-1);
+			destinationConnectors[i] = new Connector(-1);
 		}
 		
 		// 1.2. Create classic links
@@ -49,11 +72,14 @@ public class DynamicNetwork {
 			Network.Edge link = network.getEdges()[i];
 			
 			// practical capacity used in STA is about 0.8 of actual capacity
+			double length = Math.max(link.length, 0.1);
+			double freeFlowTime = Math.max(link.freeFlow, 0.1);
+			
 			double capacity = 1.25 * link.capacity;
-			double freeFlowSpeed = link.length / link.freeFlow;
+			double freeFlowSpeed = length / freeFlowTime;
 			double jamDensity = 200; // assuming 200 veh/km and one lane
 			
-			linkArray[i] = new LTM(i, clock, link.length, capacity, jamDensity, freeFlowSpeed, 0);
+			linkArray[i] = new LTM(i, length, capacity, jamDensity, freeFlowSpeed, 0, timeStep);
 		}
 		
 		

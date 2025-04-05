@@ -9,6 +9,7 @@ import java.util.Vector;
  * Node model for general intersection with arbitrary number of
  * incoming and outgoing links.
  * TODO optimize: use boolean[] instead of HashSet, OK because there are only a few incoming/outgoing links
+ * TODO if sets aren't larger than 64/32/16, use long/int/short as a bitset
  * Bibliography:
  * - (Tampere et al., 2011) A generic class of first order node models
  * for dynamic macroscopic simulation of traffic flows

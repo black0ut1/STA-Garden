@@ -7,6 +7,7 @@ import java.util.Arrays;
 /**
  * Time-dependent OD matrix, where each OD totalFlow is represented
  * by a time sequence.
+ * TODO implement as 1D array and analyze access patterns
  */
 public class TimeDependentODM {
 	

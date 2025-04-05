@@ -38,7 +38,7 @@ public class DaganzoMerge extends Node {
 	}
 	
 	@Override
-	public void shiftOrientedMixtureFlows(int timeStep) {
+	public void shiftOrientedMixtureFlows(int time) {
 		Link outgoingLink = outgoingLinks[0];
 		double R = outgoingLink.getReceivingFlow();
 		

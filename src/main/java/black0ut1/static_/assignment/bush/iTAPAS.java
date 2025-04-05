@@ -1,6 +1,7 @@
 package black0ut1.static_.assignment.bush;
 
 import black0ut1.data.network.*;
+import black0ut1.data.tuple.Pair;
 import black0ut1.static_.assignment.STAConvergence;
 import black0ut1.util.SSSP;
 
@@ -288,6 +289,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		
 		return maxIncomingLink;
 	}
+	
 	
 	protected PAS createPAS(Network.Edge ij, int tail, int minSegmentLen, int maxSegmentLen,
 							Network.Edge[] minTree, int origin, Network.Edge[] higherCostSegment,

@@ -71,14 +71,14 @@ public record MixtureFlow(
 		return new MixtureFlow(resultFlow, resultPortions);
 	}
 	
-	public void checkPortions(double tolerance, String s) {
+	public void checkPortions(double tolerance, String msg) {
 		double sum = 0;
 		for (double value : portions.values())
 			sum += value;
 		
 		if (sum != 0 && Math.abs(sum - 1) > tolerance) {
-			System.err.println(s);
-			System.err.println("Portions do not sum to 1. Sum: " + sum);
+			System.out.println(msg);
+			System.out.println("Portions do not sum to 1. Sum: " + sum);
 		}
 	}
 }

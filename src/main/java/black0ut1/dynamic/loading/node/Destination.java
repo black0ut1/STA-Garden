@@ -20,7 +20,7 @@ public class Destination extends Node {
 	}
 	
 	@Override
-	public void shiftOrientedMixtureFlows(int timeStep) {
+	public void shiftOrientedMixtureFlows(int time) {
 		Link incomingLink = incomingLinks[0];
 		double S = incomingLink.getSendingFlow();
 		
@@ -31,5 +31,9 @@ public class Destination extends Node {
 	@Override
 	protected double[][] computeOrientedFlows(double[][] totalTurningFractions) {
 		return null;
+	}
+	
+	public void reset() {
+		inflow.clear();
 	}
 }

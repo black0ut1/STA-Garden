@@ -28,8 +28,8 @@ public abstract class Node {
 		this.turningFractions = turningFractions;
 	}
 	
-	public void shiftOrientedMixtureFlows(int timeStep) {
-		MixtureFractions fractions = turningFractions[timeStep];
+	public void shiftOrientedMixtureFlows(int time) {
+		MixtureFractions fractions = turningFractions[time];
 		
 		// 1. Compute approximation of total turning fractions
 		// only an approximation of total turning fractions, for exact
@@ -91,7 +91,7 @@ public abstract class Node {
 			}
 			
 			MixtureFlow a = new MixtureFlow(outgoingFlows[j], proportions);
-			a.checkPortions(1e-4, timeStep + " " + index);
+//			a.checkPortions(1e-4, time + " " + index); // TODO remove
 			outgoingLinks[j].enterFlow(a);
 		}
 	}
