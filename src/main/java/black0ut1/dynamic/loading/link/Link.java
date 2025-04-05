@@ -55,13 +55,20 @@ public abstract class Link {
 		
 		this.length = length;
 		this.capacity = capacity;
-		this.jamDensity = jamDensity;
 		this.freeFlowSpeed = freeFlowSpeed;
+		
 		// if backward speed is not specified, it is computed so it
-		// creates triangular fundamental diagram
+		// creates triangular fundamental diagram using the formula:
+		// -(q_max * u_f) / (q_max - u_f * k_j)
 		this.backwardWaveSpeed = (backwardWaveSpeed != 0)
 				? backwardWaveSpeed
-				: - (capacity * freeFlowSpeed) / (capacity - freeFlowSpeed * jamDensity);
+				: -(capacity * freeFlowSpeed) / (capacity - freeFlowSpeed * jamDensity);
+		
+		// same with jam density, the formula is:
+		// q_max * (w + u_f) / (w * u_f)
+		this.jamDensity = (jamDensity != 0)
+				? jamDensity
+				: capacity * (backwardWaveSpeed + freeFlowSpeed) / (backwardWaveSpeed * freeFlowSpeed);
 		
 		cumulativeUpstreamCount.add(0.0);
 		cumulativeDownstreamCount.add(0.0);

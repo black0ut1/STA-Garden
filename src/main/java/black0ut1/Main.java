@@ -24,7 +24,6 @@ public class Main {
 		double smallestFreeFlowTime = Double.POSITIVE_INFINITY;
 		for (Network.Edge edge : pair.first().getEdges())
 			smallestFreeFlowTime = Math.min(smallestFreeFlowTime, edge.freeFlow);
-		smallestFreeFlowTime = Math.max(smallestFreeFlowTime, 0.1);
 		System.out.println("Smallest free flow time: " + smallestFreeFlowTime);
 		
 		// The ODM will generate flow for only first 10 time steps
@@ -42,7 +41,7 @@ public class Main {
 		DNL.setTurningFractions(mfs);
 		DNL.loadNetwork();
 		
-		// TODO abstract class for Intersection, repair FD
+		// TODO abstract class for Intersection
 	}
 	
 	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {
