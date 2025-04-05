@@ -4,14 +4,11 @@ import black0ut1.data.network.Network;
 import black0ut1.dynamic.loading.link.Connector;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.link.LTM;
-import black0ut1.dynamic.loading.node.Node;
-import black0ut1.dynamic.loading.node.Destination;
-import black0ut1.dynamic.loading.node.Origin;
-import black0ut1.dynamic.loading.node.TampereUnsignalized;
+import black0ut1.dynamic.loading.node.*;
 
 public class DynamicNetwork {
 
-	public final Node[] intersections;
+	public final Intersection[] intersections;
 	public final Origin[] origins;
 	public final Destination[] destinations;
 	
@@ -19,7 +16,7 @@ public class DynamicNetwork {
 	public final Connector[] originConnectors;
 	public final Connector[] destinationConnectors;
 	
-	public DynamicNetwork(Node[] intersections, Origin[] origins, Destination[] destinations,
+	public DynamicNetwork(Intersection[] intersections, Origin[] origins, Destination[] destinations,
 						  Link[] links, Connector[] originConnectors, Connector[] destinationConnectors) {
 		this.intersections = intersections;
 		this.origins = origins;
@@ -72,16 +69,18 @@ public class DynamicNetwork {
 			Network.Edge link = network.getEdges()[i];
 			
 			// practical capacity used in STA is about 0.8 of actual capacity
+			double freeFlowTime = Math.max(link.freeFlow, 0.1);
+			double length = Math.max(link.length, 0.1);
 			double capacity = 1.25 * link.capacity;
-			double freeFlowSpeed = link.length / link.freeFlow;
+			double freeFlowSpeed = length / freeFlowTime;
 			
-			linkArray[i] = new LTM(i, link.length, capacity, 0, freeFlowSpeed, freeFlowSpeed / 3, timeStep);
+			linkArray[i] = new LTM(i, length, capacity, 0, freeFlowSpeed, freeFlowSpeed / 3, timeStep);
 		}
 		
 		
 		// 2. Create array of intersections and arrays of virtual
 		// origins and destinations
-		Node[] nodeArray = new Node[network.nodes];
+		Intersection[] nodeArray = new Intersection[network.nodes];
 		Origin[] originArray = new Origin[network.zones];
 		Destination[] destinationArray = new Destination[network.zones];
 		

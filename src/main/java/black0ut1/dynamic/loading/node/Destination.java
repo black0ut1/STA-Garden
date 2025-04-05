@@ -28,11 +28,6 @@ public class Destination extends Node {
 		inflow.add(exited);
 	}
 	
-	@Override
-	protected double[][] computeOrientedFlows(double[][] totalTurningFractions) {
-		return null;
-	}
-	
 	public void reset() {
 		inflow.clear();
 	}

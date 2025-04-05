@@ -23,25 +23,19 @@ public class Main {
 		
 		double smallestFreeFlowTime = Double.POSITIVE_INFINITY;
 		for (Network.Edge edge : pair.first().getEdges())
-			smallestFreeFlowTime = Math.min(smallestFreeFlowTime, edge.freeFlow);
+			smallestFreeFlowTime = Math.min(smallestFreeFlowTime, Math.max(edge.freeFlow, 0.1));
 		System.out.println("Smallest free flow time: " + smallestFreeFlowTime);
 		
 		// The ODM will generate flow for only first 10 time steps
 		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), 10);
 		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, smallestFreeFlowTime);
 		
-		System.out.println("a");
-		
 		DestinationAON aon = new DestinationAON(pair.first(), network, pair.second());
 		var mfs = aon.computeTurningFractions(10);
-		
-		System.out.println("b");
 		
 		DynamicNetworkLoading DNL = new DynamicNetworkLoading(network, odm, smallestFreeFlowTime, 10);
 		DNL.setTurningFractions(mfs);
 		DNL.loadNetwork();
-		
-		// TODO abstract class for Intersection
 	}
 	
 	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {

@@ -22,9 +22,4 @@ public class LinearNode extends Node {
 		MixtureFlow exited = incoming.exitFlow(flow);
 		outgoing.enterFlow(exited);
 	}
-	
-	@Override
-	protected double[][] computeOrientedFlows(double[][] totalTurningFractions) {
-		return null;
-	}
 }

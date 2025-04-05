@@ -14,7 +14,7 @@ import java.util.Vector;
  * - (Tampere et al., 2011) A generic class of first order node models
  * for dynamic macroscopic simulation of traffic flows
  */
-public class TampereUnsignalized extends Node {
+public class TampereUnsignalized extends Intersection {
 	
 	public TampereUnsignalized(int index, Link[] incomingLinks, Link[] outgoingLinks) {
 		super(index, incomingLinks, outgoingLinks);

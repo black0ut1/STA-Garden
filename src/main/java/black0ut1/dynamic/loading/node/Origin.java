@@ -30,11 +30,6 @@ public class Origin extends Node {
 		outgoingLink.enterFlow(mf);
 	}
 	
-	@Override
-	protected double[][] computeOrientedFlows(double[][] totalTurningFractions) {
-		return null;
-	}
-	
 	protected MixtureFlow createMixtureFlowFromODM(int time) {
 		double originFlow = 0;
 		HashMap<Integer, Double> portions = new HashMap<>();

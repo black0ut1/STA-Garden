@@ -107,11 +107,6 @@ public class DaganzoMerge extends Node {
 		}
 	}
 	
-	@Override
-	protected double[][] computeOrientedFlows(double[][] totalTurningFractions) {
-		return null;
-	}
-	
 	private static double[] capacitiesToPriorities(Link[] incomingLinks) {
 		double sum = 0;
 		for (Link link : incomingLinks)

@@ -11,7 +11,7 @@ import black0ut1.dynamic.loading.link.Link;
  * - (Daganzo, 1995a)
  * - (Boyles et al., 2025) Transportation Network Analysis, Section 9.2.3
  */
-public class DaganzoDiverge extends Node {
+public class DaganzoDiverge extends Intersection {
 	
 	public DaganzoDiverge(int index, Link incomingLink, Link[] outgoingLinks) {
 		super(index, new Link[]{incomingLink}, outgoingLinks);
