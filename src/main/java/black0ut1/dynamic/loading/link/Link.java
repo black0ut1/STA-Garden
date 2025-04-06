@@ -3,8 +3,6 @@ package black0ut1.dynamic.loading.link;
 import black0ut1.dynamic.loading.MixtureFlow;
 import black0ut1.dynamic.loading.node.Node;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -46,8 +44,9 @@ public abstract class Link {
 	protected final Vector<Double> cumulativeUpstreamCount = new Vector<>();
 	/** How many vehicles passed the downstream end up until now. */
 	protected final Vector<Double> cumulativeDownstreamCount = new Vector<>();
-	/** Queue of mixture flows that currently reside on this link. */
-	protected final Deque<MixtureFlow> mixtureFlowQueue = new ArrayDeque<>();
+
+	protected final Vector<MixtureFlow> inflowMixture = new Vector<>();
+	protected final Vector<MixtureFlow> outflowMixture = new Vector<>();
 	
 	public Link(int index, double length, double capacity, double jamDensity,
 				double freeFlowSpeed, double backwardWaveSpeed) {
@@ -72,7 +71,7 @@ public abstract class Link {
 		
 		cumulativeUpstreamCount.add(0.0);
 		cumulativeDownstreamCount.add(0.0);
-		mixtureFlowQueue.addLast(new MixtureFlow(0, new HashMap<>()));
+		inflowMixture.addLast(new MixtureFlow(0, new HashMap<>()));
 	}
 	
 	public abstract void computeReceivingAndSendingFlows(int time);
@@ -86,24 +85,34 @@ public abstract class Link {
 	}
 	
 	public MixtureFlow getOutgoingMixtureFlow() {
-		MixtureFlow first = mixtureFlowQueue.removeFirst();
-		if (first.totalFlow() == 0 && !mixtureFlowQueue.isEmpty()) {
-			return mixtureFlowQueue.getFirst();
+		// get actual outgoing cumulative flow [veh]
+		Double cumOut = cumulativeDownstreamCount.getLast();
+		MixtureFlow outMixture = null;
+		// find the time when the cumulative flows are equal
+		for (var time = 0; time < cumulativeUpstreamCount.size() - 1; time++){
+			if (cumulativeUpstreamCount.get(time) <= cumOut && cumOut < cumulativeUpstreamCount.get(time + 1)){
+				// take mixture of that time
+				// for now take the lower (time) -> we should implement interpolation between time and time + 1
+				outMixture = inflowMixture.get(time);
+			}
 		}
-		// TODO if queue empty return zero
-		
-		mixtureFlowQueue.addFirst(first);
-		return mixtureFlowQueue.getFirst();
+		// this should not occur in theory (outflow cum is larger than inflow cum), because numerical problems it can happen
+		// as fallback take the latest mixture
+		if (outMixture == null){
+			outMixture = inflowMixture.getLast();
+		}
+		return outMixture;
 	}
 	
 	public void enterFlow(MixtureFlow flow) {
-		mixtureFlowQueue.addLast(flow);
+		inflowMixture.addLast(flow);
 		inflow.add(flow);
 		cumulativeUpstreamCount.add(
 				cumulativeUpstreamCount.getLast() + flow.totalFlow()
 		);
 	}
-	
+
+	// TODO exit flow is computed by mode model .... can not understood this ...
 	public MixtureFlow exitFlow(double flow) {
 //		int t_now = clock.getCurrentStep();
 //		double cumulativeOutNow = cumulativeDownstreamCount.get(t_now);
@@ -127,17 +136,17 @@ public abstract class Link {
 		MixtureFlow exitingMf = new MixtureFlow(0, new HashMap<>());
 		
 		while (flow > 0) {
-			if (mixtureFlowQueue.isEmpty()) {
+			if (mixture.isEmpty()) {
 				if (flow > 1) // TODO remove
 					System.out.println("Exiting flow but queue is empty: " + flow);
 				break;
 			}
 			
-			MixtureFlow mf = mixtureFlowQueue.removeFirst();
+			MixtureFlow mf = mixture.removeFirst();
 			
 			if (mf.totalFlow() > flow) {
 				var pair = mf.splitFlow(flow);
-				mixtureFlowQueue.addFirst(pair.second());
+				mixture.addFirst(pair.second());
 				mf = pair.first();
 			}
 			
@@ -162,7 +171,8 @@ public abstract class Link {
 		cumulativeUpstreamCount.add(0.0);
 		cumulativeDownstreamCount.add(0.0);
 		
-		mixtureFlowQueue.clear();
-		mixtureFlowQueue.addLast(new MixtureFlow(0, new HashMap<>()));
+		inflowMixture.clear();
+		outflowMixture.clear();
+		inflowMixture.addLast(new MixtureFlow(0, new HashMap<>()));
 	}
 }
