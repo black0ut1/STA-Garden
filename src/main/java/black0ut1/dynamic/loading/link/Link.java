@@ -112,54 +112,10 @@ public abstract class Link {
 		);
 	}
 
-	// TODO exit flow is computed by mode model .... can not understood this ...
+	// TODO tímhle si fakt nejsem jist ale asi takto -> jen změnit total flow
 	public MixtureFlow exitFlow(double flow) {
-//		int t_now = clock.getCurrentStep();
-//		double cumulativeOutNow = cumulativeDownstreamCount.get(t_now);
-//
-//		double entryTime;
-//		for (int t = t_now; t >= 0; t--) {
-//			double cumulativeIn = cumulativeUpstreamCount.get(t);
-//
-//			if (cumulativeIn == cumulativeOutNow) {
-//				entryTime = t;
-//				break;
-//			} else if (cumulativeIn < cumulativeOutNow) {
-//				double cumulativeIn2 = cumulativeUpstreamCount.get(t + 1);
-//
-//				double x = (cumulativeOutNow - cumulativeIn)
-//						/ (cumulativeIn2 - cumulativeIn);
-//				entryTime = t + x;
-//			}
-//		}
-		
-		MixtureFlow exitingMf = new MixtureFlow(0, new HashMap<>());
-		
-		while (flow > 0) {
-			if (mixture.isEmpty()) {
-				if (flow > 1) // TODO remove
-					System.out.println("Exiting flow but queue is empty: " + flow);
-				break;
-			}
-			
-			MixtureFlow mf = mixture.removeFirst();
-			
-			if (mf.totalFlow() > flow) {
-				var pair = mf.splitFlow(flow);
-				mixture.addFirst(pair.second());
-				mf = pair.first();
-			}
-			
-			exitingMf = exitingMf.plus(mf);
-			flow -= mf.totalFlow();
-		}
-		
-		outflow.add(exitingMf);
-		cumulativeDownstreamCount.add(
-				cumulativeDownstreamCount.getLast() + exitingMf.totalFlow()
-		);
-		
-		return exitingMf;
+		MixtureFlow of = getOutgoingMixtureFlow(); // or outflowMixture.getLast() if is already set ....
+		return new MixtureFlow(flow, of.portions());
 	}
 	
 	public void reset() {
