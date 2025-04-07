@@ -81,7 +81,7 @@ public abstract class Intersection extends Node {
 			}
 			
 			MixtureFlow a = new MixtureFlow(outgoingFlows[j], proportions);
-//			a.checkPortions(1e-4, time + " " + index); // TODO remove
+			a.checkPortions(1e-4, time + " " + index); // TODO remove
 			outgoingLinks[j].enterFlow(a);
 		}
 	}

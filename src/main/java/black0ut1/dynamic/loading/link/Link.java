@@ -44,9 +44,6 @@ public abstract class Link {
 	protected final Vector<Double> cumulativeUpstreamCount = new Vector<>();
 	/** How many vehicles passed the downstream end up until now. */
 	protected final Vector<Double> cumulativeDownstreamCount = new Vector<>();
-
-	protected final Vector<MixtureFlow> inflowMixture = new Vector<>();
-	protected final Vector<MixtureFlow> outflowMixture = new Vector<>();
 	
 	public Link(int index, double length, double capacity, double jamDensity,
 				double freeFlowSpeed, double backwardWaveSpeed) {
@@ -71,7 +68,6 @@ public abstract class Link {
 		
 		cumulativeUpstreamCount.add(0.0);
 		cumulativeDownstreamCount.add(0.0);
-		inflowMixture.addLast(new MixtureFlow(0, new HashMap<>()));
 	}
 	
 	public abstract void computeReceivingAndSendingFlows(int time);
@@ -93,19 +89,21 @@ public abstract class Link {
 			if (cumulativeUpstreamCount.get(time) <= cumOut && cumOut < cumulativeUpstreamCount.get(time + 1)){
 				// take mixture of that time
 				// for now take the lower (time) -> we should implement interpolation between time and time + 1
-				outMixture = inflowMixture.get(time);
+				outMixture = inflow.get(time);
 			}
 		}
 		// this should not occur in theory (outflow cum is larger than inflow cum), because numerical problems it can happen
 		// as fallback take the latest mixture
-		if (outMixture == null){
-			outMixture = inflowMixture.getLast();
+		if (outMixture == null) {
+			if (inflow.isEmpty())
+				return new MixtureFlow(0, new HashMap<>());
+				
+			outMixture = inflow.getLast();
 		}
 		return outMixture;
 	}
 	
 	public void enterFlow(MixtureFlow flow) {
-		inflowMixture.addLast(flow);
 		inflow.add(flow);
 		cumulativeUpstreamCount.add(
 				cumulativeUpstreamCount.getLast() + flow.totalFlow()
@@ -115,7 +113,14 @@ public abstract class Link {
 	// TODO tímhle si fakt nejsem jist ale asi takto -> jen změnit total flow
 	public MixtureFlow exitFlow(double flow) {
 		MixtureFlow of = getOutgoingMixtureFlow(); // or outflowMixture.getLast() if is already set ....
-		return new MixtureFlow(flow, of.portions());
+		var mf = new MixtureFlow(flow, of.portions());
+		
+		outflow.add(mf);
+		cumulativeDownstreamCount.add(
+				cumulativeDownstreamCount.getLast() + flow
+		);
+		
+		return mf;
 	}
 	
 	public void reset() {
@@ -126,9 +131,5 @@ public abstract class Link {
 		cumulativeDownstreamCount.clear();
 		cumulativeUpstreamCount.add(0.0);
 		cumulativeDownstreamCount.add(0.0);
-		
-		inflowMixture.clear();
-		outflowMixture.clear();
-		inflowMixture.addLast(new MixtureFlow(0, new HashMap<>()));
 	}
 }
