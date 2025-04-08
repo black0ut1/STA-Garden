@@ -3,8 +3,6 @@ package black0ut1.dynamic.loading.link;
 import black0ut1.dynamic.loading.MixtureFlow;
 import black0ut1.dynamic.loading.node.Node;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -46,8 +44,6 @@ public abstract class Link {
 	protected final Vector<Double> cumulativeUpstreamCount = new Vector<>();
 	/** How many vehicles passed the downstream end up until now. */
 	protected final Vector<Double> cumulativeDownstreamCount = new Vector<>();
-	/** Queue of mixture flows that currently reside on this link. */
-	protected final Deque<MixtureFlow> mixtureFlowQueue = new ArrayDeque<>();
 	
 	public Link(int index, double length, double capacity, double jamDensity,
 				double freeFlowSpeed, double backwardWaveSpeed) {
@@ -72,7 +68,6 @@ public abstract class Link {
 		
 		cumulativeUpstreamCount.add(0.0);
 		cumulativeDownstreamCount.add(0.0);
-		mixtureFlowQueue.addLast(new MixtureFlow(0, new HashMap<>()));
 	}
 	
 	public abstract void computeReceivingAndSendingFlows(int time);
@@ -86,71 +81,46 @@ public abstract class Link {
 	}
 	
 	public MixtureFlow getOutgoingMixtureFlow() {
-		MixtureFlow first = mixtureFlowQueue.removeFirst();
-		if (first.totalFlow() == 0 && !mixtureFlowQueue.isEmpty()) {
-			return mixtureFlowQueue.getFirst();
+		// get actual outgoing cumulative flow [veh]
+		Double cumOut = cumulativeDownstreamCount.getLast();
+		MixtureFlow outMixture = null;
+		// find the time when the cumulative flows are equal
+		for (var time = 0; time < cumulativeUpstreamCount.size() - 1; time++){
+			if (cumulativeUpstreamCount.get(time) <= cumOut && cumOut < cumulativeUpstreamCount.get(time + 1)){
+				// take mixture of that time
+				// for now take the lower (time) -> we should implement interpolation between time and time + 1
+				outMixture = inflow.get(time);
+			}
 		}
-		// TODO if queue empty return zero
-		
-		mixtureFlowQueue.addFirst(first);
-		return mixtureFlowQueue.getFirst();
+		// this should not occur in theory (outflow cum is larger than inflow cum), because numerical problems it can happen
+		// as fallback take the latest mixture
+		if (outMixture == null) {
+			if (inflow.isEmpty())
+				return new MixtureFlow(0, new HashMap<>());
+				
+			outMixture = inflow.getLast();
+		}
+		return outMixture;
 	}
 	
 	public void enterFlow(MixtureFlow flow) {
-		mixtureFlowQueue.addLast(flow);
 		inflow.add(flow);
 		cumulativeUpstreamCount.add(
 				cumulativeUpstreamCount.getLast() + flow.totalFlow()
 		);
 	}
-	
+
+	// TODO tímhle si fakt nejsem jist ale asi takto -> jen změnit total flow
 	public MixtureFlow exitFlow(double flow) {
-//		int t_now = clock.getCurrentStep();
-//		double cumulativeOutNow = cumulativeDownstreamCount.get(t_now);
-//
-//		double entryTime;
-//		for (int t = t_now; t >= 0; t--) {
-//			double cumulativeIn = cumulativeUpstreamCount.get(t);
-//
-//			if (cumulativeIn == cumulativeOutNow) {
-//				entryTime = t;
-//				break;
-//			} else if (cumulativeIn < cumulativeOutNow) {
-//				double cumulativeIn2 = cumulativeUpstreamCount.get(t + 1);
-//
-//				double x = (cumulativeOutNow - cumulativeIn)
-//						/ (cumulativeIn2 - cumulativeIn);
-//				entryTime = t + x;
-//			}
-//		}
+		MixtureFlow of = getOutgoingMixtureFlow(); // or outflowMixture.getLast() if is already set ....
+		var mf = new MixtureFlow(flow, of.portions());
 		
-		MixtureFlow exitingMf = new MixtureFlow(0, new HashMap<>());
-		
-		while (flow > 0) {
-			if (mixtureFlowQueue.isEmpty()) {
-				if (flow > 1) // TODO remove
-					System.out.println("Exiting flow but queue is empty: " + flow);
-				break;
-			}
-			
-			MixtureFlow mf = mixtureFlowQueue.removeFirst();
-			
-			if (mf.totalFlow() > flow) {
-				var pair = mf.splitFlow(flow);
-				mixtureFlowQueue.addFirst(pair.second());
-				mf = pair.first();
-			}
-			
-			exitingMf = exitingMf.plus(mf);
-			flow -= mf.totalFlow();
-		}
-		
-		outflow.add(exitingMf);
+		outflow.add(mf);
 		cumulativeDownstreamCount.add(
-				cumulativeDownstreamCount.getLast() + exitingMf.totalFlow()
+				cumulativeDownstreamCount.getLast() + flow
 		);
 		
-		return exitingMf;
+		return mf;
 	}
 	
 	public void reset() {
@@ -161,8 +131,5 @@ public abstract class Link {
 		cumulativeDownstreamCount.clear();
 		cumulativeUpstreamCount.add(0.0);
 		cumulativeDownstreamCount.add(0.0);
-		
-		mixtureFlowQueue.clear();
-		mixtureFlowQueue.addLast(new MixtureFlow(0, new HashMap<>()));
 	}
 }
