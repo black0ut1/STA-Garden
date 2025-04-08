@@ -36,6 +36,7 @@ public class Main {
 		DynamicNetworkLoading DNL = new DynamicNetworkLoading(network, odm, smallestFreeFlowTime, 10);
 		DNL.setTurningFractions(mfs);
 		DNL.loadNetwork();
+		DNL.checkDestinationInflows();
 	}
 	
 	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {

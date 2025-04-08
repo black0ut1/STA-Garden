@@ -75,6 +75,27 @@ public class DynamicNetworkLoading {
 	}
 	
 	public void checkDestinationInflows() {
-	
+		double[] odmDestinationInflow = new double[network.destinations.length];
+		
+		for (int destination = 0; destination < odm.zones; destination++)
+			for (int origin = 0; origin < odm.zones; origin++)
+				for (int t = 0; t < odm.timeSteps; t++)
+					odmDestinationInflow[destination] += odm.getFlow(origin, destination, t);
+		
+		double[] networkDestinationInflow = new double[network.destinations.length];
+		for (int destination = 0; destination < network.destinations.length; destination++) {
+			
+			var destiantionInflow = network.destinations[destination].inflow;
+			for (MixtureFlow mixtureFlow : destiantionInflow)
+				networkDestinationInflow[destination] += mixtureFlow.totalFlow();
+		}
+		
+		for (int i = 0; i < network.destinations.length; i++) {
+			if (Math.abs(odmDestinationInflow[i] - networkDestinationInflow[i]) > 1e-5) {
+				System.out.println("The total inflow into destination " + i + " is different from ODM values. " +
+						"The total flow arrived is " + networkDestinationInflow[i] + ", but ODM says "
+						+ odmDestinationInflow[i] + " should arrive.");
+			}
+		}
 	}
 }
