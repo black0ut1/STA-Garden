@@ -14,12 +14,12 @@ public class LinearNode extends Node {
 	}
 	
 	@Override
-	public void shiftOrientedMixtureFlows(int timeStep) {
+	public void shiftOrientedMixtureFlows(int time) {
 		Link incoming = incomingLinks[0];
 		Link outgoing = outgoingLinks[0];
 		
 		double flow = Math.min(incoming.getSendingFlow(), outgoing.getReceivingFlow());
-		MixtureFlow exited = incoming.exitFlow(flow);
-		outgoing.enterFlow(exited);
+		MixtureFlow exited = incoming.exitFlow(time, flow);
+		outgoing.enterFlow(time, exited);
 	}
 }

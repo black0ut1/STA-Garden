@@ -3,6 +3,7 @@ package black0ut1.dynamic.loading.link;
 import black0ut1.dynamic.loading.MixtureFlow;
 import black0ut1.dynamic.loading.node.Node;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -37,21 +38,26 @@ public abstract class Link {
 	/** The sending flow of this link - see definition */
 	protected double sendingFlow;
 	/** The flow that entered this link at each time step. */
-	public final Vector<MixtureFlow> inflow = new Vector<>();
+	public final MixtureFlow[] inflow;
 	/** The flow that exited this link at each time step. */
-	public final Vector<MixtureFlow> outflow = new Vector<>();
+	public final MixtureFlow[] outflow;
 	/** How many vehicles passed the upstream end up until now. */
-	protected final Vector<Double> cumulativeUpstreamCount = new Vector<>();
+	protected final double[] cumulativeUpstreamCount;
 	/** How many vehicles passed the downstream end up until now. */
-	protected final Vector<Double> cumulativeDownstreamCount = new Vector<>();
+	protected final double[] cumulativeDownstreamCount;
 	
-	public Link(int index, double length, double capacity, double jamDensity,
-				double freeFlowSpeed, double backwardWaveSpeed) {
+	public Link(int index, int timeSteps, double length, double capacity,
+				double jamDensity, double freeFlowSpeed, double backwardWaveSpeed) {
 		this.index = index;
 		
 		this.length = length;
 		this.capacity = capacity;
 		this.freeFlowSpeed = freeFlowSpeed;
+		
+		this.inflow = new MixtureFlow[timeSteps];
+		this.outflow = new MixtureFlow[timeSteps];
+		this.cumulativeUpstreamCount = new double[timeSteps + 1];
+		this.cumulativeDownstreamCount = new double[timeSteps + 1];
 		
 		// if backward speed is not specified, it is computed so it
 		// creates triangular fundamental diagram using the formula:
@@ -65,9 +71,6 @@ public abstract class Link {
 		this.jamDensity = (jamDensity != 0)
 				? jamDensity
 				: capacity * (backwardWaveSpeed + freeFlowSpeed) / (backwardWaveSpeed * freeFlowSpeed);
-		
-		cumulativeUpstreamCount.add(0.0);
-		cumulativeDownstreamCount.add(0.0);
 	}
 	
 	public abstract void computeReceivingAndSendingFlows(int time);
@@ -80,55 +83,50 @@ public abstract class Link {
 		return sendingFlow;
 	}
 	
-	public MixtureFlow getOutgoingMixtureFlow() {
+	public MixtureFlow getOutgoingMixtureFlow(int time) {
 		// get actual outgoing cumulative flow [veh]
-		Double cumOut = cumulativeDownstreamCount.getLast();
+		double cumOut = cumulativeDownstreamCount[time];
 		MixtureFlow outMixture = null;
 		// find the time when the cumulative flows are equal
-		for (var time = 0; time < cumulativeUpstreamCount.size() - 1; time++){
-			if (cumulativeUpstreamCount.get(time) <= cumOut && cumOut < cumulativeUpstreamCount.get(time + 1)){
+		for (var t = 0; t < time - 1; t++) {
+			if (cumulativeUpstreamCount[t] <= cumOut && cumOut < cumulativeUpstreamCount[t + 1]) {
 				// take mixture of that time
 				// for now take the lower (time) -> we should implement interpolation between time and time + 1
-				outMixture = inflow.get(time);
+				outMixture = inflow[t];
 			}
 		}
 		// this should not occur in theory (outflow cum is larger than inflow cum), because numerical problems it can happen
 		// as fallback take the latest mixture
 		if (outMixture == null) {
-			if (inflow.isEmpty())
+			if (time == 0)
 				return new MixtureFlow(0, new HashMap<>());
-				
-			outMixture = inflow.getLast();
+			
+			outMixture = inflow[time - 1];
 		}
 		return outMixture;
 	}
 	
-	public void enterFlow(MixtureFlow flow) {
-		inflow.add(flow);
-		cumulativeUpstreamCount.add(
-				cumulativeUpstreamCount.getLast() + flow.totalFlow()
-		);
+	public void enterFlow(int time, MixtureFlow flow) {
+		inflow[time] = flow;
+		cumulativeUpstreamCount[time + 1] = cumulativeUpstreamCount[time] + flow.totalFlow();
 	}
-
-	public MixtureFlow exitFlow(double flow) {
-		MixtureFlow of = getOutgoingMixtureFlow(); // or outflowMixture.getLast() if is already set ....
+	
+	public MixtureFlow exitFlow(int time, double flow) {
+		MixtureFlow of = getOutgoingMixtureFlow(time); // or outflowMixture.getLast() if is already set ....
 		var mf = new MixtureFlow(flow, of.portions());
 		
-		outflow.add(mf);
-		cumulativeDownstreamCount.add(
-				cumulativeDownstreamCount.getLast() + flow
-		);
+		outflow[time] = mf;
+		cumulativeDownstreamCount[time + 1] = cumulativeDownstreamCount[time] + flow;
 		
 		return mf;
 	}
 	
 	public void reset() {
-		inflow.clear();
-		outflow.clear();
+		// release objects
+		Arrays.fill(inflow, null);
+		Arrays.fill(outflow, null);
 		
-		cumulativeUpstreamCount.clear();
-		cumulativeDownstreamCount.clear();
-		cumulativeUpstreamCount.add(0.0);
-		cumulativeDownstreamCount.add(0.0);
+		cumulativeUpstreamCount[0] = 0;
+		cumulativeDownstreamCount[0] = 0;
 	}
 }

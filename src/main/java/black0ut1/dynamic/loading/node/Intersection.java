@@ -29,7 +29,7 @@ public abstract class Intersection extends Node {
 		double[][] totalTurningFractions = new double[incomingLinks.length][outgoingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++) {
 			
-			HashMap<Integer, Double> mixture = incomingLinks[i].getOutgoingMixtureFlow().portions();
+			HashMap<Integer, Double> mixture = incomingLinks[i].getOutgoingMixtureFlow(time).portions();
 			for (int j = 0; j < outgoingLinks.length; j++) {
 				for (int destination : mixture.keySet()) {
 					double[][] destinationFractions = fractions.getDestinationFractions(destination);
@@ -57,12 +57,12 @@ public abstract class Intersection extends Node {
 		// 4.1. Exit flow from incoming links
 		MixtureFlow[] incomingMixtureFlows = new MixtureFlow[incomingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++)
-			incomingMixtureFlows[i] = incomingLinks[i].exitFlow(incomingFlows[i]);
+			incomingMixtureFlows[i] = incomingLinks[i].exitFlow(time, incomingFlows[i]);
 		
 		// 4.2. Enter flows to outgoing links
 		for (int j = 0; j < outgoingLinks.length; j++) {
 			if (outgoingFlows[j] <= 0) {
-				outgoingLinks[j].enterFlow(new MixtureFlow(0, new HashMap<>()));
+				outgoingLinks[j].enterFlow(time, new MixtureFlow(0, new HashMap<>()));
 				continue;
 			}
 			
@@ -82,7 +82,7 @@ public abstract class Intersection extends Node {
 			
 			MixtureFlow a = new MixtureFlow(outgoingFlows[j], proportions);
 			a.checkPortions(1e-4, time + " " + index); // TODO remove
-			outgoingLinks[j].enterFlow(a);
+			outgoingLinks[j].enterFlow(time, a);
 		}
 	}
 	

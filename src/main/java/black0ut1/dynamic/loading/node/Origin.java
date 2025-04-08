@@ -27,7 +27,7 @@ public class Origin extends Node {
 		Link outgoingLink = outgoingLinks[0];
 		
 		MixtureFlow mf = createMixtureFlowFromODM(time);
-		outgoingLink.enterFlow(mf);
+		outgoingLink.enterFlow(time, mf);
 	}
 	
 	protected MixtureFlow createMixtureFlowFromODM(int time) {

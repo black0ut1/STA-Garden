@@ -52,11 +52,11 @@ public class DaganzoMerge extends Node {
 			for (Link incomingLink : incomingLinks) {
 				double S = incomingLink.getSendingFlow();
 				
-				MixtureFlow exited = incomingLink.exitFlow(S);
+				MixtureFlow exited = incomingLink.exitFlow(time, S);
 				totalExited = exited.plus(totalExited);
 			}
 			
-			outgoingLink.enterFlow(totalExited);
+			outgoingLink.enterFlow(time, totalExited);
 			
 		} else { // outgoing link is congested
 			
@@ -99,11 +99,11 @@ public class DaganzoMerge extends Node {
 			
 			MixtureFlow totalExited = new MixtureFlow(0, new HashMap<>());
 			for (int i = 0; i < incomingLinks.length; i++) {
-				MixtureFlow exited = incomingLinks[i].exitFlow(transitionFlows[i]);
+				MixtureFlow exited = incomingLinks[i].exitFlow(time, transitionFlows[i]);
 				totalExited = exited.plus(totalExited);
 			}
 			
-			outgoingLink.enterFlow(totalExited);
+			outgoingLink.enterFlow(time, totalExited);
 		}
 	}
 	

@@ -44,14 +44,14 @@ public class DynamicNetwork {
 		double totalOutflow = 0;
 		
 		for (Link link : allLinks) {
-			totalInflow += link.inflow.get(time).totalFlow();
-			totalOutflow += link.outflow.get(time).totalFlow();
+			totalInflow += link.inflow[time].totalFlow();
+			totalOutflow += link.outflow[time].totalFlow();
 		}
 		
 		return new Pair<>(totalInflow, totalOutflow);
 	}
 	
-	public static DynamicNetwork fromStaticNetwork(Network network, TimeDependentODM odm, double timeStep) {
+	public static DynamicNetwork fromStaticNetwork(Network network, TimeDependentODM odm, double timeStep, int timeSteps) {
 		// 1. Create array of regular link and arrays of connectors -
 		// links connecting virtual origins and destinations
 		Link[] linkArray = new Link[network.edges];
@@ -60,8 +60,8 @@ public class DynamicNetwork {
 		
 		// 1.1. Create connectors
 		for (int i = 0; i < network.zones; i++) {
-			originConnectors[i] = new Connector(-1);
-			destinationConnectors[i] = new Connector(-1);
+			originConnectors[i] = new Connector(-1, timeSteps);
+			destinationConnectors[i] = new Connector(-1, timeSteps);
 		}
 		
 		// 1.2. Create classic links
@@ -74,7 +74,7 @@ public class DynamicNetwork {
 			double capacity = 1.25 * link.capacity;
 			double freeFlowSpeed = length / freeFlowTime;
 			
-			linkArray[i] = new LTM(i, length, capacity, 0, freeFlowSpeed, freeFlowSpeed / 3, timeStep);
+			linkArray[i] = new LTM(i, timeSteps, length, capacity, 0, freeFlowSpeed, freeFlowSpeed / 3, timeStep);
 		}
 		
 		
@@ -89,7 +89,7 @@ public class DynamicNetwork {
 			originArray[i] = new Origin(i, originConnectors[i], odm);
 			originConnectors[i].tail = originArray[i];
 			
-			destinationArray[i] = new Destination(i, destinationConnectors[i]);
+			destinationArray[i] = new Destination(i, timeSteps, destinationConnectors[i]);
 			destinationConnectors[i].head = destinationArray[i];
 		}
 		

@@ -13,10 +13,10 @@ public class LTM extends Link {
 	
 	protected final double timeStep;
 	
-	public LTM(int index, double length, double capacity,
-			   double jamDensity, double freeFlowSpeed,
-			   double backwardWaveSpeed, double timeStep) {
-		super(index, length, capacity, jamDensity, freeFlowSpeed, backwardWaveSpeed);
+	public LTM(int index, int timeSteps, double length, double capacity,
+			   double jamDensity, double freeFlowSpeed, double backwardWaveSpeed,
+			   double timeStep) {
+		super(index, timeSteps, length, capacity, jamDensity, freeFlowSpeed, backwardWaveSpeed);
 		this.timeStep = timeStep;
 	}
 	
@@ -29,8 +29,8 @@ public class LTM extends Link {
 		
 		this.receivingFlow = Math.min(
 				capacity * timeStep,
-				cumulativeDownstreamCount.get(t1)
-						- cumulativeUpstreamCount.get(time)
+				cumulativeDownstreamCount[t1]
+						- cumulativeUpstreamCount[time]
 						+ jamDensity * length
 		);
 		
@@ -41,8 +41,8 @@ public class LTM extends Link {
 		
 		this.sendingFlow = Math.min(
 				capacity * timeStep,
-				cumulativeUpstreamCount.get(t2)
-						- cumulativeDownstreamCount.get(time)
+				cumulativeUpstreamCount[t2]
+						- cumulativeDownstreamCount[time]
 		);
 	}
 }

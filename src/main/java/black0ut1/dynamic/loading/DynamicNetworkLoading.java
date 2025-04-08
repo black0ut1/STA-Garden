@@ -25,8 +25,9 @@ public class DynamicNetworkLoading {
 		this.steps = steps;
 	}
 	
-	public void loadNetwork() {
-		for (int t = 0; t < steps; t++) {
+	public int loadNetwork() {
+		int t;
+		for (t = 0; t < steps; t++) {
 			System.out.println("========= Time " + t + " =========");
 			
 			// execute link models
@@ -44,6 +45,7 @@ public class DynamicNetworkLoading {
 			if (pair.first() == 0 && pair.second() == 0)
 				break;
 		}
+		return t;
 	}
 	
 	public void setTurningFractions(MixtureFractions[][] turningFractions) {
@@ -59,7 +61,7 @@ public class DynamicNetworkLoading {
 			destination.reset();
 	}
 	
-	public void checkDestinationInflows() {
+	public void checkDestinationInflows(int steps) {
 		System.out.println("============ Checking arrived flows ============");
 		double[] odmDestinationInflow = new double[network.destinations.length];
 		
@@ -72,15 +74,14 @@ public class DynamicNetworkLoading {
 		for (int destination = 0; destination < network.destinations.length; destination++) {
 			
 			var destiantionInflow = network.destinations[destination].inflow;
-			for (MixtureFlow mixtureFlow : destiantionInflow) {
-				
-				for (int dest : mixtureFlow.portions().keySet()) {
+			for (int t = 0; t < steps; t++) {
+				for (int dest : destiantionInflow[t].portions().keySet()) {
 					if (dest != destination)
 						System.out.println("Mixture flow arrived to destination " + destination +
 								" contains a portion belonging to other destination " + dest);
 				}
 				
-				networkDestinationInflow[destination] += mixtureFlow.totalFlow();
+				networkDestinationInflow[destination] += destiantionInflow[t].totalFlow();
 			}
 		}
 		

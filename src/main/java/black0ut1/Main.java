@@ -13,7 +13,7 @@ import black0ut1.io.TNTP;
 public class Main {
 	
 	public static void main(String[] argv) {
-		String map = "SiouxFalls";
+		String map = "ChicagoSketch";
 		String networkFile = "data/" + map + "/" + map + "_net.tntp";
 		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
 		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
@@ -27,13 +27,18 @@ public class Main {
 				smallestFreeFlowTime = Math.min(smallestFreeFlowTime, edge.freeFlow);
 		System.out.println("Smallest free flow time: " + smallestFreeFlowTime);
 		
-		double timeStep = 0.3;
+//		ChicagoSketch, 0.12, 10, 2000:
+//		Sum of all ODM values: 1260907.440000012
+//		Sum of all flows arrived at every destination: 1260822.4400000058
+//		Average difference: 4.266629068537336
+//		249972ms, 18.14GB
+		double timeStep = 0.12;
 		int odmSteps = 10;
-		int totalSteps = 300;
+		int totalSteps = 2000;
 		
 		// The ODM will generate flow for only first 10 time steps
 		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), odmSteps);
-		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, timeStep);
+		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, timeStep, totalSteps);
 		
 		// The route choice model
 		DestinationAON aon = new DestinationAON(pair.first(), network, pair.second());
@@ -44,11 +49,11 @@ public class Main {
 		DNL.setTurningFractions(mfs);
 		
 		long startTime = System.currentTimeMillis();
-		DNL.loadNetwork();
+		int finalAmountOfSteps = DNL.loadNetwork();
 		long endTime = System.currentTimeMillis();
 		System.out.println("DNL took " + (endTime - startTime) + "ms");
 		
-		DNL.checkDestinationInflows();
+		DNL.checkDestinationInflows(finalAmountOfSteps);
 	}
 	
 	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {

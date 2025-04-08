@@ -3,6 +3,7 @@ package black0ut1.dynamic.loading.node;
 import black0ut1.dynamic.loading.MixtureFlow;
 import black0ut1.dynamic.loading.link.Link;
 
+import java.util.Arrays;
 import java.util.Vector;
 
 /**
@@ -13,10 +14,11 @@ import java.util.Vector;
  */
 public class Destination extends Node {
 	
-	public final Vector<MixtureFlow> inflow = new Vector<>();
+	public final MixtureFlow[] inflow;
 	
-	public Destination(int index, Link incomingLink) {
+	public Destination(int index, int timeSteps, Link incomingLink) {
 		super(index, new Link[]{incomingLink}, null);
+		this.inflow = new MixtureFlow[timeSteps];
 	}
 	
 	@Override
@@ -24,11 +26,11 @@ public class Destination extends Node {
 		Link incomingLink = incomingLinks[0];
 		double S = incomingLink.getSendingFlow();
 		
-		MixtureFlow exited = incomingLink.exitFlow(S);
-		inflow.add(exited);
+		MixtureFlow exited = incomingLink.exitFlow(time, S);
+		inflow[time] = exited;
 	}
 	
 	public void reset() {
-		inflow.clear();
+		Arrays.fill(inflow, null);
 	}
 }
