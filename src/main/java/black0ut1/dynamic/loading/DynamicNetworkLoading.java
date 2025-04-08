@@ -75,13 +75,13 @@ public class DynamicNetworkLoading {
 			
 			var destiantionInflow = network.destinations[destination].inflow;
 			for (int t = 0; t < steps; t++) {
-				for (int dest : destiantionInflow[t].portions().keySet()) {
+				for (int dest : destiantionInflow[t].mixtures.keySet()) {
 					if (dest != destination)
 						System.out.println("Mixture flow arrived to destination " + destination +
 								" contains a portion belonging to other destination " + dest);
 				}
 				
-				networkDestinationInflow[destination] += destiantionInflow[t].totalFlow();
+				networkDestinationInflow[destination] += destiantionInflow[t].totalFlow;
 			}
 		}
 		

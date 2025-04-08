@@ -29,12 +29,15 @@ public abstract class Intersection extends Node {
 		double[][] totalTurningFractions = new double[incomingLinks.length][outgoingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++) {
 			
-			HashMap<Integer, Double> mixture = incomingLinks[i].getOutgoingMixtureFlow(time).portions();
+			var mixture = incomingLinks[i].getOutgoingMixtureFlow(time);
 			for (int j = 0; j < outgoingLinks.length; j++) {
-				for (int destination : mixture.keySet()) {
+				
+				int finalI = i;
+				int finalJ = j;
+				mixture.forEach((destination, portion) -> {
 					double[][] destinationFractions = fractions.getDestinationFractions(destination);
-					totalTurningFractions[i][j] += mixture.get(destination) * destinationFractions[i][j];
-				}
+					totalTurningFractions[finalI][finalJ] += portion * destinationFractions[finalI][finalJ];
+				});
 			}
 		}
 		
@@ -62,23 +65,22 @@ public abstract class Intersection extends Node {
 		// 4.2. Enter flows to outgoing links
 		for (int j = 0; j < outgoingLinks.length; j++) {
 			if (outgoingFlows[j] <= 0) {
-				outgoingLinks[j].enterFlow(time, new MixtureFlow(0, new HashMap<>()));
+				outgoingLinks[j].enterFlow(time, new MixtureFlow());
 				continue;
 			}
 			
 			HashMap<Integer, Double> proportions = new HashMap<>();
 			
-			for (int destination : fractions.destinationTurningFractions().keySet()) {
-				double[][] destinationFractions = fractions.getDestinationFractions(destination);
-				
+			int finalJ = j;
+			fractions.forEach((destination, destinationFractions) -> {
 				double sum = 0;
 				for (int i = 0; i < incomingLinks.length; i++) {
-					sum += incomingMixtureFlows[i].getDestinationFlow(destination) * destinationFractions[i][j];
+					sum += incomingMixtureFlows[i].getDestinationFlow(destination) * destinationFractions[i][finalJ];
 				}
 				
 				if (sum > 0)
-					proportions.put(destination, sum / outgoingFlows[j]);
-			}
+					proportions.put(destination, sum / outgoingFlows[finalJ]);
+			});
 			
 			MixtureFlow a = new MixtureFlow(outgoingFlows[j], proportions);
 			a.checkPortions(1e-4, time + " " + index); // TODO remove

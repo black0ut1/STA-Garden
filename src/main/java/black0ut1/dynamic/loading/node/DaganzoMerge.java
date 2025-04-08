@@ -3,7 +3,6 @@ package black0ut1.dynamic.loading.node;
 import black0ut1.dynamic.loading.MixtureFlow;
 import black0ut1.dynamic.loading.link.Link;
 
-import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -48,7 +47,7 @@ public class DaganzoMerge extends Node {
 		
 		if (totalS <= R) { // all vehicles can pass
 			
-			MixtureFlow totalExited = new MixtureFlow(0, new HashMap<>());
+			MixtureFlow totalExited = new MixtureFlow();
 			for (Link incomingLink : incomingLinks) {
 				double S = incomingLink.getSendingFlow();
 				
@@ -97,7 +96,7 @@ public class DaganzoMerge extends Node {
 				activeIncomingLinks.removeIf(i -> remainingS[i] == 0);
 			}
 			
-			MixtureFlow totalExited = new MixtureFlow(0, new HashMap<>());
+			MixtureFlow totalExited = new MixtureFlow();
 			for (int i = 0; i < incomingLinks.length; i++) {
 				MixtureFlow exited = incomingLinks[i].exitFlow(time, transitionFlows[i]);
 				totalExited = exited.plus(totalExited);

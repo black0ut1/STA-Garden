@@ -44,8 +44,8 @@ public class DynamicNetwork {
 		double totalOutflow = 0;
 		
 		for (Link link : allLinks) {
-			totalInflow += link.inflow[time].totalFlow();
-			totalOutflow += link.outflow[time].totalFlow();
+			totalInflow += link.inflow[time].totalFlow;
+			totalOutflow += link.outflow[time].totalFlow;
 		}
 		
 		return new Pair<>(totalInflow, totalOutflow);

@@ -4,8 +4,6 @@ import black0ut1.dynamic.loading.MixtureFlow;
 import black0ut1.dynamic.loading.node.Node;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Vector;
 
 /**
  * Base class for dynamic link models. Link models mainly differ
@@ -99,7 +97,7 @@ public abstract class Link {
 		// as fallback take the latest mixture
 		if (outMixture == null) {
 			if (time == 0)
-				return new MixtureFlow(0, new HashMap<>());
+				return new MixtureFlow();
 			
 			outMixture = inflow[time - 1];
 		}
@@ -108,12 +106,12 @@ public abstract class Link {
 	
 	public void enterFlow(int time, MixtureFlow flow) {
 		inflow[time] = flow;
-		cumulativeUpstreamCount[time + 1] = cumulativeUpstreamCount[time] + flow.totalFlow();
+		cumulativeUpstreamCount[time + 1] = cumulativeUpstreamCount[time] + flow.totalFlow;
 	}
 	
 	public MixtureFlow exitFlow(int time, double flow) {
 		MixtureFlow of = getOutgoingMixtureFlow(time); // or outflowMixture.getLast() if is already set ....
-		var mf = new MixtureFlow(flow, of.portions());
+		var mf = of.copyWithFlow(flow);
 		
 		outflow[time] = mf;
 		cumulativeDownstreamCount[time + 1] = cumulativeDownstreamCount[time] + flow;

@@ -1,6 +1,7 @@
 package black0ut1.dynamic.loading;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Class for defining, how MixtureFlow turns at an intersection. It
@@ -8,14 +9,24 @@ import java.util.HashMap;
  * Turning fraction tf[i][j] is a number from interval [0, 1] that
  * expresses portion of flow entering intersection from incoming
  * link i, that exits using outgoing link j.
- * @param destinationTurningFractions Map from destination to turning
- * fractions of flow heading to that destination.
  */
-public record MixtureFractions(
-		HashMap<Integer, double[][]> destinationTurningFractions
-) {
+public class MixtureFractions {
+	
+	/** Map from destination to turning fractions of flow heading to
+	 * that destination. */
+	protected final HashMap<Integer, double[][]> destinationTurningFractions;
+	
+	public MixtureFractions(HashMap<Integer, double[][]> destinationTurningFractions) {
+		this.destinationTurningFractions = destinationTurningFractions;
+	}
+	
 	public double[][] getDestinationFractions(int destination) {
 		return destinationTurningFractions.get(destination);
+	}
+	
+	public void forEach(Consumer consumer) {
+		for (Map.Entry<Integer, double[][]> entry : destinationTurningFractions.entrySet())
+			consumer.accept(entry.getKey(), entry.getValue());
 	}
 	
 	public void checkPartialFractions() {
@@ -35,5 +46,10 @@ public record MixtureFractions(
 				}
 			}
 		}
+	}
+	
+	@FunctionalInterface
+	public interface Consumer {
+		void accept(int destination, double[][] destinationFractions);
 	}
 }
