@@ -110,7 +110,6 @@ public abstract class Link {
 		);
 	}
 
-	// TODO tímhle si fakt nejsem jist ale asi takto -> jen změnit total flow
 	public MixtureFlow exitFlow(double flow) {
 		MixtureFlow of = getOutgoingMixtureFlow(); // or outflowMixture.getLast() if is already set ....
 		var mf = new MixtureFlow(flow, of.portions());

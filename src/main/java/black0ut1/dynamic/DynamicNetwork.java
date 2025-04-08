@@ -1,54 +1,54 @@
 package black0ut1.dynamic;
 
 import black0ut1.data.network.Network;
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.link.Connector;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.node.*;
+import black0ut1.util.Util;
 
 public class DynamicNetwork {
-
+	
 	public final Intersection[] intersections;
 	public final Origin[] origins;
 	public final Destination[] destinations;
+	public final Node[] allNodes;
 	
 	public final Link[] links;
 	public final Connector[] originConnectors;
 	public final Connector[] destinationConnectors;
+	public final Link[] allLinks;
 	
 	public DynamicNetwork(Intersection[] intersections, Origin[] origins, Destination[] destinations,
 						  Link[] links, Connector[] originConnectors, Connector[] destinationConnectors) {
 		this.intersections = intersections;
 		this.origins = origins;
 		this.destinations = destinations;
+		this.allNodes = Util.concat(Node.class, intersections, origins, destinations);
 		
 		this.links = links;
 		this.originConnectors = originConnectors;
 		this.destinationConnectors = destinationConnectors;
+		this.allLinks = Util.concat(Link.class, links, originConnectors, destinationConnectors);
 	}
 	
 	/**
-	 * Determines, network changed in a given time. I.e. if any flow
-	 * has moved on any link.
-	 * @param time The time in which it is tested if network changed.
-	 * Must not be higher than the time the DNL is currently in.
-	 * @return True, if network changed, otherwise false.
+	 * Sums up the total inflow and outflow over all links
+	 * @param time The time in which the flows are summed up. Must not
+	 * be higher than the time the DNL is currently in.
+	 * @return Pair (total inflow, total outflow).
 	 */
-	public boolean changed(int time) {
-		for (Link link : originConnectors) {
-			if (link.inflow.get(time).totalFlow() != 0 || link.outflow.get(time).totalFlow() != 0)
-				return true;
-		}
-		for (Link link : destinationConnectors) {
-			if (link.inflow.get(time).totalFlow() != 0 || link.outflow.get(time).totalFlow() != 0)
-				return true;
-		}
-		for (Link link : links) {
-			if (link.inflow.get(time).totalFlow() != 0 || link.outflow.get(time).totalFlow() != 0)
-				return true;
+	public Pair<Double, Double> getTotalInflowOutflow(int time) {
+		double totalInflow = 0;
+		double totalOutflow = 0;
+		
+		for (Link link : allLinks) {
+			totalInflow += link.inflow.get(time).totalFlow();
+			totalOutflow += link.outflow.get(time).totalFlow();
 		}
 		
-		return false;
+		return new Pair<>(totalInflow, totalOutflow);
 	}
 	
 	public static DynamicNetwork fromStaticNetwork(Network network, TimeDependentODM odm, double timeStep) {

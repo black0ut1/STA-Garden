@@ -23,19 +23,31 @@ public class Main {
 		
 		double smallestFreeFlowTime = Double.POSITIVE_INFINITY;
 		for (Network.Edge edge : pair.first().getEdges())
-			smallestFreeFlowTime = Math.min(smallestFreeFlowTime, Math.max(edge.freeFlow, 0.1));
+			if (edge.freeFlow > 0)
+				smallestFreeFlowTime = Math.min(smallestFreeFlowTime, edge.freeFlow);
 		System.out.println("Smallest free flow time: " + smallestFreeFlowTime);
 		
+		double timeStep = 0.3;
+		int odmSteps = 10;
+		int totalSteps = 300;
+		
 		// The ODM will generate flow for only first 10 time steps
-		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), 10);
-		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, smallestFreeFlowTime);
+		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), odmSteps);
+		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, timeStep);
 		
+		// The route choice model
 		DestinationAON aon = new DestinationAON(pair.first(), network, pair.second());
-		var mfs = aon.computeTurningFractions(10);
+		var mfs = aon.computeTurningFractions(totalSteps);
 		
-		DynamicNetworkLoading DNL = new DynamicNetworkLoading(network, odm, smallestFreeFlowTime, 10);
+		
+		DynamicNetworkLoading DNL = new DynamicNetworkLoading(network, odm, timeStep, totalSteps);
 		DNL.setTurningFractions(mfs);
+		
+		long startTime = System.currentTimeMillis();
 		DNL.loadNetwork();
+		long endTime = System.currentTimeMillis();
+		System.out.println("DNL took " + (endTime - startTime) + "ms");
+		
 		DNL.checkDestinationInflows();
 	}
 	

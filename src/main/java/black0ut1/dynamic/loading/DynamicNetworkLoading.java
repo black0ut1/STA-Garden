@@ -30,44 +30,29 @@ public class DynamicNetworkLoading {
 			System.out.println("========= Time " + t + " =========");
 			
 			// execute link models
-			for (Link link : network.originConnectors)
-				link.computeReceivingAndSendingFlows(t);
-			for (Link link : network.destinationConnectors)
-				link.computeReceivingAndSendingFlows(t);
-			for (Link link : network.links)
+			for (Link link : network.allLinks)
 				link.computeReceivingAndSendingFlows(t);
 			
 			// execute node models
-			for (Node node : network.origins)
-				node.shiftOrientedMixtureFlows(t);
-			for (Node node : network.destinations)
-				node.shiftOrientedMixtureFlows(t);
-			for (Node node : network.intersections)
+			for (Node node : network.allNodes)
 				node.shiftOrientedMixtureFlows(t);
 			
-			if (!network.changed(t))
+			var pair = network.getTotalInflowOutflow(t);
+			System.out.println("Inflow of all links: " + pair.first());
+			System.out.println("Outflow of all links: " + pair.second());
+			
+			if (pair.first() == 0 && pair.second() == 0)
 				break;
 		}
 	}
 	
 	public void setTurningFractions(MixtureFractions[][] turningFractions) {
-		if (turningFractions.length != network.intersections.length)
-			throw new RuntimeException("Number of turning fraction arrays must be equal to number of intersections");
-		
-		for (int i = 0; i < network.intersections.length; i++) {
-			if (turningFractions[i].length != steps)
-				throw new RuntimeException("Number of turning fractions must be equal to number of steps (node " + i + ")");
-			
+		for (int i = 0; i < network.intersections.length; i++)
 			network.intersections[i].setTurningFractions(turningFractions[i]);
-		}
 	}
 	
 	public void resetNetwork() {
-		for (Link link : network.links)
-			link.reset();
-		for (Link link : network.originConnectors)
-			link.reset();
-		for (Link link : network.destinationConnectors)
+		for (Link link : network.allLinks)
 			link.reset();
 		
 		for (Destination destination : network.destinations)
@@ -75,6 +60,7 @@ public class DynamicNetworkLoading {
 	}
 	
 	public void checkDestinationInflows() {
+		System.out.println("============ Checking arrived flows ============");
 		double[] odmDestinationInflow = new double[network.destinations.length];
 		
 		for (int destination = 0; destination < odm.zones; destination++)
@@ -86,8 +72,16 @@ public class DynamicNetworkLoading {
 		for (int destination = 0; destination < network.destinations.length; destination++) {
 			
 			var destiantionInflow = network.destinations[destination].inflow;
-			for (MixtureFlow mixtureFlow : destiantionInflow)
+			for (MixtureFlow mixtureFlow : destiantionInflow) {
+				
+				for (int dest : mixtureFlow.portions().keySet()) {
+					if (dest != destination)
+						System.out.println("Mixture flow arrived to destination " + destination +
+								" contains a portion belonging to other destination " + dest);
+				}
+				
 				networkDestinationInflow[destination] += mixtureFlow.totalFlow();
+			}
 		}
 		
 		for (int i = 0; i < network.destinations.length; i++) {
@@ -97,5 +91,20 @@ public class DynamicNetworkLoading {
 						+ odmDestinationInflow[i] + " should arrive.");
 			}
 		}
+		
+		double odmTotal = 0;
+		for (double v : odmDestinationInflow)
+			odmTotal += v;
+		System.out.println("Sum of all ODM values: " + odmTotal);
+		
+		double networkTotal = 0;
+		for (double v : networkDestinationInflow)
+			networkTotal += v;
+		System.out.println("Sum of all flows arrived at every destination: " + networkTotal);
+		
+		double avgDifference = 0;
+		for (int i = 0; i < network.destinations.length; i++)
+			avgDifference += Math.abs(odmDestinationInflow[i] - networkDestinationInflow[i]);
+		System.out.println("Average difference: " + avgDifference / network.destinations.length);
 	}
 }

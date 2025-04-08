@@ -1,5 +1,6 @@
 package black0ut1.util;
 
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -28,5 +29,23 @@ public class Util {
 	
 	public static double projectToInterval(double x, double min, double max) {
 		return Math.max(Math.min(x, max), min);
+	}
+	
+	@SafeVarargs
+	public static <T> T[] concat(Class<?> type, T[]... arrays) {
+		int length = 0;
+		for (T[] array : arrays)
+			length += array.length;
+		
+		@SuppressWarnings("unchecked")
+		T[] result = (T[]) Array.newInstance(type, length);
+		
+		int i = 0;
+		for (T[] array : arrays) {
+			System.arraycopy(array, 0, result, i, array.length);
+			i += array.length;
+		}
+		
+		return result;
 	}
 }
