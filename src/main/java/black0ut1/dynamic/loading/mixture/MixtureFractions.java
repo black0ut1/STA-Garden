@@ -1,7 +1,8 @@
-package black0ut1.dynamic.loading;
+package black0ut1.dynamic.loading.mixture;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.carrotsearch.hppc.IntObjectHashMap;
+import com.carrotsearch.hppc.cursors.IntCursor;
+import com.carrotsearch.hppc.procedures.IntObjectProcedure;
 
 /**
  * Class for defining, how MixtureFlow turns at an intersection. It
@@ -14,9 +15,9 @@ public class MixtureFractions {
 	
 	/** Map from destination to turning fractions of flow heading to
 	 * that destination. */
-	protected final HashMap<Integer, double[][]> destinationTurningFractions;
+	protected final IntObjectHashMap<double[][]> destinationTurningFractions;
 	
-	public MixtureFractions(HashMap<Integer, double[][]> destinationTurningFractions) {
+	public MixtureFractions(IntObjectHashMap<double[][]> destinationTurningFractions) {
 		this.destinationTurningFractions = destinationTurningFractions;
 	}
 	
@@ -25,13 +26,12 @@ public class MixtureFractions {
 	}
 	
 	public void forEach(Consumer consumer) {
-		for (Map.Entry<Integer, double[][]> entry : destinationTurningFractions.entrySet())
-			consumer.accept(entry.getKey(), entry.getValue());
+		destinationTurningFractions.forEach((IntObjectProcedure<double[][]>) consumer::accept);
 	}
 	
 	public void checkPartialFractions() {
-		for (int destination : destinationTurningFractions.keySet()) {
-			double[][] tf = getDestinationFractions(destination);
+		for (IntCursor c : destinationTurningFractions.keys()) {
+			double[][] tf = getDestinationFractions(c.value);
 			
 			double[] sumIncoming = new double[tf.length];
 			for (int i = 0; i < tf.length; i++)
@@ -42,7 +42,7 @@ public class MixtureFractions {
 				if (sumIncoming[i] != 1) {
 					System.err.printf("Turning fractions of flows coming from " +
 									"incoming link %d don't sum up to 1: %f (destination %d)%n",
-							i, sumIncoming[i], destination);
+							i, sumIncoming[i], c.value);
 				}
 			}
 		}

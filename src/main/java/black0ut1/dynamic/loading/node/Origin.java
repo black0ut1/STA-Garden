@@ -1,12 +1,9 @@
 package black0ut1.dynamic.loading.node;
 
 import black0ut1.dynamic.TimeDependentODM;
-import black0ut1.dynamic.loading.MixtureFlow;
+import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.link.Link;
-
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
+import com.carrotsearch.hppc.IntDoubleHashMap;
 
 /**
  * Represents origin - a virtual node that loads traffic onto the
@@ -32,7 +29,7 @@ public class Origin extends Node {
 	
 	protected MixtureFlow createMixtureFlowFromODM(int time) {
 		double originFlow = 0;
-		HashMap<Integer, Double> portions = new HashMap<>();
+		var portions = new IntDoubleHashMap();
 		
 		for (int dest = 0; dest < odm.zones; dest++)
 			originFlow += odm.getFlow(this.index, dest, time);

@@ -3,6 +3,7 @@ package black0ut1.dynamic.loading;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.Link;
+import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.node.Destination;
 import black0ut1.dynamic.loading.node.Node;
 
@@ -75,11 +76,13 @@ public class DynamicNetworkLoading {
 			
 			var destiantionInflow = network.destinations[destination].inflow;
 			for (int t = 0; t < steps; t++) {
-				for (int dest : destiantionInflow[t].mixtures.keySet()) {
-					if (dest != destination)
-						System.out.println("Mixture flow arrived to destination " + destination +
-								" contains a portion belonging to other destination " + dest);
-				}
+				
+				int finalDestination = destination;
+				destiantionInflow[t].forEach((destination1, _) -> {
+					if (destination1 != finalDestination)
+						System.out.println("Mixture flow arrived to destination " + finalDestination +
+								" contains a portion belonging to other destination " + destination1);
+				});
 				
 				networkDestinationInflow[destination] += destiantionInflow[t].totalFlow;
 			}

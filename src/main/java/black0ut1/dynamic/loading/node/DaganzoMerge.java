@@ -1,6 +1,6 @@
 package black0ut1.dynamic.loading.node;
 
-import black0ut1.dynamic.loading.MixtureFlow;
+import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.link.Link;
 
 import java.util.Vector;

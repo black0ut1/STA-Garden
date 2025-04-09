@@ -1,10 +1,9 @@
 package black0ut1.dynamic.loading.node;
 
-import black0ut1.dynamic.loading.MixtureFlow;
-import black0ut1.dynamic.loading.MixtureFractions;
+import black0ut1.dynamic.loading.mixture.MixtureFlow;
+import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.link.Link;
-
-import java.util.HashMap;
+import com.carrotsearch.hppc.IntDoubleHashMap;
 
 public abstract class Intersection extends Node {
 	
@@ -69,7 +68,7 @@ public abstract class Intersection extends Node {
 				continue;
 			}
 			
-			HashMap<Integer, Double> proportions = new HashMap<>();
+			var proportions = new IntDoubleHashMap();
 			
 			int finalJ = j;
 			fractions.forEach((destination, destinationFractions) -> {

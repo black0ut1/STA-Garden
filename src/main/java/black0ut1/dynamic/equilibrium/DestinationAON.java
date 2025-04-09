@@ -3,9 +3,10 @@ package black0ut1.dynamic.equilibrium;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.dynamic.DynamicNetwork;
-import black0ut1.dynamic.loading.MixtureFractions;
+import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.node.Node;
 import black0ut1.util.SSSP;
+import com.carrotsearch.hppc.IntObjectHashMap;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public class DestinationAON {
 	}
 	
 	protected MixtureFractions createNodeFractions(double[][] destinationFlows, int node1) {
-		HashMap<Integer, double[][]> fractions = new HashMap<>();
+		var fractions = new IntObjectHashMap<double[][]>();
 		Node node = dNetwork.intersections[node1];
 		
 		// compute fractions for a destination
