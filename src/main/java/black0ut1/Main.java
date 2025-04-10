@@ -27,11 +27,6 @@ public class Main {
 				smallestFreeFlowTime = Math.min(smallestFreeFlowTime, edge.freeFlow);
 		System.out.println("Smallest free flow time: " + smallestFreeFlowTime);
 		
-//		ChicagoSketch, 0.12, 10, 2000:
-//		Sum of all ODM values: 1260907.440000012
-//		Sum of all flows arrived at every destination: 1260822.4400000058
-//		Average difference: 4.266629068537336
-//		249972ms, 18.14GB
 		double timeStep = 0.12;
 		int odmSteps = 10;
 		int totalSteps = 2000;

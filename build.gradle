@@ -33,3 +33,7 @@ jar {
                 .collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs = ['-Xmx10G']
+}

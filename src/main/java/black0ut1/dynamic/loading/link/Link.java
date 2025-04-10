@@ -84,15 +84,15 @@ public abstract class Link {
 	public MixtureFlow getOutgoingMixtureFlow(int time) {
 		// get actual outgoing cumulative flow [veh]
 		double cumOut = cumulativeDownstreamCount[time];
+		
 		MixtureFlow outMixture = null;
 		// find the time when the cumulative flows are equal
-		for (var t = 0; t < time - 1; t++) {
-			if (cumulativeUpstreamCount[t] <= cumOut && cumOut < cumulativeUpstreamCount[t + 1]) {
-				// take mixture of that time
-				// for now take the lower (time) -> we should implement interpolation between time and time + 1
+		for (int t = time; t >= 0; t--)
+			if (cumulativeUpstreamCount[t] <= cumOut) {
 				outMixture = inflow[t];
+				break;
 			}
-		}
+		
 		// this should not occur in theory (outflow cum is larger than inflow cum), because numerical problems it can happen
 		// as fallback take the latest mixture
 		if (outMixture == null) {
@@ -101,6 +101,7 @@ public abstract class Link {
 			
 			outMixture = inflow[time - 1];
 		}
+		
 		return outMixture;
 	}
 	
