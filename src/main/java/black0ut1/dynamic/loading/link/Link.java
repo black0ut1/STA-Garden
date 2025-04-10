@@ -97,7 +97,7 @@ public abstract class Link {
 		// as fallback take the latest mixture
 		if (outMixture == null) {
 			if (time == 0)
-				return new MixtureFlow();
+				return MixtureFlow.ZERO;
 			
 			outMixture = inflow[time - 1];
 		}

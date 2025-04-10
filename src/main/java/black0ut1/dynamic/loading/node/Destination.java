@@ -1,7 +1,7 @@
 package black0ut1.dynamic.loading.node;
 
-import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.link.Link;
+import black0ut1.dynamic.loading.mixture.MixtureFlow;
 
 import java.util.Arrays;
 
@@ -21,7 +21,7 @@ public class Destination extends Node {
 	}
 	
 	@Override
-	public void shiftOrientedMixtureFlows(int time) {
+	public void shiftOrientedMixtureFlows(int time, int destinations) {
 		Link incomingLink = incomingLinks[0];
 		double S = incomingLink.getSendingFlow();
 		

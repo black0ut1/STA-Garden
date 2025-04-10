@@ -1,9 +1,9 @@
 package black0ut1.dynamic.loading.node;
 
+import black0ut1.dynamic.loading.mixture.ArrayMixtureFlow;
+import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
-import black0ut1.dynamic.loading.link.Link;
-import com.carrotsearch.hppc.IntDoubleHashMap;
 
 public abstract class Intersection extends Node {
 	
@@ -17,7 +17,7 @@ public abstract class Intersection extends Node {
 		this.turningFractions = turningFractions;
 	}
 	
-	public void shiftOrientedMixtureFlows(int time) {
+	public void shiftOrientedMixtureFlows(int time, int destinations) {
 		MixtureFractions fractions = turningFractions[time];
 		
 		// 1. Compute approximation of total turning fractions
@@ -64,25 +64,24 @@ public abstract class Intersection extends Node {
 		// 4.2. Enter flows to outgoing links
 		for (int j = 0; j < outgoingLinks.length; j++) {
 			if (outgoingFlows[j] <= 0) {
-				outgoingLinks[j].enterFlow(time, new MixtureFlow());
+				outgoingLinks[j].enterFlow(time, MixtureFlow.ZERO);
 				continue;
 			}
 			
-			var proportions = new IntDoubleHashMap();
+			var mixtures = new double[destinations];
 			
 			int finalJ = j;
 			fractions.forEach((destination, destinationFractions) -> {
-				double sum = 0;
-				for (int i = 0; i < incomingLinks.length; i++) {
-					sum += incomingMixtureFlows[i].getDestinationFlow(destination) * destinationFractions[i][finalJ];
-				}
 				
-				if (sum > 0)
-					proportions.put(destination, sum / outgoingFlows[finalJ]);
+				double sum = 0;
+				for (int i = 0; i < incomingLinks.length; i++)
+					sum += incomingMixtureFlows[i].getDestinationFlow(destination) * destinationFractions[i][finalJ];
+				
+				mixtures[destination] = sum / outgoingFlows[finalJ];
 			});
 			
-			MixtureFlow a = new MixtureFlow(outgoingFlows[j], proportions);
-			a.checkPortions(1e-4, time + " " + index); // TODO remove
+			MixtureFlow a = new ArrayMixtureFlow(outgoingFlows[j], mixtures);
+			a.checkPortions(1e-4); // TODO remove
 			outgoingLinks[j].enterFlow(time, a);
 		}
 	}

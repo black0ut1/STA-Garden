@@ -1,9 +1,9 @@
 package black0ut1.dynamic.loading.node;
 
 import black0ut1.dynamic.TimeDependentODM;
-import black0ut1.dynamic.loading.mixture.MixtureFlow;
+import black0ut1.dynamic.loading.mixture.ArrayMixtureFlow;
 import black0ut1.dynamic.loading.link.Link;
-import com.carrotsearch.hppc.IntDoubleHashMap;
+import black0ut1.dynamic.loading.mixture.MixtureFlow;
 
 /**
  * Represents origin - a virtual node that loads traffic onto the
@@ -20,7 +20,7 @@ public class Origin extends Node {
 	}
 	
 	@Override
-	public void shiftOrientedMixtureFlows(int time) {
+	public void shiftOrientedMixtureFlows(int time, int destinations) {
 		Link outgoingLink = outgoingLinks[0];
 		
 		MixtureFlow mf = createMixtureFlowFromODM(time);
@@ -28,19 +28,18 @@ public class Origin extends Node {
 	}
 	
 	protected MixtureFlow createMixtureFlowFromODM(int time) {
-		double originFlow = 0;
-		var portions = new IntDoubleHashMap();
+		var portions = new double[odm.zones];
 		
+		double originFlow = 0;
 		for (int dest = 0; dest < odm.zones; dest++)
 			originFlow += odm.getFlow(this.index, dest, time);
 		
 		for (int dest = 0; dest < odm.zones; dest++) {
 			double flow = odm.getFlow(this.index, dest, time);
 			
-			if (flow > 0)
-				portions.put(dest, flow / originFlow);
+			portions[dest] = flow / originFlow;
 		}
 		
-		return new MixtureFlow(originFlow, portions);
+		return new ArrayMixtureFlow(originFlow, portions);
 	}
 }

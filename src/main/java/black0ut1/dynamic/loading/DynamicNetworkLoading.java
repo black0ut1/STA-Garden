@@ -37,7 +37,7 @@ public class DynamicNetworkLoading {
 			
 			// execute node models
 			for (Node node : network.allNodes)
-				node.shiftOrientedMixtureFlows(t);
+				node.shiftOrientedMixtureFlows(t, network.destinations.length);
 			
 			var pair = network.getTotalInflowOutflow(t);
 			System.out.println("Inflow of all links: " + pair.first());
