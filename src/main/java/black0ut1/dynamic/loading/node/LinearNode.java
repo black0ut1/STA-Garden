@@ -1,7 +1,7 @@
 package black0ut1.dynamic.loading.node;
 
-import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
+import black0ut1.dynamic.loading.link.Link;
 
 /**
  * Basic node model representing links in series:
@@ -14,7 +14,7 @@ public class LinearNode extends Node {
 	}
 	
 	@Override
-	public void shiftOrientedMixtureFlows(int time, int destinations) {
+	public void shiftOrientedMixtureFlows(int time, int destinationsNum) {
 		Link incoming = incomingLinks[0];
 		Link outgoing = outgoingLinks[0];
 		

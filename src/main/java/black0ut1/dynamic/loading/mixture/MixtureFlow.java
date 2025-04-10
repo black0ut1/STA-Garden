@@ -1,18 +1,41 @@
 package black0ut1.dynamic.loading.mixture;
 
+import java.util.Arrays;
+
 /**
- * This interface represents a flow in DNL. The flow cannot be only a
+ * This class represents a flow in DNL. The flow cannot be only a
  * double, because we must track how much of the flow is going to each
  * destination.
+ * TODO thoroughly document, implementation is fast but opaque
  */
-public abstract class MixtureFlow {
+public class MixtureFlow {
 	
 	/** The total flow, which consists of portions heading to
 	 * different destinations. */
 	public final double totalFlow;
 	
-	protected MixtureFlow(double totalFlow) {
+	/* Map from destination to a portion of total flow. Each portion
+	 * is from the interval [0, 1] and they must sum up to 1. If some
+	 * destination is not included in this map, zero percent of the
+	 * total totalFlow head there. */
+	/** Array of destinations in ascending order. */
+	public final int[] destinations;
+	
+	public final double[] portions;
+	
+	public MixtureFlow(double totalFlow, int[] destinations, double[] portions, int len) {
 		this.totalFlow = totalFlow;
+		
+		this.destinations = new int[len];
+		this.portions = new double[len];
+		System.arraycopy(destinations, 0, this.destinations, 0, len);
+		System.arraycopy(portions, 0, this.portions, 0, len);
+	}
+	
+	public MixtureFlow() {
+		this.totalFlow = 0;
+		this.destinations = new int[0];
+		this.portions = new double[0];
 	}
 	
 	/**
@@ -21,34 +44,42 @@ public abstract class MixtureFlow {
 	 * @param destination Destination index.
 	 * @return totalFlow * destination portion
 	 */
-	public abstract double getDestinationFlow(int destination);
-	
-	public abstract MixtureFlow copyWithFlow(double newFlow);
-	
-	public abstract void forEach(Consumer consumer);
-	
-	public abstract void checkPortions(double tolerance);
-	
-	@FunctionalInterface
-	public interface Consumer {
-		void accept(int destination, double portion);
+	public double getDestinationFlow(int destination) {
+		int i = Arrays.binarySearch(destinations, destination);
+		if (i < 0)
+			return 0;
+		
+		return totalFlow * portions[i];
 	}
 	
-	public static MixtureFlow ZERO = new MixtureFlow(0) {
-		@Override
-		public double getDestinationFlow(int destination) {
-			return 0;
-		}
+//	public MixtureFlow plus(MixtureFlow other) {
+//		double resultFlow = totalFlow + other.totalFlow;
+//		var resultPortions = new IntDoubleHashMap();
+//
+//		var destinationUnion = new IntHashSet();
+//		destinationUnion.addAll(this.mixtures.keys());
+//		destinationUnion.addAll(other.mixtures.keys());
+//
+//		destinationUnion.forEach((IntProcedure) destination -> {
+//			double thisDestinationFlow = this.getDestinationFlow(destination);
+//			double otherDestinationFlow = other.getDestinationFlow(destination);
+//
+//			resultPortions.put(destination, (thisDestinationFlow + otherDestinationFlow) / resultFlow);
+//		});
+//
+//		return new MixtureFlow(resultFlow, resultPortions);
+//	}
+	
+	public MixtureFlow copyWithFlow(double newFlow) {
+		return new MixtureFlow(newFlow, destinations, portions, destinations.length);
+	}
+	
+	public void checkPortions(double tolerance) {
+		double sum = 0;
+		for (double portion : portions)
+			sum += portion;
 		
-		@Override
-		public MixtureFlow copyWithFlow(double newFlow) {
-			return this;
-		}
-		
-		@Override
-		public void forEach(Consumer consumer) {}
-		
-		@Override
-		public void checkPortions(double tolerance) {}
-	};
+		if (sum != 0 && Math.abs(sum - 1) > tolerance)
+			System.out.println("Portions do not sum to 1. Sum: " + sum);
+	}
 }

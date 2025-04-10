@@ -18,5 +18,5 @@ public abstract class Node {
 		
 	}
 	
-	public abstract void shiftOrientedMixtureFlows(int time, int destinations);
+	public abstract void shiftOrientedMixtureFlows(int time, int destinationsNum);
 }

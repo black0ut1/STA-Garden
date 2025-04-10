@@ -3,7 +3,6 @@ package black0ut1.dynamic.equilibrium;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.dynamic.DynamicNetwork;
-import black0ut1.dynamic.loading.mixture.ArrayMixtureFractions;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.node.Node;
 import black0ut1.util.SSSP;
@@ -39,7 +38,10 @@ public class DestinationAON {
 	}
 	
 	protected MixtureFractions createNodeFractions(double[][] destinationFlows, int node1) {
-		var fractions = new double[dNetwork.destinations.length][][];
+		int len = 0;
+		int[] destinations = new int[network.nodes];
+		double[][][] destinationTurningFractions = new double[network.nodes][][];
+		
 		Node node = dNetwork.intersections[node1];
 		
 		// compute fractions for a destination
@@ -85,10 +87,12 @@ public class DestinationAON {
 			for (int i = 0; i < node.incomingLinks.length; i++)
 				destinationFractions[i][J] = 1;
 			
-			fractions[destination] = destinationFractions;
+			destinations[len] = destination;
+			destinationTurningFractions[len] = destinationFractions;
+			len++;
 		}
 		
-		return new ArrayMixtureFractions(fractions);
+		return new MixtureFractions(destinations, destinationTurningFractions, len);
 	}
 	
 	protected double[][] assignFlows() {
