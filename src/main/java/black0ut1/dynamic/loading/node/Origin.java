@@ -32,6 +32,9 @@ public class Origin extends Node {
 		for (int dest = 0; dest < odm.zones; dest++)
 			originFlow += odm.getFlow(this.index, dest, time);
 		
+		if (originFlow == 0)
+			return MixtureFlow.ZERO;
+		
 		int len = 0;
 		int[] destinations = new int[destinationsNum];
 		double[] portions = new double[destinationsNum];

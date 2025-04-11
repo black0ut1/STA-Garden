@@ -37,15 +37,18 @@ public class Main {
 		
 		// The route choice model
 		DestinationAON aon = new DestinationAON(pair.first(), network, pair.second());
+		long startTime = System.currentTimeMillis();
 		var mfs = aon.computeTurningFractions(totalSteps);
+		long endTime = System.currentTimeMillis();
+		System.out.println("AON took " + (endTime - startTime) + "ms");
 		
-		
+		// Dynamic network loading
 		DynamicNetworkLoading DNL = new DynamicNetworkLoading(network, odm, timeStep, totalSteps);
 		DNL.setTurningFractions(mfs);
 		
-		long startTime = System.currentTimeMillis();
+		startTime = System.currentTimeMillis();
 		int finalAmountOfSteps = DNL.loadNetwork();
-		long endTime = System.currentTimeMillis();
+		endTime = System.currentTimeMillis();
 		System.out.println("DNL took " + (endTime - startTime) + "ms");
 		
 		DNL.checkDestinationInflows(finalAmountOfSteps);

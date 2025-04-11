@@ -60,7 +60,7 @@ public abstract class Intersection extends Node {
 		// 4.2. Enter flows to outgoing links
 		for (int j = 0; j < outgoingLinks.length; j++) {
 			if (outgoingFlows[j] <= 0) {
-				outgoingLinks[j].enterFlow(time, new MixtureFlow());
+				outgoingLinks[j].enterFlow(time, MixtureFlow.ZERO);
 				continue;
 			}
 			

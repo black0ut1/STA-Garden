@@ -23,6 +23,9 @@ public class MixtureFlow {
 	
 	public final double[] portions;
 	
+	/** Using this reduces the number of objects allocated. */
+	public static final MixtureFlow ZERO = new MixtureFlow(0, new int[0], new double[0], 0);
+	
 	public MixtureFlow(double totalFlow, int[] destinations, double[] portions, int len) {
 		this.totalFlow = totalFlow;
 		
@@ -30,12 +33,6 @@ public class MixtureFlow {
 		this.portions = new double[len];
 		System.arraycopy(destinations, 0, this.destinations, 0, len);
 		System.arraycopy(portions, 0, this.portions, 0, len);
-	}
-	
-	public MixtureFlow() {
-		this.totalFlow = 0;
-		this.destinations = new int[0];
-		this.portions = new double[0];
 	}
 	
 	/**
@@ -71,6 +68,9 @@ public class MixtureFlow {
 //	}
 	
 	public MixtureFlow copyWithFlow(double newFlow) {
+		if (newFlow == 0)
+			return MixtureFlow.ZERO;
+		
 		return new MixtureFlow(newFlow, destinations, portions, destinations.length);
 	}
 	
