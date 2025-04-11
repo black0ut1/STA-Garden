@@ -1,15 +1,11 @@
 package black0ut1.dynamic.loading.node;
 
+import black0ut1.data.IntSet;
 import black0ut1.dynamic.loading.link.Link;
-
-import java.util.HashSet;
-import java.util.Vector;
 
 /**
  * Node model for general intersection with arbitrary number of
  * incoming and outgoing links.
- * TODO optimize: use boolean[] instead of HashSet, OK because there are only a few incoming/outgoing links
- * TODO if sets aren't larger than 64/32/16, use long/int/short as a bitset
  * Bibliography:
  * - (Tampere et al., 2011) A generic class of first order node models
  * for dynamic macroscopic simulation of traffic flows
@@ -40,14 +36,14 @@ public class TampereUnsignalized extends Intersection {
 		
 		// for each outgoing link j, initialize set Uj of all incoming
 		// links that compete for Rj
-		HashSet<Integer>[] U = new HashSet[outgoingLinks.length];
+		IntSet[] U = new IntSet[outgoingLinks.length];
 		
 		// set of outgoing links j, towards which nonzero sending flow
 		// is directed
-		HashSet<Integer> J = new HashSet<>();
+		IntSet J = new IntSet(outgoingLinks.length);
 		
 		for (int j = 0; j < outgoingLinks.length; j++) {
-			U[j] = new HashSet<>();
+			U[j] = new IntSet(incomingLinks.length);
 			
 			// add all i competing for Rj to initial set Uj
 			for (int i = 0; i < incomingLinks.length; i++)
@@ -59,7 +55,6 @@ public class TampereUnsignalized extends Intersection {
 		
 		
 		// 2. Determine oriented capacities
-		// TODO orientedCapacities must be either 0 or inf (not nan)
 		double[][] orientedCapacities = new double[incomingLinks.length][outgoingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++)
 			for (int j = 0; j < outgoingLinks.length; j++) {
@@ -73,79 +68,88 @@ public class TampereUnsignalized extends Intersection {
 		while (!J.isEmpty()) {
 			
 			// 3. Determine most restrictive constraint
-			for (int j : J) {
-				double denominator = 0;
-				for (int i : U[j])
-					denominator += orientedCapacities[i][j];
-				a[j] = R[j] / denominator;
-			}
-			
-			// TODO merge ^ and v into one loop
-			
 			double minA = Double.POSITIVE_INFINITY;
 			int minJ = -1;
-			for (int j : J)
-				if (a[j] <= minA) {
-					minA = a[j];
-					minJ = j;
+			
+			for (int j = 0; j < J.size; j++) {
+				if (J.contains(j)) {
+					double denominator = 0;
+					
+					for (int i = 0; i < U[j].size; i++) {
+						if (U[j].contains(i))
+							denominator += orientedCapacities[i][j];
+					}
+					a[j] = R[j] / denominator;
+					
+					if (a[j] <= minA) {
+						minA = a[j];
+						minJ = j;
+					}
 				}
+			}
 			
 			// 4. Determine flows of corresponding set U[minJ] and
 			// recalculate Rj
 			boolean exists = false;
-			for (int i : U[minJ])
-				if (incomingLinks[i].getSendingFlow() <= minA * incomingLinks[i].capacity) {
-					exists = true;
-					break;
+			for (int i = 0; i < U[minJ].size; i++)
+				if (U[minJ].contains(i)) {
+					
+					if (incomingLinks[i].getSendingFlow() <= minA * incomingLinks[i].capacity) {
+						exists = true;
+						break;
+					}
 				}
 			
 			// (a) at least one i in U[minJ] is constrained
 			if (exists) {
 				
-				for (int i : new HashSet<>(U[minJ])) {
-					if (incomingLinks[i].getSendingFlow() <= minA * incomingLinks[i].capacity) {
+				for (int i = 0; i < U[minJ].size; i++)
+					if (U[minJ].contains(i)) {
 						
-						for (int j = 0; j < outgoingLinks.length; j++)
-							orientedFlows[i][j] = orientedSendingFlow[i][j];
-						
-						Vector<Integer> remove = new Vector<>();
-						for (int j : J) {
-							R[j] -= orientedSendingFlow[i][j];
-							U[j].remove(i);
+						if (incomingLinks[i].getSendingFlow() <= minA * incomingLinks[i].capacity) {
 							
-							if (U[j].isEmpty()) {
-								a[j] = 1;
-								remove.add(j);
-							}
+							for (int j = 0; j < outgoingLinks.length; j++)
+								orientedFlows[i][j] = orientedSendingFlow[i][j];
+							
+							for (int j = 0; j < J.size; j++)
+								if (J.contains(j)) {
+									R[j] -= orientedSendingFlow[i][j];
+									U[j].remove(i);
+									
+									if (U[j].isEmpty()) {
+										a[j] = 1;
+										J.remove(j);
+									}
+								}
 						}
-						remove.forEach(J::remove);
 					}
-				}
 				
 			} else {
 				
-				for (int i : U[minJ]) {
-					for (int j = 0; j < outgoingLinks.length; j++)
-						orientedFlows[i][j] = minA * orientedCapacities[i][j];
-					
-					Vector<Integer> remove = new Vector<>();
-					for (int j : J) {
-						R[j] -= minA * orientedCapacities[i][j];
+				for (int i = 0; i < U[minJ].size; i++)
+					if (U[minJ].contains(i)) {
 						
-						if (j != minJ) {
-							U[j].removeAll(U[minJ]);
-							
-							if (U[j].isEmpty()) {
-								a[j] = 1;
-								remove.add(j);
+						for (int j = 0; j < outgoingLinks.length; j++)
+							orientedFlows[i][j] = minA * orientedCapacities[i][j];
+						
+						for (int j = 0; j < J.size; j++)
+							if (J.contains(j)) {
+								
+								R[j] -= minA * orientedCapacities[i][j];
+								
+								if (j != minJ) {
+									U[j].removeAll(U[minJ]);
+									
+									if (U[j].isEmpty()) {
+										a[j] = 1;
+										J.remove(j);
+									}
+								} else {
+									a[j] = minA;
+									J.remove(j);
+								}
 							}
-						} else {
-							a[j] = minA;
-							remove.add(j);
-						}
 					}
-					remove.forEach(J::remove);
-				}
 			}
 		}
 		
