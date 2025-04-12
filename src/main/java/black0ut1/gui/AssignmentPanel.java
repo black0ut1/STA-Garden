@@ -49,7 +49,7 @@ public class AssignmentPanel extends JPanel {
 		
 		addMouseWheelListener(event -> {
 			int rot = event.getWheelRotation();
-			scale -= WHEEL_ROTATION_SCALE_FACTOR * rot;
+			scale -= WHEEL_ROTATION_SCALE_FACTOR * rot * Math.abs(scale / 100);
 			if (scale < 0)
 				scale = 0;
 			
@@ -139,7 +139,7 @@ public class AssignmentPanel extends JPanel {
 	}
 	
 	private void drawEdges(Graphics2D g) {
-		g.setColor(Color.BLACK);
+		g.setColor(Color.LIGHT_GRAY);
 		g.setStroke(new BasicStroke(EDGE_WIDTH));
 		
 		for (Network.Edge edge : network.getEdges()) {
@@ -165,9 +165,9 @@ public class AssignmentPanel extends JPanel {
 	}
 	
 	private void drawNodes(Graphics2D g) {
-		g.setColor(Color.BLACK);
-		
 		for (int i = 0; i < network.nodes; i++) {
+			
+			g.setColor((i < network.zones) ? Color.BLACK : Color.GRAY);
 			g.fillOval((int) scaledNodesX[i] - NODE_RADIUS, (int) scaledNodesY[i] - NODE_RADIUS,
 					2 * NODE_RADIUS, 2 * NODE_RADIUS);
 		}
