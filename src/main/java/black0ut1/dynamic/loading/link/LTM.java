@@ -29,8 +29,8 @@ public class LTM extends Link {
 		
 		this.receivingFlow = Math.min(
 				capacity * timeStep,
-				cumulativeDownstreamCount[t1]
-						- cumulativeUpstreamCount[time]
+				cumulativeOutflow[t1]
+						- cumulativeInflow[time]
 						+ jamDensity * length
 		);
 		
@@ -41,8 +41,8 @@ public class LTM extends Link {
 		
 		this.sendingFlow = Math.min(
 				capacity * timeStep,
-				cumulativeUpstreamCount[t2]
-						- cumulativeDownstreamCount[time]
+				cumulativeInflow[t2]
+						- cumulativeOutflow[time]
 		);
 	}
 }

@@ -3,7 +3,8 @@ package black0ut1.dynamic.loading.node;
 import black0ut1.dynamic.loading.link.Link;
 
 /**
- * Base class for dynamic node models.
+ * Base class for dynamic node models. Node models differ by their
+ * strategy for shifting flow from incoming links into outgoing links.
  */
 public abstract class Node {
 	
@@ -15,7 +16,6 @@ public abstract class Node {
 		this.index = index;
 		this.incomingLinks = incomingLinks;
 		this.outgoingLinks = outgoingLinks;
-		
 	}
 	
 	public abstract void shiftOrientedMixtureFlows(int time, int destinationsNum);

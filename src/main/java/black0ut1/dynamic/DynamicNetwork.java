@@ -8,16 +8,29 @@ import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.node.*;
 import black0ut1.util.Util;
 
+/**
+ * Class representing the traffic network in DNL.
+ * <p>
+ * To split the functionality, a zone is represented by origin,
+ * destination, intersection and two connectors. The origin is a
+ * virtual node and serves as source of flow of this zone. Destination
+ * is also virtual and serves as the sink. Origin and destination are
+ * connected to the physical intersection using connectors - virtual
+ * links with zero travel time. For some zone i ({@code i in
+ * [0, zones)}), all these parts are on index i in relevant arrays.
+ */
 public class DynamicNetwork {
 	
 	public final Intersection[] intersections;
 	public final Origin[] origins;
 	public final Destination[] destinations;
+	/** The above three arrays merged into one for convenient use. */
 	public final Node[] allNodes;
 	
 	public final Link[] links;
 	public final Connector[] originConnectors;
 	public final Connector[] destinationConnectors;
+	/** The above three arrays merged into one for convenient use. */
 	public final Link[] allLinks;
 	
 	public DynamicNetwork(Intersection[] intersections, Origin[] origins, Destination[] destinations,
@@ -34,7 +47,7 @@ public class DynamicNetwork {
 	}
 	
 	/**
-	 * Sums up the total inflow and outflow over all links
+	 * Sums up the total inflow and outflow over all links.
 	 * @param time The time in which the flows are summed up. Must not
 	 * be higher than the time the DNL is currently in.
 	 * @return Pair (total inflow, total outflow).
@@ -51,7 +64,7 @@ public class DynamicNetwork {
 		return new Pair<>(totalInflow, totalOutflow);
 	}
 	
-	public static DynamicNetwork fromStaticNetwork(Network network, TimeDependentODM odm, double timeStep, int timeSteps) {
+	public static DynamicNetwork fromStaticNetwork(Network network, TimeDependentODM odm, double timeStep, int steps) {
 		// 1. Create array of regular link and arrays of connectors -
 		// links connecting virtual origins and destinations
 		Link[] linkArray = new Link[network.edges];
@@ -60,8 +73,8 @@ public class DynamicNetwork {
 		
 		// 1.1. Create connectors
 		for (int i = 0; i < network.zones; i++) {
-			originConnectors[i] = new Connector(-1, timeSteps);
-			destinationConnectors[i] = new Connector(-1, timeSteps);
+			originConnectors[i] = new Connector(-1, steps);
+			destinationConnectors[i] = new Connector(-1, steps);
 		}
 		
 		// 1.2. Create classic links
@@ -74,7 +87,7 @@ public class DynamicNetwork {
 			double capacity = 1.25 * link.capacity;
 			double freeFlowSpeed = length / freeFlowTime;
 			
-			linkArray[i] = new LTM(i, timeSteps, length, capacity, 0, freeFlowSpeed, freeFlowSpeed / 3, timeStep);
+			linkArray[i] = new LTM(i, steps, length, capacity, 0, freeFlowSpeed, freeFlowSpeed / 3, timeStep);
 		}
 		
 		
@@ -89,7 +102,7 @@ public class DynamicNetwork {
 			originArray[i] = new Origin(i, originConnectors[i], odm);
 			originConnectors[i].tail = originArray[i];
 			
-			destinationArray[i] = new Destination(i, timeSteps, destinationConnectors[i]);
+			destinationArray[i] = new Destination(i, steps, destinationConnectors[i]);
 			destinationConnectors[i].head = destinationArray[i];
 		}
 		

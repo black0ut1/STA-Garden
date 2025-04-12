@@ -6,8 +6,8 @@ import black0ut1.dynamic.loading.node.Node;
 import java.util.Arrays;
 
 /**
- * Base class for dynamic link models. Link models mainly differ
- * by their computation of receiving and sending flow.
+ * Base class for dynamic link models. Link models mainly differ by
+ * their computation of receiving and sending flow.
  */
 public abstract class Link {
 	
@@ -31,18 +31,18 @@ public abstract class Link {
 	
 	///// Flow variables //////
 	
-	/** The receiving flow of this link - see definition */
+	/** The receiving flow (supply) of this link. */
 	protected double receivingFlow;
-	/** The sending flow of this link - see definition */
+	/** The sending flow (demand) of this link. */
 	protected double sendingFlow;
 	/** The flow that entered this link at each time step. */
 	public final MixtureFlow[] inflow;
 	/** The flow that exited this link at each time step. */
 	public final MixtureFlow[] outflow;
 	/** How many vehicles passed the upstream end up until now. */
-	protected final double[] cumulativeUpstreamCount;
+	protected final double[] cumulativeInflow;
 	/** How many vehicles passed the downstream end up until now. */
-	protected final double[] cumulativeDownstreamCount;
+	protected final double[] cumulativeOutflow;
 	
 	public Link(int index, int timeSteps, double length, double capacity,
 				double jamDensity, double freeFlowSpeed, double backwardWaveSpeed) {
@@ -54,8 +54,8 @@ public abstract class Link {
 		
 		this.inflow = new MixtureFlow[timeSteps];
 		this.outflow = new MixtureFlow[timeSteps];
-		this.cumulativeUpstreamCount = new double[timeSteps + 1];
-		this.cumulativeDownstreamCount = new double[timeSteps + 1];
+		this.cumulativeInflow = new double[timeSteps + 1];
+		this.cumulativeOutflow = new double[timeSteps + 1];
 		
 		// if backward speed is not specified, it is computed so it
 		// creates triangular fundamental diagram using the formula:
@@ -71,6 +71,12 @@ public abstract class Link {
 				: capacity * (backwardWaveSpeed + freeFlowSpeed) / (backwardWaveSpeed * freeFlowSpeed);
 	}
 	
+	/**
+	 * Computes the receiving (supply) and sending (demand) flow for
+	 * this time step. This method is implemented by the specific link
+	 * model.
+	 * @param time Current time step.
+	 */
 	public abstract void computeReceivingAndSendingFlows(int time);
 	
 	public double getReceivingFlow() {
@@ -82,13 +88,14 @@ public abstract class Link {
 	}
 	
 	public MixtureFlow getOutgoingMixtureFlow(int time) {
+		// TODO do not floor, interpolate, also precompute
 		// get actual outgoing cumulative flow [veh]
-		double cumOut = cumulativeDownstreamCount[time];
+		double cumOut = cumulativeOutflow[time];
 		
 		MixtureFlow outMixture = null;
 		// find the time when the cumulative flows are equal
 		for (int t = time; t >= 0; t--)
-			if (cumulativeUpstreamCount[t] <= cumOut) {
+			if (cumulativeInflow[t] <= cumOut) {
 				outMixture = inflow[t];
 				break;
 			}
@@ -105,27 +112,45 @@ public abstract class Link {
 		return outMixture;
 	}
 	
+	/**
+	 * This method is used to update flow variables when a flow enters
+	 * this link.
+	 * @param time Current time step.
+	 * @param flow The mixture flow entering this link.
+	 */
 	public void enterFlow(int time, MixtureFlow flow) {
 		inflow[time] = flow;
-		cumulativeUpstreamCount[time + 1] = cumulativeUpstreamCount[time] + flow.totalFlow;
+		cumulativeInflow[time + 1] = cumulativeInflow[time] + flow.totalFlow;
 	}
 	
+	/**
+	 * This method is used to update flow variables when a flow exits
+	 * this link. It returns mixture flow exiting this link.
+	 * @param time Current time step.
+	 * @param flow The amount of flow exiting this link.
+	 * @return Mixture flow with {@code totalFlow = flow} and
+	 * according mixtures.
+	 */
 	public MixtureFlow exitFlow(int time, double flow) {
-		MixtureFlow of = getOutgoingMixtureFlow(time); // or outflowMixture.getLast() if is already set ....
+		MixtureFlow of = getOutgoingMixtureFlow(time);
 		var mf = of.copyWithFlow(flow);
 		
 		outflow[time] = mf;
-		cumulativeDownstreamCount[time + 1] = cumulativeDownstreamCount[time] + flow;
+		cumulativeOutflow[time + 1] = cumulativeOutflow[time] + flow;
 		
 		return mf;
 	}
 	
+	/**
+	 * Resets the link to its original state making it ready to be
+	 * used again for DNL.
+	 */
 	public void reset() {
 		// release objects
 		Arrays.fill(inflow, null);
 		Arrays.fill(outflow, null);
 		
-		cumulativeUpstreamCount[0] = 0;
-		cumulativeDownstreamCount[0] = 0;
+		cumulativeInflow[0] = 0;
+		cumulativeOutflow[0] = 0;
 	}
 }

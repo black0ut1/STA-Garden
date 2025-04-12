@@ -6,10 +6,10 @@ import black0ut1.dynamic.loading.link.Link;
 import java.util.Arrays;
 
 /**
- * Represents destination - a virtual intersection that consumes traffic
- * from the network - a dynamic flow sink.
- * Destination has only one incoming link and none outgoing. All of
- * the flow from the incoming link is consumed during a time step.
+ * Represents destination - a virtual node that consumes traffic from
+ * the network - a dynamic flow sink. Destination has only one
+ * incoming link and none outgoing. All of the flow from the incoming
+ * link is consumed during a time step.
  */
 public class Destination extends Node {
 	

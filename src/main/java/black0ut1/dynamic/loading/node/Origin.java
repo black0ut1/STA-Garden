@@ -7,7 +7,8 @@ import black0ut1.dynamic.loading.link.Link;
 /**
  * Represents origin - a virtual node that loads traffic onto the
  * network - a dynamic flow source. Origin has only one outgoing link
- * and none incoming.
+ * and none incoming. The outgoing link must be able to accomodate for
+ * all of the flow outgoing out of this origin.
  */
 public class Origin extends Node {
 	

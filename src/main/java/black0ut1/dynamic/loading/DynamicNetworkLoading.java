@@ -7,6 +7,12 @@ import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.node.Destination;
 import black0ut1.dynamic.loading.node.Node;
 
+/**
+ * Class that wraps up the whole functionality of dynamic network
+ * loading. Use it to set turning fractions for each intersection,
+ * load the network by executing the node and link models or check the
+ * consistency of loaded flows.
+ */
 public class DynamicNetworkLoading {
 	
 	/** The network to be loaded. */
@@ -49,11 +55,23 @@ public class DynamicNetworkLoading {
 		return t;
 	}
 	
+	/**
+	 * Sets mixture fractions for each intersection and for each time
+	 * step.
+	 * @param turningFractions 2D array of mixture flows, where first
+	 * index represents intersection and the second represents the
+	 * time step - {@code turningFractions[i][t]} are MixtureFractions used by
+	 * intersection i during time step t.
+	 */
 	public void setTurningFractions(MixtureFractions[][] turningFractions) {
 		for (int i = 0; i < network.intersections.length; i++)
 			network.intersections[i].setTurningFractions(turningFractions[i]);
 	}
 	
+	/**
+	 * Resets the network to its original state making it ready to be
+	 * loaded again.
+	 */
 	public void resetNetwork() {
 		for (Link link : network.allLinks)
 			link.reset();
@@ -62,6 +80,16 @@ public class DynamicNetworkLoading {
 			destination.reset();
 	}
 	
+	/**
+	 * Checks the consistency of flows that arrived to destinations.
+	 * For this method to work properly, every flow must arrive to
+	 * some destination. It checks if the total flow arrived to a
+	 * destination is different from what ODM tells should arrive. It
+	 * also checks if the MixtureFlow contains only the one
+	 * destination.
+	 * @param steps The total number of steps the DNL took to finish,
+	 * as returned by {@code loadNetwork()}.
+	 */
 	public void checkDestinationInflows(int steps) {
 		System.out.println("============ Checking arrived flows ============");
 		double[] odmDestinationInflow = new double[network.destinations.length];

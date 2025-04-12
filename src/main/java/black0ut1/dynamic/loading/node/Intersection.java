@@ -4,6 +4,11 @@ import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.link.Link;
 
+/**
+ * Intersection is a specialization of {@code Node} class for nodes
+ * that have more than one outgoing link and thus need turning
+ * fractions to determine where should incoming flows turn.
+ */
 public abstract class Intersection extends Node {
 	
 	protected MixtureFractions[] turningFractions;
