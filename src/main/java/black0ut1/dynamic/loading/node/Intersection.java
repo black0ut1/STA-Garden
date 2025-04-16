@@ -1,5 +1,6 @@
 package black0ut1.dynamic.loading.node;
 
+import black0ut1.data.DoubleMatrix;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.link.Link;
@@ -25,7 +26,7 @@ public abstract class Intersection extends Node {
 		MixtureFractions fractions = turningFractions[time];
 		
 		// 1. Compute total turning fractions
-		double[][] totalTurningFractions = new double[incomingLinks.length][outgoingLinks.length];
+		DoubleMatrix totalTurningFractions = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
 		for (int i = 0; i < incomingLinks.length; i++) {
 			
 			var mixture = incomingLinks[i].getOutgoingMixtureFlow(time);
@@ -35,14 +36,15 @@ public abstract class Intersection extends Node {
 					int destination = mixture.destinations[d];
 					double portion = mixture.portions[d];
 					
-					double[][] destinationFractions = fractions.getDestinationFractions(destination);
-					totalTurningFractions[i][j] += portion * destinationFractions[i][j];
+					DoubleMatrix destinationFractions = fractions.getDestinationFractions(destination);
+					totalTurningFractions.set(i, j,
+							totalTurningFractions.get(i, j) + portion * destinationFractions.get(i, j));
 				}
 			}
 		}
 		
 		// 2. Execute the specific node model
-		double[][] orientedFlows = computeOrientedFlows(totalTurningFractions);
+		DoubleMatrix orientedFlows = computeOrientedFlows(totalTurningFractions);
 		
 		
 		// 3. Compute total incoming and outgoing flows
@@ -52,8 +54,8 @@ public abstract class Intersection extends Node {
 		double[] outgoingFlows = new double[outgoingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++)
 			for (int j = 0; j < outgoingLinks.length; j++) {
-				incomingFlows[i] += orientedFlows[i][j];
-				outgoingFlows[j] += orientedFlows[i][j];
+				incomingFlows[i] += orientedFlows.get(i, j);
+				outgoingFlows[j] += orientedFlows.get(i, j);
 			}
 		
 		// 4. Compute the mixture flows and shift them accordingly
@@ -75,11 +77,11 @@ public abstract class Intersection extends Node {
 			
 			for (int d = 0; d < fractions.destinations.length; d++) {
 				int destination = fractions.destinations[d];
-				double[][] destinationFractions = fractions.destinationTurningFractions[d];
+				DoubleMatrix destinationFractions = fractions.destinationTurningFractions[d];
 				
 				double sum = 0;
 				for (int i = 0; i < incomingLinks.length; i++)
-					sum += incomingMixtureFlows[i].getDestinationFlow(destination) * destinationFractions[i][j];
+					sum += incomingMixtureFlows[i].getDestinationFlow(destination) * destinationFractions.get(i, j);
 				
 				if (sum > 0) {
 					destinations[len[0]] = destination;
@@ -94,5 +96,5 @@ public abstract class Intersection extends Node {
 		}
 	}
 	
-	protected abstract double[][] computeOrientedFlows(double[][] totalTurningFractions);
+	protected abstract DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions);
 }

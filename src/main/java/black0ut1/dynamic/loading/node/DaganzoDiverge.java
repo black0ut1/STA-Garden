@@ -1,5 +1,6 @@
 package black0ut1.dynamic.loading.node;
 
+import black0ut1.data.DoubleMatrix;
 import black0ut1.dynamic.loading.link.Link;
 
 /**
@@ -18,8 +19,8 @@ public class DaganzoDiverge extends Intersection {
 	}
 	
 	@Override
-	protected double[][] computeOrientedFlows(double[][] totalTurningFractions) {
-		double[][] orientedFlows = new double[incomingLinks.length][outgoingLinks.length];
+	protected DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions) {
+		DoubleMatrix orientedFlows = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
 		
 		// the single incoming link
 		Link incomingLink = incomingLinks[0];
@@ -31,13 +32,13 @@ public class DaganzoDiverge extends Intersection {
 		for (int j = 0; j < outgoingLinks.length; j++) {
 			
 			double R = outgoingLinks[j].getReceivingFlow();
-			theta = Math.min(theta, R / (S * totalTurningFractions[0][j]));
+			theta = Math.min(theta, R / (S * totalTurningFractions.get(0, j)));
 		}
 		
 		// 2. Compute outgoing flows
 		for (int j = 0; j < outgoingLinks.length; j++) {
-			double outgoingFlow = theta * S * totalTurningFractions[0][j];
-			orientedFlows[0][j] = outgoingFlow;
+			double outgoingFlow = theta * S * totalTurningFractions.get(0, j);
+			orientedFlows.set(0, j, outgoingFlow);
 		}
 		
 		return orientedFlows;

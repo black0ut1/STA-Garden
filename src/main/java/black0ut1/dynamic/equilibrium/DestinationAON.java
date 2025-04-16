@@ -40,7 +40,7 @@ public class DestinationAON {
 	protected MixtureFractions createNodeFractions(double[][] destinationFlows, int node1) {
 		int len = 0;
 		int[] destinations = new int[network.nodes];
-		double[][][] destinationTurningFractions = new double[network.nodes][][];
+		DoubleMatrix[] destinationTurningFractions = new DoubleMatrix[network.nodes];
 		
 		Node node = dNetwork.intersections[node1];
 		
@@ -82,10 +82,10 @@ public class DestinationAON {
 				continue;
 			
 			
-			double[][] destinationFractions = new double[node.incomingLinks.length][node.outgoingLinks.length];
+			DoubleMatrix destinationFractions = new DoubleMatrix(node.incomingLinks.length, node.outgoingLinks.length);
 			// all flow from each incoming link is going into J
 			for (int i = 0; i < node.incomingLinks.length; i++)
-				destinationFractions[i][J] = 1;
+				destinationFractions.set(i, J, 1);
 			
 			destinations[len] = destination;
 			destinationTurningFractions[len] = destinationFractions;
