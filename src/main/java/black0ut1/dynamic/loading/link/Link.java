@@ -21,8 +21,10 @@ public abstract class Link {
 	public final double length;
 	/** Capacity/maximum possible flow of the link [veh/h] */
 	public final double capacity;
-	/** Jam density [veh/km] - the density of vehicles, after which
-	 *  flow falls to 0 */
+	/**
+	 * Jam density [veh/km] - the density of vehicles, after which
+	 * flow falls to 0
+	 */
 	public final double jamDensity;
 	/** The speed of free flow on the link [km/h] */
 	public final double freeFlowSpeed;
@@ -88,26 +90,48 @@ public abstract class Link {
 	}
 	
 	public MixtureFlow getOutgoingMixtureFlow(int time) {
-		// TODO do not floor, interpolate, also precompute
-		// get actual outgoing cumulative flow [veh]
-		double cumOut = cumulativeOutflow[time];
+		if (time == 0)
+			return MixtureFlow.ZERO;
 		
+		double currOutflow = cumulativeOutflow[time];
+		
+		// find the time when the cumulative flows are equal (the time
+		// when currOutflow entered the link)
 		MixtureFlow outMixture = null;
-		// find the time when the cumulative flows are equal
-		for (int t = time; t >= 0; t--)
-			if (cumulativeInflow[t] <= cumOut) {
+		for (int t = time; t >= 0; t--) {
+			
+			if (Math.abs(cumulativeInflow[t] - currOutflow) < 1e-8) {
+				// found time is exactly an integer (or to combat
+				// numerical problems, very close to integer)
 				outMixture = inflow[t];
 				break;
+				
+			} else if (cumulativeInflow[t] < currOutflow) {
+				// found time is not integer, must interpolate
+				double a = cumulativeInflow[t];
+				double b = cumulativeInflow[t + 1];
+				
+				// t + p is the found time
+				double p = (currOutflow - a) / (b - a);
+				
+				MixtureFlow A = inflow[t];
+				MixtureFlow B = inflow[t + 1];
+				
+				// A + p * (B - A) = p * B + (1 - p) * A
+				outMixture = B.copyWithFlow(B.totalFlow * p)
+						.plus(
+								A.copyWithFlow(A.totalFlow * (1 - p))
+						);
+				break;
 			}
-		
-		// this should not occur in theory (outflow cum is larger than inflow cum), because numerical problems it can happen
-		// as fallback take the latest mixture
-		if (outMixture == null) {
-			if (time == 0)
-				return MixtureFlow.ZERO;
-			
-			outMixture = inflow[time - 1];
 		}
+		
+		
+		// this should not occur in theory (outflow cum is larger than
+		// inflow cum), because numerical problems it can happen as
+		// fallback take the latest mixture
+		if (outMixture == null)
+			outMixture = inflow[time - 1];
 		
 		return outMixture;
 	}

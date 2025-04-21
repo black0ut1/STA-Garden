@@ -49,6 +49,56 @@ public class MixtureFlow {
 		return totalFlow * portions[i];
 	}
 	
+	public MixtureFlow plus(MixtureFlow other) {
+		double resultFlow = totalFlow + other.totalFlow;
+		
+		int[] destinationUnion = new int[this.destinations.length + other.destinations.length];
+		double[] portions = new double[this.destinations.length + other.destinations.length];
+		
+		// union of two sorted arrays algorithm
+		int m = this.destinations.length, n = other.destinations.length;
+		int i = 0, j = 0, len = 0;
+		while (i < m && j < n) {
+			
+			if (this.destinations[i] < other.destinations[j]) {
+				destinationUnion[len] = this.destinations[i];
+				portions[len] = this.portions[i] * this.totalFlow / resultFlow;
+				
+				i++;
+			} else if (this.destinations[i] > other.destinations[j]) {
+				destinationUnion[len] = other.destinations[j];
+				portions[len] = other.portions[j] * other.totalFlow / resultFlow;
+				
+				j++;
+			} else {
+				destinationUnion[len] = this.destinations[i];
+				portions[len] = (this.portions[i] * this.totalFlow
+						+ other.portions[j] * other.totalFlow) / resultFlow;
+				
+				i++;
+				j++;
+			}
+			
+			len++;
+		}
+		while (i < m) {
+			destinationUnion[len] = this.destinations[i];
+			portions[len] = this.portions[i] * this.totalFlow / resultFlow;
+			
+			i++;
+			len++;
+		}
+		while (j < n) {
+			destinationUnion[len] = other.destinations[j];
+			portions[len] = other.portions[j] * other.totalFlow / resultFlow;
+			
+			j++;
+			len++;
+		}
+
+		return new MixtureFlow(resultFlow, destinationUnion, portions, len);
+	}
+	
 //	public MixtureFlow plus(MixtureFlow other) {
 //		double resultFlow = totalFlow + other.totalFlow;
 //		var resultPortions = new IntDoubleHashMap();
