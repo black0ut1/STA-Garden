@@ -71,7 +71,7 @@ public abstract class Intersection extends Node {
 				continue;
 			}
 			
-			final int[] len = {0};
+			int len = 0;
 			int[] destinations = new int[destinationsNum];
 			double[] portions = new double[destinationsNum];
 			
@@ -84,13 +84,13 @@ public abstract class Intersection extends Node {
 					sum += incomingMixtureFlows[i].getDestinationFlow(destination) * destinationFractions.get(i, j);
 				
 				if (sum > 0) {
-					destinations[len[0]] = destination;
-					portions[len[0]] = sum / outgoingFlows[j];
-					len[0]++;
+					destinations[len] = destination;
+					portions[len] = sum / outgoingFlows[j];
+					len++;
 				}
 			}
 			
-			MixtureFlow a = new MixtureFlow(outgoingFlows[j], destinations, portions, len[0]);
+			MixtureFlow a = new MixtureFlow(outgoingFlows[j], destinations, portions, len);
 			a.checkPortions(1e-4); // TODO remove
 			outgoingLinks[j].enterFlow(time, a);
 		}
