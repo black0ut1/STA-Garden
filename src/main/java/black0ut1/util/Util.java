@@ -48,4 +48,14 @@ public class Util {
 		
 		return result;
 	}
+	
+	public static double min(double a, double b, double c) {
+		double smallest = a;
+		if (smallest > b)
+			smallest = b;
+		if (smallest > c)
+			smallest = c;
+		
+		return smallest;
+	}
 }
