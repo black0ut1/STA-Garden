@@ -63,8 +63,7 @@ public class CTM extends Link {
 	}
 	
 	/**
-	 * Exactly recreated example from Transportation Network
-	 * Analysis, p. 378.
+	 * Recreated example from Transportation Network Analysis, p. 378.
 	 */
 	public static void main(String[] args) {
 		CTM ctm = new CTM(0, 1, 21, 3, 10, 30, 1, 2.0 / 3);
