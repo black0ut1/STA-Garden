@@ -67,7 +67,7 @@ public class CTM extends Link {
 	 * Analysis, p. 378.
 	 */
 	public static void main(String[] args) {
-		CTM ctm = new CTM(0, 21, 3, 10, 30, 1, 2.0 / 3, 1);
+		CTM ctm = new CTM(0, 1, 21, 3, 10, 30, 1, 2.0 / 3);
 		
 		System.out.println(" t | d(t)  R(t) | y(0, t) n(0, t) y(1, t) n(1, t) y(2, t) n(2, t) | S(t) y(3, t)");
 		

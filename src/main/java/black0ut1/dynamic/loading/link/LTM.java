@@ -25,22 +25,15 @@ public class LTM extends Link {
 		if (t1 < 0)
 			t1 = 0;
 		
-		this.receivingFlow = Math.min(
-				capacity * stepSize,
-				cumulativeOutflow[t1]
-						- cumulativeInflow[time]
-						+ jamDensity * length
-		);
+		this.receivingFlow = Math.min(capacity * stepSize,
+				cumulativeOutflow[t1] - cumulativeInflow[time] + jamDensity * length);
 		
 		
 		int t2 = (int) (time + 1 - length / freeFlowSpeed / stepSize);
 		if (t2 < 0)
 			t2 = 0;
 		
-		this.sendingFlow = Math.min(
-				capacity * stepSize,
-				cumulativeInflow[t2]
-						- cumulativeOutflow[time]
-		);
+		this.sendingFlow = Math.min(capacity * stepSize,
+				cumulativeInflow[t2] - cumulativeOutflow[time]);
 	}
 }
