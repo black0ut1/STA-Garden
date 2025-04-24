@@ -13,9 +13,11 @@ public class CTM extends Link {
 	protected final double delta;
 	protected final double cellMaxVeh;
 	
-	public CTM(int index, int timeSteps, double length, double capacity,
-			   double jamDensity, double freeFlowSpeed, double backwardWaveSpeed, double stepSize) {
-		super(index, timeSteps, length, capacity, jamDensity, freeFlowSpeed, backwardWaveSpeed);
+	public CTM(int index, double stepSize, int timeSteps, double length,
+			   double capacity, double jamDensity, double freeFlowSpeed,
+			   double backwardWaveSpeed) {
+		super(index, stepSize, timeSteps, length, capacity,
+				jamDensity, freeFlowSpeed, backwardWaveSpeed);
 		
 		int cellsNum = (int) (this.length / (this.freeFlowSpeed / stepSize));
 		double cellSize = this.length / cellsNum;

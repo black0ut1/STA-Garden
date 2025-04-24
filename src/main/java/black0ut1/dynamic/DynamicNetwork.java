@@ -87,7 +87,7 @@ public class DynamicNetwork {
 			double capacity = 1.25 * link.capacity;
 			double freeFlowSpeed = length / freeFlowTime;
 			
-			linkArray[i] = new LTM(i, steps, length, capacity, 0, freeFlowSpeed, freeFlowSpeed / 3, timeStep);
+			linkArray[i] = new LTM(i, timeStep, steps, length, capacity, 0, freeFlowSpeed, freeFlowSpeed / 3);
 		}
 		
 		

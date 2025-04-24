@@ -11,36 +11,34 @@ package black0ut1.dynamic.loading.link;
  */
 public class LTM extends Link {
 	
-	protected final double timeStep;
-	
-	public LTM(int index, int timeSteps, double length, double capacity,
-			   double jamDensity, double freeFlowSpeed, double backwardWaveSpeed,
-			   double timeStep) {
-		super(index, timeSteps, length, capacity, jamDensity, freeFlowSpeed, backwardWaveSpeed);
-		this.timeStep = timeStep;
+	public LTM(int index, double stepSize, int timeSteps, double length,
+			   double capacity, double jamDensity, double freeFlowSpeed,
+			   double backwardWaveSpeed) {
+		super(index, stepSize, timeSteps, length, capacity,
+				jamDensity, freeFlowSpeed, backwardWaveSpeed);
 	}
 	
 	@Override
 	public void computeReceivingAndSendingFlows(int time) {
 		// TODO do not floor, interpolate, also precompute
-		int t1 = (int) (time + 1 - length / backwardWaveSpeed / timeStep);
+		int t1 = (int) (time + 1 - length / backwardWaveSpeed / stepSize);
 		if (t1 < 0)
 			t1 = 0;
 		
 		this.receivingFlow = Math.min(
-				capacity * timeStep,
+				capacity * stepSize,
 				cumulativeOutflow[t1]
 						- cumulativeInflow[time]
 						+ jamDensity * length
 		);
 		
 		
-		int t2 = (int) (time + 1 - length / freeFlowSpeed / timeStep);
+		int t2 = (int) (time + 1 - length / freeFlowSpeed / stepSize);
 		if (t2 < 0)
 			t2 = 0;
 		
 		this.sendingFlow = Math.min(
-				capacity * timeStep,
+				capacity * stepSize,
 				cumulativeInflow[t2]
 						- cumulativeOutflow[time]
 		);

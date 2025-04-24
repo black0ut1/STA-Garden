@@ -15,6 +15,8 @@ public abstract class Link {
 	public Node head;
 	public Node tail;
 	
+	protected final double stepSize;
+	
 	///// Fundamental diagram parameters //////
 	
 	/** Length of the link [km] */
@@ -46,9 +48,11 @@ public abstract class Link {
 	/** How many vehicles passed the downstream end up until now. */
 	protected final double[] cumulativeOutflow;
 	
-	public Link(int index, int timeSteps, double length, double capacity,
-				double jamDensity, double freeFlowSpeed, double backwardWaveSpeed) {
+	public Link(int index, double stepSize, int timeSteps, double length,
+				double capacity, double jamDensity, double freeFlowSpeed,
+				double backwardWaveSpeed) {
 		this.index = index;
+		this.stepSize = stepSize;
 		
 		this.length = length;
 		this.capacity = capacity;
