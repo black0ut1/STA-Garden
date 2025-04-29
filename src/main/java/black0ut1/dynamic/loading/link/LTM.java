@@ -54,19 +54,19 @@ public class LTM extends Link {
 			
 			if (ltm.getReceivingFlow() < flowSent[t]) {
 				MixtureFlow mf = new MixtureFlow(ltm.getReceivingFlow(), new int[0], new double[0], 0);
-				ltm.enterFlow(t, mf);
+//				ltm.enterFlow(t, mf);
 				
 				// carry over unsent flow
 				flowSent[t + 1] += (flowSent[t] - ltm.getReceivingFlow());
 			} else {
 				MixtureFlow mf = new MixtureFlow(flowSent[t], new int[0], new double[0], 0);
-				ltm.enterFlow(t, mf);
+//				ltm.enterFlow(t, mf);
 			}
 			
 			double flowExited = Math.min(10, ltm.getSendingFlow());
 			if (t < 10) // red light until time 10
 				flowExited = 0;
-			ltm.exitFlow(t, flowExited);
+//			ltm.exitFlow(t, flowExited);
 			
 			System.out.printf("%2d | %4.1f  %4.1f %6.1f | %4.1f %5.1f  | %4.1f %6.1f %8.1f %n",
 					t, flowSent[t], ltm.getReceivingFlow(), ltm.inflow[t].totalFlow,

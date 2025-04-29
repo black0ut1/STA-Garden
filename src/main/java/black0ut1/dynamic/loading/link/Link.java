@@ -44,9 +44,9 @@ public abstract class Link {
 	/** The flow that exited this link at each time step. */
 	public final MixtureFlow[] outflow;
 	/** How many vehicles passed the upstream end up until now. */
-	protected final double[] cumulativeInflow;
+	public final double[] cumulativeInflow;
 	/** How many vehicles passed the downstream end up until now. */
-	protected final double[] cumulativeOutflow;
+	public final double[] cumulativeOutflow;
 	
 	public Link(int index, double stepSize, int timeSteps, double length,
 				double capacity, double jamDensity, double freeFlowSpeed,
@@ -138,35 +138,6 @@ public abstract class Link {
 			outMixture = inflow[time - 1];
 		
 		return outMixture;
-	}
-	
-	/**
-	 * This method is used to update flow variables when a flow enters
-	 * this link.
-	 * @param time Current time step.
-	 * @param flow The mixture flow entering this link.
-	 */
-	public void enterFlow(int time, MixtureFlow flow) {
-		inflow[time] = flow;
-		cumulativeInflow[time + 1] = cumulativeInflow[time] + flow.totalFlow;
-	}
-	
-	/**
-	 * This method is used to update flow variables when a flow exits
-	 * this link. It returns mixture flow exiting this link.
-	 * @param time Current time step.
-	 * @param flow The amount of flow exiting this link.
-	 * @return Mixture flow with {@code totalFlow = flow} and
-	 * according mixtures.
-	 */
-	public MixtureFlow exitFlow(int time, double flow) {
-		MixtureFlow of = getOutgoingMixtureFlow(time);
-		var mf = of.copyWithFlow(flow);
-		
-		outflow[time] = mf;
-		cumulativeOutflow[time + 1] = cumulativeOutflow[time] + flow;
-		
-		return mf;
 	}
 	
 	/**

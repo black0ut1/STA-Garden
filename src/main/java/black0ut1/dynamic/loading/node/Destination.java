@@ -1,5 +1,6 @@
 package black0ut1.dynamic.loading.node;
 
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.link.Link;
 
@@ -21,12 +22,18 @@ public class Destination extends Node {
 	}
 	
 	@Override
-	public void shiftOrientedMixtureFlows(int time, int destinationsNum) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum) {
 		Link incomingLink = incomingLinks[0];
 		double S = incomingLink.getSendingFlow();
 		
-		MixtureFlow exited = incomingLink.exitFlow(time, S);
-		inflow[time] = exited;
+		MixtureFlow incomingMixtureFlow = incomingLink
+				.getOutgoingMixtureFlow(time)
+				.copyWithFlow(S);
+		
+		inflow[time] = incomingMixtureFlow;
+		
+		MixtureFlow[] incomingMixtureFlows = new MixtureFlow[] {incomingMixtureFlow};
+		return new Pair<>(incomingMixtureFlows, null);
 	}
 	
 	public void reset() {

@@ -1,6 +1,8 @@
 package black0ut1.dynamic.loading.node;
 
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.link.Link;
+import black0ut1.dynamic.loading.mixture.MixtureFlow;
 
 /**
  * Base class for dynamic node models. Node models differ by their
@@ -18,5 +20,5 @@ public abstract class Node {
 		this.outgoingLinks = outgoingLinks;
 	}
 	
-	public abstract void shiftOrientedMixtureFlows(int time, int destinationsNum);
+	public abstract Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum);
 }

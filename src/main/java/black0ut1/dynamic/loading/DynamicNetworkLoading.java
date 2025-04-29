@@ -3,9 +3,11 @@ package black0ut1.dynamic.loading;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.Link;
+import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.node.Destination;
 import black0ut1.dynamic.loading.node.Node;
+import black0ut1.dynamic.loading.node.Origin;
 
 /**
  * Class that wraps up the whole functionality of dynamic network
@@ -41,9 +43,30 @@ public class DynamicNetworkLoading {
 			for (Link link : network.allLinks)
 				link.computeReceivingAndSendingFlows(t);
 			
-			// execute node models
-			for (Node node : network.allNodes)
-				node.shiftOrientedMixtureFlows(t, network.destinations.length);
+			// execute node models and shift flows
+			for (Node node : network.allNodes) {
+				var pair = node.computeOrientedMixtureFlows(t, network.destinations.length);
+				
+				if (!(node instanceof Origin)) { // origins have null incomingLinks
+					for (int i = 0; i < node.incomingLinks.length; i++) {
+						Link incomingLink = node.incomingLinks[i];
+						MixtureFlow incomingFlow = pair.first()[i];
+						
+						incomingLink.outflow[t] = incomingFlow;
+						incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
+					}
+				}
+				
+				if (!(node instanceof Destination)) { // destinations have null outgoingLinks
+					for (int j = 0; j < node.outgoingLinks.length; j++) {
+						Link outgoingLink = node.outgoingLinks[j];
+						MixtureFlow outgoingFlow = pair.second()[j];
+						
+						outgoingLink.inflow[t] = outgoingFlow;
+						outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
+					}
+				}
+			}
 			
 			var pair = network.getTotalInflowOutflow(t);
 			System.out.println("Inflow of all links: " + pair.first());

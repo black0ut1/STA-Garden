@@ -1,5 +1,6 @@
 package black0ut1.dynamic.loading.node;
 
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.link.Link;
@@ -20,11 +21,12 @@ public class Origin extends Node {
 	}
 	
 	@Override
-	public void shiftOrientedMixtureFlows(int time, int destinationsNum) {
-		Link outgoingLink = outgoingLinks[0];
+	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum) {
 		
-		MixtureFlow mf = createMixtureFlowFromODM(time, destinationsNum);
-		outgoingLink.enterFlow(time, mf);
+		MixtureFlow outgoingMixtureFlow = createMixtureFlowFromODM(time, destinationsNum);
+		
+		MixtureFlow[] outgoingMixtureFlows = new MixtureFlow[] {outgoingMixtureFlow};
+		return new Pair<>(null, outgoingMixtureFlows);
 	}
 	
 	protected MixtureFlow createMixtureFlowFromODM(int time, int destinationsNum) {

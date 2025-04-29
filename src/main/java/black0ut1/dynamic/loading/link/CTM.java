@@ -31,21 +31,11 @@ public class CTM extends Link {
 	}
 	
 	@Override
-	public void enterFlow(int time, MixtureFlow flow) {
-		cellFlow[0] = flow.totalFlow;
-		
-		super.enterFlow(time, flow);
-	}
-	
-	@Override
-	public MixtureFlow exitFlow(int time, double flow) {
-		cellFlow[cellFlow.length - 1] = flow;
-		
-		return super.exitFlow(time, flow);
-	}
-	
-	@Override
 	public void computeReceivingAndSendingFlows(int time) {
+		if (time > 0) {
+			cellFlow[0] = inflow[time - 1].totalFlow;
+			cellFlow[cellFlow.length - 1] = outflow[time - 1].totalFlow;
+		}
 		
 		for (int x = 0; x < cells.length; x++) {
 			cells[x] = cells[x] + cellFlow[x] - cellFlow[x + 1];
@@ -77,19 +67,19 @@ public class CTM extends Link {
 			
 			if (ctm.getReceivingFlow() < flowSent[t]) {
 				MixtureFlow mf = new MixtureFlow(ctm.getReceivingFlow(), new int[0], new double[0], 0);
-				ctm.enterFlow(t, mf);
+//				ctm.enterFlow(t, mf);
 				
 				// carry over unsent flow
 				flowSent[t + 1] += (flowSent[t] - ctm.getReceivingFlow());
 			} else {
 				MixtureFlow mf = new MixtureFlow(flowSent[t], new int[0], new double[0], 0);
-				ctm.enterFlow(t, mf);
+//				ctm.enterFlow(t, mf);
 			}
 			
 			// red light until time 10
 			if (t >= 10) {
 				double flowExited = Math.min(10, ctm.getSendingFlow());
-				ctm.exitFlow(t, flowExited);
+//				ctm.exitFlow(t, flowExited);
 			}
 			
 			System.out.format("%2d | %4.1f  %4.1f | %6.1f  %6.1f  %6.1f  %6.1f  %6.1f  %6.1f  | %4.1f %6.1f %n",

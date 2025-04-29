@@ -24,4 +24,16 @@ public class DoubleMatrix {
 	public void set(int i, int j, double value) {
 		arr[i * n + j] = value;
 	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < m; j++)
+				sb.append(arr[i * n + j]).append(" ");
+			sb.append('\n');
+		}
+		
+		return sb.toString();
+	}
 }

@@ -1,6 +1,7 @@
 package black0ut1.dynamic.loading.node;
 
 import black0ut1.data.DoubleMatrix;
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.link.Link;
@@ -22,7 +23,7 @@ public abstract class Intersection extends Node {
 		this.turningFractions = turningFractions;
 	}
 	
-	public void shiftOrientedMixtureFlows(int time, int destinationsNum) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum) {
 		MixtureFractions fractions = turningFractions[time];
 		
 		// 1. Compute total turning fractions
@@ -61,13 +62,16 @@ public abstract class Intersection extends Node {
 		// 4. Compute the mixture flows and shift them accordingly
 		// 4.1. Exit flow from incoming links
 		MixtureFlow[] incomingMixtureFlows = new MixtureFlow[incomingLinks.length];
-		for (int i = 0; i < incomingLinks.length; i++)
-			incomingMixtureFlows[i] = incomingLinks[i].exitFlow(time, incomingFlows[i]);
+		for (int i = 0; i < incomingLinks.length; i++) {
+			MixtureFlow of = incomingLinks[i].getOutgoingMixtureFlow(time);
+			incomingMixtureFlows[i] = of.copyWithFlow(incomingFlows[i]);
+		}
 		
 		// 4.2. Enter flows to outgoing links
+		MixtureFlow[] outgoingMixtureFlows = new MixtureFlow[outgoingLinks.length];
 		for (int j = 0; j < outgoingLinks.length; j++) {
 			if (outgoingFlows[j] <= 0) {
-				outgoingLinks[j].enterFlow(time, MixtureFlow.ZERO);
+				outgoingMixtureFlows[j] = MixtureFlow.ZERO;
 				continue;
 			}
 			
@@ -92,8 +96,10 @@ public abstract class Intersection extends Node {
 			
 			MixtureFlow a = new MixtureFlow(outgoingFlows[j], destinations, portions, len);
 			a.checkPortions(1e-4); // TODO remove
-			outgoingLinks[j].enterFlow(time, a);
+			outgoingMixtureFlows[j] = a;
 		}
+		
+		return new Pair<>(incomingMixtureFlows, outgoingMixtureFlows);
 	}
 	
 	protected abstract DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions);

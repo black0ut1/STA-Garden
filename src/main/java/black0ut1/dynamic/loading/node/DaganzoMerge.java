@@ -1,5 +1,6 @@
 package black0ut1.dynamic.loading.node;
 
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 
@@ -40,7 +41,7 @@ public class DaganzoMerge extends Node {
 	}
 
 	@Override
-	public void shiftOrientedMixtureFlows(int time, int destinationsNum) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum) {
 		Link outgoingLink = outgoingLinks[0];
 		double R = outgoingLink.getReceivingFlow();
 
@@ -50,15 +51,20 @@ public class DaganzoMerge extends Node {
 
 		if (totalS <= R) { // all vehicles can pass
 
-			MixtureFlow totalExited = MixtureFlow.ZERO;
-			for (Link incomingLink : incomingLinks) {
-				double S = incomingLink.getSendingFlow();
-
-				MixtureFlow exited = incomingLink.exitFlow(time, S);
-				totalExited = exited.plus(totalExited);
+			MixtureFlow outgoingMixtureFlow = MixtureFlow.ZERO;
+			
+			MixtureFlow[] incomingMixtureFlows = new MixtureFlow[incomingLinks.length];
+			for (int i = 0; i < incomingLinks.length; i++) {
+				double S = incomingLinks[i].getSendingFlow();
+				
+				MixtureFlow of = incomingLinks[i].getOutgoingMixtureFlow(time);
+				incomingMixtureFlows[i] = of.copyWithFlow(S);
+				
+				outgoingMixtureFlow = outgoingMixtureFlow.plus(incomingMixtureFlows[i]);
 			}
-
-			outgoingLink.enterFlow(time, totalExited);
+			
+			MixtureFlow[] outgoingMixtureFlows = new MixtureFlow[] {outgoingMixtureFlow};
+			return new Pair<>(incomingMixtureFlows, outgoingMixtureFlows);
 
 		} else { // outgoing link is congested
 
@@ -99,13 +105,19 @@ public class DaganzoMerge extends Node {
 				activeIncomingLinks.removeIf(i -> remainingS[i] == 0);
 			}
 
-			MixtureFlow totalExited = MixtureFlow.ZERO;
+			
+			MixtureFlow outgoingMixtureFlow = MixtureFlow.ZERO;
+			
+			MixtureFlow[] incomingMixtureFlows = new MixtureFlow[incomingLinks.length];
 			for (int i = 0; i < incomingLinks.length; i++) {
-				MixtureFlow exited = incomingLinks[i].exitFlow(time, transitionFlows[i]);
-				totalExited = exited.plus(totalExited);
+				MixtureFlow of = incomingLinks[i].getOutgoingMixtureFlow(time);
+				incomingMixtureFlows[i] = of.copyWithFlow(transitionFlows[i]);
+				
+				outgoingMixtureFlow = outgoingMixtureFlow.plus(incomingMixtureFlows[i]);
 			}
-
-			outgoingLink.enterFlow(time, totalExited);
+			
+			MixtureFlow[] outgoingMixtureFlows = new MixtureFlow[] {outgoingMixtureFlow};
+			return new Pair<>(incomingMixtureFlows, outgoingMixtureFlows);
 		}
 	}
 
