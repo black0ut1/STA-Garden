@@ -2,6 +2,7 @@ package black0ut1.dynamic.loading.link;
 
 
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
+import black0ut1.util.Util;
 
 /**
  * Link transmission model.
@@ -13,6 +14,9 @@ import black0ut1.dynamic.loading.mixture.MixtureFlow;
  */
 public class LTM extends Link {
 	
+	public double psi;
+	public double phi;
+	
 	public LTM(int index, double stepSize, int timeSteps, double length,
 			   double capacity, double jamDensity, double freeFlowSpeed,
 			   double backwardWaveSpeed) {
@@ -22,21 +26,28 @@ public class LTM extends Link {
 	
 	@Override
 	public void computeReceivingAndSendingFlows(int time) {
-		// TODO do not floor, interpolate, also precompute
-		int t1 = (int) (time + 1 - length / backwardWaveSpeed / stepSize);
-		if (t1 < 0)
-			t1 = 0;
+		double t1 = time + 1 - length / backwardWaveSpeed / stepSize;
+		// t1 should not be larger than time unless time step is too large
+		t1 = Util.projectToInterval(t1, 0, time);
 		
+		double psi = t1 - (int) t1;
+		double interpolatedOutflow = (1 - psi) * cumulativeOutflow[(int) t1] + psi * cumulativeOutflow[(int) t1 + 1];
 		this.receivingFlow = Math.min(capacity * stepSize,
-				cumulativeOutflow[t1] - cumulativeInflow[time] + jamDensity * length);
+				interpolatedOutflow - cumulativeInflow[time] + jamDensity * length);
 		
 		
-		int t2 = (int) (time + 1 - length / freeFlowSpeed / stepSize);
-		if (t2 < 0)
-			t2 = 0;
+		double t2 = time + 1 - length / freeFlowSpeed / stepSize;
+		// t2 should not be larger than time unless time step is too large
+		t2 = Util.projectToInterval(t2, 0, time);
 		
+		double phi = t2 - (int) t2;
+		double interpolatedInflow = (1 - phi) * cumulativeInflow[(int) t2] + phi * cumulativeInflow[(int) t2 + 1];
 		this.sendingFlow = Math.min(capacity * stepSize,
-				cumulativeInflow[t2] - cumulativeOutflow[time]);
+				interpolatedInflow - cumulativeOutflow[time]);
+		
+		
+		this.psi = psi;
+		this.phi = phi;
 	}
 	
 	/**
