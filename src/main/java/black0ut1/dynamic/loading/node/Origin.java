@@ -21,15 +21,15 @@ public class Origin extends Node {
 	}
 	
 	@Override
-	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time) {
 		
-		MixtureFlow outgoingMixtureFlow = createMixtureFlowFromODM(time, destinationsNum);
+		MixtureFlow outgoingMixtureFlow = createMixtureFlowFromODM(time);
 		
 		MixtureFlow[] outgoingMixtureFlows = new MixtureFlow[] {outgoingMixtureFlow};
 		return new Pair<>(null, outgoingMixtureFlows);
 	}
 	
-	protected MixtureFlow createMixtureFlowFromODM(int time, int destinationsNum) {
+	protected MixtureFlow createMixtureFlowFromODM(int time) {
 		
 		double originFlow = 0;
 		for (int dest = 0; dest < odm.zones; dest++)
@@ -39,8 +39,8 @@ public class Origin extends Node {
 			return MixtureFlow.ZERO;
 		
 		int len = 0;
-		int[] destinations = new int[destinationsNum];
-		double[] portions = new double[destinationsNum];
+		int[] destinations = new int[odm.zones];
+		double[] portions = new double[odm.zones];
 		
 		for (int dest = 0; dest < odm.zones; dest++) {
 			double flow = odm.getFlow(this.index, dest, time);

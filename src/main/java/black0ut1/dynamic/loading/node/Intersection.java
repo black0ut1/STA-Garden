@@ -23,7 +23,8 @@ public abstract class Intersection extends Node {
 		this.turningFractions = turningFractions;
 	}
 	
-	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum) {
+	@Override
+	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time) {
 		MixtureFractions fractions = turningFractions[time];
 		
 		// 1. Compute total turning fractions
@@ -76,8 +77,8 @@ public abstract class Intersection extends Node {
 			}
 			
 			int len = 0;
-			int[] destinations = new int[destinationsNum];
-			double[] portions = new double[destinationsNum];
+			int[] destinations = new int[fractions.destinations.length];
+			double[] portions = new double[fractions.destinations.length];
 			
 			for (int d = 0; d < fractions.destinations.length; d++) {
 				int destination = fractions.destinations[d];

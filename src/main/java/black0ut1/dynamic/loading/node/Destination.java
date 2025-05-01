@@ -22,7 +22,7 @@ public class Destination extends Node {
 	}
 	
 	@Override
-	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time) {
 		Link incomingLink = incomingLinks[0];
 		double S = incomingLink.getSendingFlow();
 		

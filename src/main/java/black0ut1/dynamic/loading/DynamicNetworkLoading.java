@@ -45,7 +45,7 @@ public class DynamicNetworkLoading {
 			
 			// execute node models and shift flows
 			for (Node node : network.allNodes) {
-				var pair = node.computeOrientedMixtureFlows(t, network.destinations.length);
+				var pair = node.computeOrientedMixtureFlows(t);
 				
 				if (!(node instanceof Origin)) { // origins have null incomingLinks
 					for (int i = 0; i < node.incomingLinks.length; i++) {

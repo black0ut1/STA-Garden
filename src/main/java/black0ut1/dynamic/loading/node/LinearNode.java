@@ -15,7 +15,7 @@ public class LinearNode extends Node {
 	}
 	
 	@Override
-	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time) {
 		Link incoming = incomingLinks[0];
 		Link outgoing = outgoingLinks[0];
 		

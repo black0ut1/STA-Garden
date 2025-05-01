@@ -41,7 +41,7 @@ public class DaganzoMerge extends Node {
 	}
 
 	@Override
-	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time) {
 		Link outgoingLink = outgoingLinks[0];
 		double R = outgoingLink.getReceivingFlow();
 

@@ -20,5 +20,5 @@ public abstract class Node {
 		this.outgoingLinks = outgoingLinks;
 	}
 	
-	public abstract Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time, int destinationsNum);
+	public abstract Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time);
 }
