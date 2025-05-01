@@ -1,21 +1,25 @@
-package black0ut1.dynamic.loading;
+package black0ut1.dynamic.loading.dnl;
 
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.node.Destination;
-import black0ut1.dynamic.loading.node.Node;
-import black0ut1.dynamic.loading.node.Origin;
 
 /**
- * Class that wraps up the whole functionality of dynamic network
- * loading. Use it to set turning fractions for each intersection,
- * load the network by executing the node and link models or check the
- * consistency of loaded flows.
+ * Abstract class that wraps the functionality of dynamic network
+ * loading. Subclasses of this class would differ by their strategy of
+ * loading the traffic each time step.
+ * <p>
+ * The typical usage would be:							<br>
+ *  1. Determine turning fractions using DUE			<br>
+ *  2. dnl.setTurningFractions(turningFractions)		<br>
+ *  3. dnl.loadNetwork()								<br>
+ *  4. Determine time-dependent travel times			<br>
+ *  5. dnl.resetNetwork()								<br>
+ *  6. Go to 1.
  */
-public class DynamicNetworkLoading {
+public abstract class DynamicNetworkLoading {
 	
 	/** The network to be loaded. */
 	protected final DynamicNetwork network;
@@ -39,34 +43,7 @@ public class DynamicNetworkLoading {
 		for (t = 0; t < steps; t++) {
 			System.out.println("========= Time " + t + " =========");
 			
-			// execute link models
-			for (Link link : network.allLinks)
-				link.computeReceivingAndSendingFlows(t);
-			
-			// execute node models and shift flows
-			for (Node node : network.allNodes) {
-				var pair = node.computeOrientedMixtureFlows(t);
-				
-				if (!(node instanceof Origin)) { // origins have null incomingLinks
-					for (int i = 0; i < node.incomingLinks.length; i++) {
-						Link incomingLink = node.incomingLinks[i];
-						MixtureFlow incomingFlow = pair.first()[i];
-						
-						incomingLink.outflow[t] = incomingFlow;
-						incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
-					}
-				}
-				
-				if (!(node instanceof Destination)) { // destinations have null outgoingLinks
-					for (int j = 0; j < node.outgoingLinks.length; j++) {
-						Link outgoingLink = node.outgoingLinks[j];
-						MixtureFlow outgoingFlow = pair.second()[j];
-						
-						outgoingLink.inflow[t] = outgoingFlow;
-						outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
-					}
-				}
-			}
+			loadForTime(t);
 			
 			var pair = network.getTotalInflowOutflow(t);
 			System.out.println("Inflow of all links: " + pair.first());
@@ -77,6 +54,8 @@ public class DynamicNetworkLoading {
 		}
 		return t;
 	}
+	
+	protected abstract void loadForTime(int t);
 	
 	/**
 	 * Sets mixture fractions for each intersection and for each time
@@ -94,13 +73,24 @@ public class DynamicNetworkLoading {
 	/**
 	 * Resets the network to its original state making it ready to be
 	 * loaded again.
+	 * @param hard If true, method will fully reset all network parts
+	 * that have mutable state (i.e. all links, destinations and
+	 * intersetions) so that they are in a state as if they were just
+	 * created. If false, the method will only reset values, so that
+	 * the network is ready for another DNL, but objects will contain
+	 * garbage from previous DNL (which will be rewritten).
 	 */
-	public void resetNetwork() {
+	public void resetNetwork(boolean hard) {
 		for (Link link : network.allLinks)
-			link.reset();
+			link.reset(hard);
 		
-		for (Destination destination : network.destinations)
-			destination.reset();
+		if (hard) {
+			for (Destination destination : network.destinations)
+				destination.reset();
+			
+			for (int i = 0; i < network.intersections.length; i++)
+				network.intersections[i].setTurningFractions(null);
+		}
 	}
 	
 	/**

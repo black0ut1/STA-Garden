@@ -143,13 +143,27 @@ public abstract class Link {
 	/**
 	 * Resets the link to its original state making it ready to be
 	 * used again for DNL.
+	 * @param hard If true, method will fully reset all values that
+	 * were changed during DNL - the state will be the same as if this
+	 * object was just created. If false, will perform soft reset so
+	 * that this object is ready for another DNL, but arrays will
+	 * contain garbage from previous DNL (which will be rewritten).
 	 */
-	public void reset() {
-		// release objects
-		Arrays.fill(inflow, null);
-		Arrays.fill(outflow, null);
-		
-		cumulativeInflow[0] = 0;
-		cumulativeOutflow[0] = 0;
+	public void reset(boolean hard) {
+		if (hard) {
+			// release objects
+			Arrays.fill(inflow, null);
+			Arrays.fill(outflow, null);
+			
+			// zero out cumulative flows
+			Arrays.fill(cumulativeInflow, 0);
+			Arrays.fill(cumulativeOutflow, 0);
+			
+			this.sendingFlow = 0;
+			this.receivingFlow = 0;
+		} else {
+			cumulativeInflow[0] = 0;
+			cumulativeOutflow[0] = 0;
+		}
 	}
 }

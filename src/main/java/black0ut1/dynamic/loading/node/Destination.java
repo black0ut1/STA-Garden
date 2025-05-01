@@ -37,6 +37,7 @@ public class Destination extends Node {
 	}
 	
 	public void reset() {
+		// release objects
 		Arrays.fill(inflow, null);
 	}
 }
