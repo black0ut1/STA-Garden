@@ -2,7 +2,6 @@ package black0ut1.dynamic.loading.link;
 
 
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
-import black0ut1.util.Util;
 
 /**
  * Link transmission model.
@@ -28,7 +27,8 @@ public class LTM extends Link {
 	public void computeReceivingAndSendingFlows(int time) {
 		double t1 = time + 1 - length / backwardWaveSpeed / stepSize;
 		// t1 should not be larger than time unless time step is too large
-		t1 = Util.projectToInterval(t1, 0, time);
+		if (t1 < 0)
+			t1 = 0;
 		
 		double psi = t1 - (int) t1;
 		double interpolatedOutflow = (1 - psi) * cumulativeOutflow[(int) t1] + psi * cumulativeOutflow[(int) t1 + 1];
@@ -38,7 +38,8 @@ public class LTM extends Link {
 		
 		double t2 = time + 1 - length / freeFlowSpeed / stepSize;
 		// t2 should not be larger than time unless time step is too large
-		t2 = Util.projectToInterval(t2, 0, time);
+		if (t2 < 0)
+			t2 = 0;
 		
 		double phi = t2 - (int) t2;
 		double interpolatedInflow = (1 - phi) * cumulativeInflow[(int) t2] + phi * cumulativeInflow[(int) t2 + 1];

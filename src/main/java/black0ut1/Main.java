@@ -6,7 +6,9 @@ import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.equilibrium.DestinationAON;
-import black0ut1.dynamic.loading.DynamicNetworkLoading;
+import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
+import black0ut1.dynamic.loading.dnl.ILTM_DNL;
+import black0ut1.dynamic.loading.link.Link;
 import black0ut1.io.TNTP;
 
 
@@ -21,19 +23,18 @@ public class Main {
 		var pair = loadData(networkFile, odmFile, nodeFile);
 //		new GUI(new AssignmentPanel(pair.first()));
 		
-		double smallestFreeFlowTime = Double.POSITIVE_INFINITY;
-		for (Network.Edge edge : pair.first().getEdges())
-			if (edge.freeFlow > 0)
-				smallestFreeFlowTime = Math.min(smallestFreeFlowTime, edge.freeFlow);
-		System.out.println("Smallest free flow time: " + smallestFreeFlowTime);
-		
-		double timeStep = 0.12;
+		double timeStep = 0.4;
 		int odmSteps = 10;
 		int totalSteps = 2000;
 		
 		// The ODM will generate flow for only first 10 time steps
 		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), odmSteps);
 		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, timeStep, totalSteps);
+		
+		double smallestFreeFlowTime = Double.POSITIVE_INFINITY;
+		for (Link link : network.links)
+			smallestFreeFlowTime = Math.min(smallestFreeFlowTime, link.length / link.freeFlowSpeed);
+		System.out.println("Smallest free flow time: " + smallestFreeFlowTime);
 		
 		// The route choice model
 		DestinationAON aon = new DestinationAON(pair.first(), network, pair.second());
@@ -43,7 +44,7 @@ public class Main {
 		System.out.println("AON took " + (endTime - startTime) + "ms");
 		
 		// Dynamic network loading
-		DynamicNetworkLoading DNL = new DynamicNetworkLoading(network, odm, timeStep, totalSteps);
+		DynamicNetworkLoading DNL = new ILTM_DNL(network, odm, timeStep, totalSteps);
 		DNL.setTurningFractions(mfs);
 		
 		startTime = System.currentTimeMillis();

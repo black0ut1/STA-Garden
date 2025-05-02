@@ -111,6 +111,9 @@ public abstract class Link {
 				break;
 				
 			} else if (cumulativeInflow[t] < currOutflow) {
+				if (t == time - 1)
+					return inflow[time - 1];
+				
 				// found time is not integer, must interpolate
 				double a = cumulativeInflow[t];
 				double b = cumulativeInflow[t + 1];
