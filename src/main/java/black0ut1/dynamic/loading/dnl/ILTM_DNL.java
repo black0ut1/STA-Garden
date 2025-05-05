@@ -2,7 +2,6 @@ package black0ut1.dynamic.loading.dnl;
 
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
-import black0ut1.dynamic.loading.link.Connector;
 import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
@@ -22,9 +21,6 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 	
 	@Override
 	protected void loadForTime(int t) {
-		// Execute link models
-		for (Link link : network.allLinks)
-			link.computeReceivingAndSendingFlows(t);
 		
 		// Algorithm part 1: Execute origins
 		for (Origin origin : network.origins) {
@@ -51,46 +47,36 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 				var pair = node.computeOrientedMixtureFlows(t);
 				
 				for (int i = 0; i < node.incomingLinks.length; i++) {
-					if (node.incomingLinks[i] instanceof Connector)
-						continue;
-					
-					LTM incomingLink = (LTM) node.incomingLinks[i];
-					MixtureFlow incomingFlow = pair.first()[i];
-					
-					double Xad = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
-					double Vi = incomingLink.cumulativeOutflow[t + 1];
-					deltas[incomingLink.tail.index] += incomingLink.psi * Math.abs(Xad - Vi);
-				}
-				
-				for (int j = 0; j < node.outgoingLinks.length; j++) {
-					if (node.outgoingLinks[j] instanceof Connector)
-						continue;
-					
-					LTM outgoingLink = (LTM) node.outgoingLinks[j];
-					MixtureFlow outgoingFlow = pair.second()[j];
-					
-					double Xbd = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
-					double Ui = outgoingLink.cumulativeInflow[t + 1];
-					deltas[outgoingLink.head.index] += outgoingLink.phi * Math.abs(Xbd - Ui);
-				}
-				
-				deltas[node.index] = 0;
-				
-				for (int i = 0; i < node.incomingLinks.length; i++) {
 					Link incomingLink = node.incomingLinks[i];
 					MixtureFlow incomingFlow = pair.first()[i];
 					
+					double Xad = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
+					
+					if (incomingLink instanceof LTM) {
+						double Vi = incomingLink.cumulativeOutflow[t + 1];
+						deltas[incomingLink.tail.index] += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
+					}
+					
 					incomingLink.outflow[t] = incomingFlow;
-					incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
+					incomingLink.cumulativeOutflow[t + 1] = Xad;
 				}
 				
 				for (int j = 0; j < node.outgoingLinks.length; j++) {
 					Link outgoingLink = node.outgoingLinks[j];
 					MixtureFlow outgoingFlow = pair.second()[j];
 					
+					double Xbd = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
+					
+					if (outgoingLink instanceof LTM) {
+						double Ui = outgoingLink.cumulativeInflow[t + 1];
+						deltas[outgoingLink.head.index] += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
+					}
+					
 					outgoingLink.inflow[t] = outgoingFlow;
-					outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
+					outgoingLink.cumulativeInflow[t + 1] = Xbd;
 				}
+				
+				deltas[node.index] = 0;
 			}
 		}
 		
