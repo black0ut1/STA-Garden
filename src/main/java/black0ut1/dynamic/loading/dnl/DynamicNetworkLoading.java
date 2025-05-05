@@ -5,6 +5,7 @@ import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.node.Destination;
+import black0ut1.dynamic.loading.node.Intersection;
 
 /**
  * Abstract class that wraps the functionality of dynamic network
@@ -12,19 +13,21 @@ import black0ut1.dynamic.loading.node.Destination;
  * loading the traffic each time step.
  * <p>
  * The typical usage would be:							<br>
- *  1. Determine turning fractions using DUE			<br>
- *  2. dnl.setTurningFractions(turningFractions)		<br>
- *  3. dnl.loadNetwork()								<br>
- *  4. Determine time-dependent travel times			<br>
- *  5. dnl.resetNetwork()								<br>
- *  6. Go to 1.
+ * 1. Determine turning fractions using DUE			<br>
+ * 2. dnl.setTurningFractions(turningFractions)		<br>
+ * 3. dnl.loadNetwork()								<br>
+ * 4. Determine time-dependent travel times			<br>
+ * 5. dnl.resetNetwork()								<br>
+ * 6. Go to 1.
  */
 public abstract class DynamicNetworkLoading {
 	
 	/** The network to be loaded. */
 	protected final DynamicNetwork network;
-	/** Time dependent origin-destination matrix. Its flows will be
-	 *  loaded onto the network. */
+	/**
+	 * Time dependent origin-destination matrix. Its flows will be
+	 * loaded onto the network.
+	 */
 	protected final TimeDependentODM odm;
 	/** The period of one time step [h]. */
 	protected final double stepSize;
@@ -71,26 +74,26 @@ public abstract class DynamicNetworkLoading {
 	}
 	
 	/**
-	 * Resets the network to its original state making it ready to be
-	 * loaded again.
-	 * @param hard If true, method will fully reset all network parts
-	 * that have mutable state (i.e. all links, destinations and
-	 * intersetions) so that they are in a state as if they were just
-	 * created. If false, the method will only reset values, so that
-	 * the network is ready for another DNL, but objects will contain
-	 * garbage from previous DNL (which will be rewritten).
+	 * Resets all the mutable states of network components to their
+	 * initial values. Namely, links have zeroed flow variables and
+	 * sending/receiving flows, destinations have zeroed inflow and
+	 * intersection turning fractions are removed.
+	 * <p>
+	 * Repeated BasicDNL on a network that is not reset should yield
+	 * the same results (because cumulativeInflow[0] and
+	 * cumulativeOutflow[0] are always 0, the rest is overwritten). It
+	 * would be different with ILTM_DNL, because it could benefit from
+	 * the values from previous DNL (see the paper - warm start).
 	 */
-	public void resetNetwork(boolean hard) {
+	public void resetNetwork() {
 		for (Link link : network.allLinks)
-			link.reset(hard);
+			link.reset();
 		
-		if (hard) {
-			for (Destination destination : network.destinations)
-				destination.reset();
-			
-			for (int i = 0; i < network.intersections.length; i++)
-				network.intersections[i].setTurningFractions(null);
-		}
+		for (Destination destination : network.destinations)
+			destination.reset();
+		
+		for (Intersection intersection : network.intersections)
+			intersection.setTurningFractions(null);
 	}
 	
 	/**
