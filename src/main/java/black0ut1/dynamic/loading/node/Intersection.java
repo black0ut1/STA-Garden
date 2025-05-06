@@ -14,6 +14,7 @@ import black0ut1.dynamic.loading.link.Link;
 public abstract class Intersection extends Node {
 	
 	protected MixtureFractions[] turningFractions;
+	public double potential;
 	
 	public Intersection(int index, Link[] incomingLinks, Link[] outgoingLinks) {
 		super(index, incomingLinks, outgoingLinks);

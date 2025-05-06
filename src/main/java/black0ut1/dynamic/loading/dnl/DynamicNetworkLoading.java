@@ -12,13 +12,13 @@ import black0ut1.dynamic.loading.node.Intersection;
  * loading. Subclasses of this class would differ by their strategy of
  * loading the traffic each time step.
  * <p>
- * The typical usage would be:							<br>
- * 1. Determine turning fractions using DUE			<br>
- * 2. dnl.setTurningFractions(turningFractions)		<br>
- * 3. dnl.loadNetwork()								<br>
- * 4. Determine time-dependent travel times			<br>
- * 5. dnl.resetNetwork()								<br>
- * 6. Go to 1.
+ * The typical usage would be:										  <br>
+ * 1. Determine turning fractions using DUE							  <br>
+ * 2. dnl.setTurningFractions(turningFractions)						  <br>
+ * 3. dnl.loadNetwork()												  <br>
+ * 4. Determine time-dependent travel times							  <br>
+ * 5. dnl.resetNetwork()											  <br>
+ * 6. Go to 1.														  <br>
  */
 public abstract class DynamicNetworkLoading {
 	
@@ -65,8 +65,8 @@ public abstract class DynamicNetworkLoading {
 	 * step.
 	 * @param turningFractions 2D array of mixture flows, where first
 	 * index represents intersection and the second represents the
-	 * time step - {@code turningFractions[i][t]} are MixtureFractions used by
-	 * intersection i during time step t.
+	 * time step - {@code turningFractions[i][t]} are MixtureFractions
+	 * used by intersection i during time step t.
 	 */
 	public void setTurningFractions(MixtureFractions[][] turningFractions) {
 		for (int i = 0; i < network.intersections.length; i++)
