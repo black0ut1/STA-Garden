@@ -11,6 +11,9 @@ import black0ut1.dynamic.loading.node.Origin;
 
 import java.util.Arrays;
 
+/**
+ * TODO clean up, implement ILTMLink
+ */
 public class ILTM_DNL extends DynamicNetworkLoading {
 	
 	protected final double precision = 1e-8;
@@ -33,18 +36,34 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 			outgoing.cumulativeInflow[t + 1] = Xad;
 		}
 		
+		for (Link link : network.originConnectors)
+			link.computeReceivingAndSendingFlows(t);
 		
+		// values in this array determine which nodes need to be
+		// executed again
 		double[] deltas = new double[network.intersections.length];
 		Arrays.fill(deltas, Double.POSITIVE_INFINITY);
 		
-		int it;
-		for (it = 0; abovePrecision(deltas); it++) {
+		do { // iterative scheme
 			
-			for (Link link : network.allLinks)
-				link.computeReceivingAndSendingFlows(t);
-			
+			// for each intersection
 			for (Intersection node : network.intersections) {
+				
+				// update sending flow of incoming links
+				for (Link incomingLink : node.incomingLinks) {
+					if (incomingLink instanceof LTM)
+						((LTM) incomingLink).computeSendingFlow(t);
+				}
+				
+				// update receiving flow of outgoing links
+				for (Link outgoingLink : node.outgoingLinks) {
+					if (outgoingLink instanceof LTM)
+						((LTM) outgoingLink).computeReceivingFlow(t);
+				}
+				
+				// compute oriented flow
 				var pair = node.computeOrientedMixtureFlows(t);
+				
 				
 				for (int i = 0; i < node.incomingLinks.length; i++) {
 					Link incomingLink = node.incomingLinks[i];
@@ -78,10 +97,13 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 				
 				deltas[node.index] = 0;
 			}
-		}
+		} while (abovePrecision(deltas));
 		
 		
 		// Algorithm part 3: Execute destination
+		for (Link link : network.destinationConnectors)
+			link.computeReceivingAndSendingFlows(t);
+		
 		for (Destination destination : network.destinations) {
 			var pair = destination.computeOrientedMixtureFlows(t);
 			
@@ -91,9 +113,6 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 			incoming.outflow[t] = pair.first()[0];
 			incoming.cumulativeOutflow[t + 1] = Xad;
 		}
-		
-		
-		System.out.println("ILTM iterations: " + it);
 	}
 	
 	protected boolean abovePrecision(double[] deltas) {

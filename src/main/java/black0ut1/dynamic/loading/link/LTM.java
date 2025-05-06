@@ -25,6 +25,11 @@ public class LTM extends Link {
 	
 	@Override
 	public void computeReceivingAndSendingFlows(int time) {
+		computeReceivingFlow(time);
+		computeSendingFlow(time);
+	}
+	
+	public void computeReceivingFlow(int time) {
 		double t1 = time + 1 - length / backwardWaveSpeed / stepSize;
 		// t1 should not be larger than time unless time step is too large
 		if (t1 < 0)
@@ -35,7 +40,10 @@ public class LTM extends Link {
 		this.receivingFlow = Math.min(capacity * stepSize,
 				interpolatedOutflow - cumulativeInflow[time] + jamDensity * length);
 		
-		
+		this.psi = psi;
+	}
+	
+	public void computeSendingFlow(int time) {
 		double t2 = time + 1 - length / freeFlowSpeed / stepSize;
 		// t2 should not be larger than time unless time step is too large
 		if (t2 < 0)
@@ -46,8 +54,6 @@ public class LTM extends Link {
 		this.sendingFlow = Math.min(capacity * stepSize,
 				interpolatedInflow - cumulativeOutflow[time]);
 		
-		
-		this.psi = psi;
 		this.phi = phi;
 	}
 	
