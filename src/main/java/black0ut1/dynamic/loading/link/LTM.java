@@ -40,7 +40,7 @@ public class LTM extends Link {
 		this.receivingFlow = Math.min(capacity * stepSize,
 				interpolatedOutflow - cumulativeInflow[time] + jamDensity * length);
 		
-		this.psi = psi;
+		this.psi = (t1 > time) ? psi : 0;
 	}
 	
 	public void computeSendingFlow(int time) {
@@ -54,7 +54,7 @@ public class LTM extends Link {
 		this.sendingFlow = Math.min(capacity * stepSize,
 				interpolatedInflow - cumulativeOutflow[time]);
 		
-		this.phi = phi;
+		this.phi = (t2 > time) ? phi : 0;
 	}
 	
 	/**
