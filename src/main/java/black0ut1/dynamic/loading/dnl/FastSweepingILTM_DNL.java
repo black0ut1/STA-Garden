@@ -10,27 +10,12 @@ import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.node.Origin;
 
 import java.util.Arrays;
+import java.util.Comparator;
 
-/**
- * Iterative LTM network loading (unoptimized version). It circumvents
- * the limit put on step size by the link with lowest free flow time.
- * <p>
- * It assumes that the network consists only of connectors and LTM
- * links. It is also much faster, when executed on a network which
- * contains values from previous DNL if changes in input are small.
- * <p>
- * Bibliography:													  <br>
- * - (Himpe et al., 2016) An efficient iterative link transmission
- * model															  <br>
- * TODO clean up, implement ILTMLink
- */
-public class ILTM_DNL extends DynamicNetworkLoading {
+
+public class FastSweepingILTM_DNL extends ILTM_DNL {
 	
-	protected final double precision = 1e-8;
-	public int nodeUpdates = 0;
-	public int iterations = 0;
-	
-	public ILTM_DNL(DynamicNetwork network, TimeDependentODM odm, double stepSize, int steps) {
+	public FastSweepingILTM_DNL(DynamicNetwork network, TimeDependentODM odm, double stepSize, int steps) {
 		super(network, odm, stepSize, steps);
 	}
 	
@@ -51,18 +36,18 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 		for (Link link : network.originConnectors)
 			link.computeReceivingAndSendingFlows(t);
 		
-		// update potentials
-		double[] deltas = new double[network.intersections.length];
-		Arrays.fill(deltas, Double.POSITIVE_INFINITY);
+		
+		Intersection[] intersections = network.intersections.clone();
+		for (Intersection intersection : intersections)
+			intersection.potential = Double.POSITIVE_INFINITY;
 		
 		do { // iterative scheme
 			iterations++;
 			
 			// for each intersection
-			for (Intersection node : network.intersections) {
-				if (deltas[node.index] < precision)
+			for (Intersection node : intersections) {
+				if (node.potential == 0)
 					continue;
-				
 				nodeUpdates++;
 				
 				// update sending flow of incoming links
@@ -89,7 +74,8 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 					
 					if (incomingLink instanceof LTM) {
 						double Vi = incomingLink.cumulativeOutflow[t + 1];
-						deltas[incomingLink.tail.index] += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
+						network.intersections[incomingLink.tail.index].potential
+								+= ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
 					}
 					
 					incomingLink.outflow[t] = incomingFlow;
@@ -104,16 +90,19 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 					
 					if (outgoingLink instanceof LTM) {
 						double Ui = outgoingLink.cumulativeInflow[t + 1];
-						deltas[outgoingLink.head.index] += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
+						network.intersections[outgoingLink.head.index].potential
+								+= ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
 					}
 					
 					outgoingLink.inflow[t] = outgoingFlow;
 					outgoingLink.cumulativeInflow[t + 1] = Xbd;
 				}
 				
-				deltas[node.index] = 0;
+				node.potential = 0;
 			}
-		} while (abovePrecision(deltas));
+			
+			Arrays.sort(intersections, Comparator.comparingDouble(o -> -o.potential));
+		} while (intersections[0].potential > precision);
 		
 		
 		// Algorithm part 3: Execute destination
@@ -129,13 +118,5 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 			incoming.outflow[t] = pair.first()[0];
 			incoming.cumulativeOutflow[t + 1] = Xad;
 		}
-	}
-	
-	protected boolean abovePrecision(double[] deltas) {
-		for (double delta : deltas)
-			if (delta > precision)
-				return true;
-		
-		return false;
 	}
 }
