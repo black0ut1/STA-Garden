@@ -52,15 +52,15 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 			link.computeReceivingAndSendingFlows(t);
 		
 		// update potentials
-		double[] deltas = new double[network.intersections.length];
-		Arrays.fill(deltas, Double.POSITIVE_INFINITY);
+		double[] potentials = new double[network.intersections.length];
+		Arrays.fill(potentials, Double.POSITIVE_INFINITY);
 		
 		do { // iterative scheme
 			iterations++;
 			
 			// for each intersection
 			for (Intersection node : network.intersections) {
-				if (deltas[node.index] < precision)
+				if (potentials[node.index] < precision)
 					continue;
 				
 				nodeUpdates++;
@@ -89,7 +89,7 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 					
 					if (incomingLink instanceof LTM) {
 						double Vi = incomingLink.cumulativeOutflow[t + 1];
-						deltas[incomingLink.tail.index] += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
+						potentials[incomingLink.tail.index] += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
 					}
 					
 					incomingLink.outflow[t] = incomingFlow;
@@ -104,16 +104,16 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 					
 					if (outgoingLink instanceof LTM) {
 						double Ui = outgoingLink.cumulativeInflow[t + 1];
-						deltas[outgoingLink.head.index] += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
+						potentials[outgoingLink.head.index] += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
 					}
 					
 					outgoingLink.inflow[t] = outgoingFlow;
 					outgoingLink.cumulativeInflow[t + 1] = Xbd;
 				}
 				
-				deltas[node.index] = 0;
+				potentials[node.index] = 0;
 			}
-		} while (abovePrecision(deltas));
+		} while (abovePrecision(potentials));
 		
 		
 		// Algorithm part 3: Execute destination

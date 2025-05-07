@@ -46,7 +46,7 @@ public class FastSweepingILTM_DNL extends ILTM_DNL {
 			
 			// for each intersection
 			for (Intersection node : intersections) {
-				if (node.potential == 0)
+				if (node.potential < precision)
 					continue;
 				nodeUpdates++;
 				
