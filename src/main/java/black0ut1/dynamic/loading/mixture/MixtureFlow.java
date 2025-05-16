@@ -35,6 +35,12 @@ public class MixtureFlow {
 		System.arraycopy(portions, 0, this.portions, 0, len);
 	}
 	
+	private MixtureFlow(double totalFlow, int[] destinations, double[] portions) {
+		this.totalFlow = totalFlow;
+		this.destinations = destinations;
+		this.portions = portions;
+	}
+	
 	/**
 	 * Return the portion of the total flow that is heading for a
 	 * specific destination.
@@ -99,29 +105,11 @@ public class MixtureFlow {
 		return new MixtureFlow(resultFlow, destinationUnion, portions, len);
 	}
 	
-//	public MixtureFlow plus(MixtureFlow other) {
-//		double resultFlow = totalFlow + other.totalFlow;
-//		var resultPortions = new IntDoubleHashMap();
-//
-//		var destinationUnion = new IntHashSet();
-//		destinationUnion.addAll(this.mixtures.keys());
-//		destinationUnion.addAll(other.mixtures.keys());
-//
-//		destinationUnion.forEach((IntProcedure) destination -> {
-//			double thisDestinationFlow = this.getDestinationFlow(destination);
-//			double otherDestinationFlow = other.getDestinationFlow(destination);
-//
-//			resultPortions.put(destination, (thisDestinationFlow + otherDestinationFlow) / resultFlow);
-//		});
-//
-//		return new MixtureFlow(resultFlow, resultPortions);
-//	}
-	
 	public MixtureFlow copyWithFlow(double newFlow) {
 		if (newFlow == 0)
 			return MixtureFlow.ZERO;
 		
-		return new MixtureFlow(newFlow, destinations, portions, destinations.length);
+		return new MixtureFlow(newFlow, destinations, portions);
 	}
 	
 	public void checkPortions(double tolerance) {
