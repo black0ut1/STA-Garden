@@ -12,13 +12,15 @@ public class PointQueue extends Link {
 					  double freeFlowSpeed, double backwardWaveSpeed) {
 		super(index, stepSize, timeSteps, length, capacity,
 				jamDensity, freeFlowSpeed, backwardWaveSpeed);
+		
+		this.receivingFlow = capacity * stepSize;
 	}
 	
 	@Override
-	public void computeReceivingAndSendingFlows(int time) {
-		this.receivingFlow = capacity * stepSize;
-		
-		
+	public void computeReceivingFlow(int time) {}
+	
+	@Override
+	public void computeSendingFlow(int time) {
 		int t2 = (int) (time + 1 - length / freeFlowSpeed / stepSize);
 		if (t2 < 0)
 			t2 = 0;

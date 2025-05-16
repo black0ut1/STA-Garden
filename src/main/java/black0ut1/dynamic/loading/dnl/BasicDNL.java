@@ -21,34 +21,61 @@ public class BasicDNL extends DynamicNetworkLoading {
 	@Override
 	protected void loadForTime(int t) {
 		
-		// execute link models
-		for (Link link : network.allLinks)
-			link.computeReceivingAndSendingFlows(t);
+		// 1. Load traffic from each origin onto the connector
+		for (Origin origin : network.origins) {
+			Link outgoingLink = origin.outgoingLinks[0];
+			outgoingLink.computeReceivingFlow(t);
+			
+			var pair = origin.computeOrientedMixtureFlows(t);
+			
+			MixtureFlow outgoingFlow = pair.second()[0];
+			outgoingLink.inflow[t] = outgoingFlow;
+			outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
+		}
 		
-		// execute node models and shift flows
-		for (Node node : network.allNodes) {
+		// 2. For each intersection
+		for (Node node : network.intersections) {
+			
+			// 2.1 Update sending flow of each incoming link
+			for (Link incomingLink : node.incomingLinks)
+				incomingLink.computeSendingFlow(t);
+			
+			// 2.2 Update receiving flow of each outgoing link
+			for (Link outgoingLink : node.outgoingLinks)
+				outgoingLink.computeReceivingFlow(t);
+			
+			// 2.3 Compute oriented flows using intersection model
 			var pair = node.computeOrientedMixtureFlows(t);
 			
-			if (!(node instanceof Origin)) { // origins have null incomingLinks
-				for (int i = 0; i < node.incomingLinks.length; i++) {
-					Link incomingLink = node.incomingLinks[i];
-					MixtureFlow incomingFlow = pair.first()[i];
-					
-					incomingLink.outflow[t] = incomingFlow;
-					incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
-				}
+			// 2.4 Remove oriented flows from incoming links
+			for (int i = 0; i < node.incomingLinks.length; i++) {
+				Link incomingLink = node.incomingLinks[i];
+				MixtureFlow incomingFlow = pair.first()[i];
+				
+				incomingLink.outflow[t] = incomingFlow;
+				incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 			}
 			
-			if (!(node instanceof Destination)) { // destinations have null outgoingLinks
-				for (int j = 0; j < node.outgoingLinks.length; j++) {
-					Link outgoingLink = node.outgoingLinks[j];
-					MixtureFlow outgoingFlow = pair.second()[j];
-					
-					outgoingLink.inflow[t] = outgoingFlow;
-					outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
-				}
+			// 2.5 Load oriented flows onto outgoing links
+			for (int j = 0; j < node.outgoingLinks.length; j++) {
+				Link outgoingLink = node.outgoingLinks[j];
+				MixtureFlow outgoingFlow = pair.second()[j];
+				
+				outgoingLink.inflow[t] = outgoingFlow;
+				outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
 			}
 		}
 		
+		// 3. Sink traffic from connector to each destination
+		for (Destination destination : network.destinations) {
+			Link incomingLink = destination.incomingLinks[0];
+			incomingLink.computeSendingFlow(t);
+			
+			var pair = destination.computeOrientedMixtureFlows(t);
+			
+			MixtureFlow incomingFlow = pair.first()[0];
+			incomingLink.outflow[t] = incomingFlow;
+			incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
+		}
 	}
 }

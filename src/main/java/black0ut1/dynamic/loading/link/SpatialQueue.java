@@ -15,11 +15,13 @@ public class SpatialQueue extends Link {
 	}
 	
 	@Override
-	public void computeReceivingAndSendingFlows(int time) {
+	public void computeReceivingFlow(int time) {
 		this.receivingFlow = Math.min(capacity * stepSize,
 				cumulativeOutflow[time] - cumulativeInflow[time] + jamDensity * length);
-		
-		
+	}
+	
+	@Override
+	public void computeSendingFlow(int time) {
 		int t2 = (int) (time + 1 - length / freeFlowSpeed / stepSize);
 		if (t2 < 0)
 			t2 = 0;

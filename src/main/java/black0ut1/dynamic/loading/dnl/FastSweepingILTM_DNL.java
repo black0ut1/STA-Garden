@@ -12,7 +12,12 @@ import black0ut1.dynamic.loading.node.Origin;
 import java.util.Arrays;
 import java.util.Comparator;
 
-
+/**
+ * Tested on ChicagoSketch - only brings significant speedup for very
+ * large step sizes (5 and more). Brings no speedup for step sizes up
+ * to 2.
+ * TODO Try priority queue instead of sorting
+ */
 public class FastSweepingILTM_DNL extends ILTM_DNL {
 	
 	public FastSweepingILTM_DNL(DynamicNetwork network, TimeDependentODM odm, double stepSize, int steps) {
@@ -22,101 +27,106 @@ public class FastSweepingILTM_DNL extends ILTM_DNL {
 	@Override
 	protected void loadForTime(int t) {
 		
-		// Algorithm part 1: Execute origins
+		// 1. Load traffic from each origin onto the connector
 		for (Origin origin : network.origins) {
+			Link outgoingLink = origin.outgoingLinks[0];
+			outgoingLink.computeReceivingFlow(t);
+			
 			var pair = origin.computeOrientedMixtureFlows(t);
 			
-			Link outgoing = origin.outgoingLinks[0];
-			var Xad = outgoing.cumulativeInflow[t] + pair.second()[0].totalFlow;
-			
-			outgoing.inflow[t] = pair.second()[0];
-			outgoing.cumulativeInflow[t + 1] = Xad;
+			MixtureFlow outgoingFlow = pair.second()[0];
+			outgoingLink.inflow[t] = outgoingFlow;
+			outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
 		}
 		
-		for (Link link : network.originConnectors)
-			link.computeReceivingAndSendingFlows(t);
-		
-		
+		// Initialize update potential of every intersection to inf
+		// and clone intersection array for sorting
 		Intersection[] intersections = network.intersections.clone();
 		for (Intersection intersection : intersections)
 			intersection.potential = Double.POSITIVE_INFINITY;
 		
-		do { // iterative scheme
+		// 2. Iterate until update potential of every intersection of
+		// is under precision
+		do {
 			iterations++;
 			
-			// for each intersection
+			// 2.1 For each intersection
 			for (Intersection node : intersections) {
+				
+				// Update potential of this node is sufficiently small
+				// so we do not need to update it.
 				if (node.potential < precision)
 					continue;
+				
 				nodeUpdates++;
 				
-				// update sending flow of incoming links
-				for (Link incomingLink : node.incomingLinks) {
-					if (incomingLink instanceof LTM)
-						((LTM) incomingLink).computeSendingFlow(t);
-				}
+				// 2.1.1 Update sending flow of each incoming link
+				for (Link incomingLink : node.incomingLinks)
+					incomingLink.computeSendingFlow(t);
 				
-				// update receiving flow of outgoing links
-				for (Link outgoingLink : node.outgoingLinks) {
-					if (outgoingLink instanceof LTM)
-						((LTM) outgoingLink).computeReceivingFlow(t);
-				}
+				// 2.1.2 Update receiving flow of each outgoing link
+				for (Link outgoingLink : node.outgoingLinks)
+					outgoingLink.computeReceivingFlow(t);
 				
-				// compute oriented flow
+				// 2.1.3 Compute oriented flows using intersection model
 				var pair = node.computeOrientedMixtureFlows(t);
 				
-				
+				// 2.1.4 Remove oriented flows from incoming links
 				for (int i = 0; i < node.incomingLinks.length; i++) {
 					Link incomingLink = node.incomingLinks[i];
 					MixtureFlow incomingFlow = pair.first()[i];
 					
 					double Xad = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 					
+					// increase update potential of the link tail
 					if (incomingLink instanceof LTM) {
 						double Vi = incomingLink.cumulativeOutflow[t + 1];
-						network.intersections[incomingLink.tail.index].potential
-								+= ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
+						((Intersection) incomingLink.tail).potential += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
 					}
 					
 					incomingLink.outflow[t] = incomingFlow;
 					incomingLink.cumulativeOutflow[t + 1] = Xad;
 				}
 				
+				// 2.1.5 Load oriented flows onto outgoing links
 				for (int j = 0; j < node.outgoingLinks.length; j++) {
 					Link outgoingLink = node.outgoingLinks[j];
 					MixtureFlow outgoingFlow = pair.second()[j];
 					
 					double Xbd = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
 					
+					// increase update potential of the link head
 					if (outgoingLink instanceof LTM) {
 						double Ui = outgoingLink.cumulativeInflow[t + 1];
-						network.intersections[outgoingLink.head.index].potential
-								+= ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
+						((Intersection) outgoingLink.head).potential += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
 					}
 					
 					outgoingLink.inflow[t] = outgoingFlow;
 					outgoingLink.cumulativeInflow[t + 1] = Xbd;
 				}
 				
+				// 2.1.6 This intersection was just updated, thus
+				// potential is 0
 				node.potential = 0;
 			}
 			
+			// 2.2 Sort intersection array so that the intersections
+			// with most potential are updated first
 			Arrays.sort(intersections, Comparator.comparingDouble(o -> -o.potential));
+			
 		} while (intersections[0].potential > precision);
 		
 		
-		// Algorithm part 3: Execute destination
-		for (Link link : network.destinationConnectors)
-			link.computeReceivingAndSendingFlows(t);
-		
+		// 3. Sink traffic from connector to each destination
 		for (Destination destination : network.destinations) {
+			Link incomingLink = destination.incomingLinks[0];
+			incomingLink.computeSendingFlow(t);
+			
 			var pair = destination.computeOrientedMixtureFlows(t);
 			
-			Link incoming = destination.incomingLinks[0];
-			var Xad = incoming.cumulativeOutflow[t] + pair.first()[0].totalFlow;
-			
-			incoming.outflow[t] = pair.first()[0];
-			incoming.cumulativeOutflow[t + 1] = Xad;
+			MixtureFlow incomingFlow = pair.first()[0];
+			incomingLink.outflow[t] = incomingFlow;
+			incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 		}
 	}
 }

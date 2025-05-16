@@ -23,12 +23,6 @@ public class LTM extends Link {
 				jamDensity, freeFlowSpeed, backwardWaveSpeed);
 	}
 	
-	@Override
-	public void computeReceivingAndSendingFlows(int time) {
-		computeReceivingFlow(time);
-		computeSendingFlow(time);
-	}
-	
 	public void computeReceivingFlow(int time) {
 		double t1 = time + 1 - length / backwardWaveSpeed / stepSize;
 		// t1 should not be larger than time unless time step is too large
@@ -68,23 +62,31 @@ public class LTM extends Link {
 		double[] flowSent = {10, 10, 10, 10, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0};
 		for (int t = 0; t <= 20; t++) {
 			
-			ltm.computeReceivingAndSendingFlows(t);
+			ltm.computeReceivingFlow(t);
+			ltm.computeSendingFlow(t);
 			
 			if (ltm.getReceivingFlow() < flowSent[t]) {
 				MixtureFlow mf = new MixtureFlow(ltm.getReceivingFlow(), new int[0], new double[0], 0);
-//				ltm.enterFlow(t, mf);
+				
+				ltm.inflow[t] = mf;
+				ltm.cumulativeInflow[t + 1] = ltm.cumulativeInflow[t] + mf.totalFlow;
 				
 				// carry over unsent flow
 				flowSent[t + 1] += (flowSent[t] - ltm.getReceivingFlow());
 			} else {
 				MixtureFlow mf = new MixtureFlow(flowSent[t], new int[0], new double[0], 0);
-//				ltm.enterFlow(t, mf);
+				
+				ltm.inflow[t] = mf;
+				ltm.cumulativeInflow[t + 1] = ltm.cumulativeInflow[t] + mf.totalFlow;
 			}
 			
 			double flowExited = Math.min(10, ltm.getSendingFlow());
 			if (t < 10) // red light until time 10
 				flowExited = 0;
-//			ltm.exitFlow(t, flowExited);
+			MixtureFlow mf = new MixtureFlow(flowExited, new int[0], new double[0], 0);
+			
+			ltm.outflow[t] = mf;
+			ltm.cumulativeOutflow[t + 1] = ltm.cumulativeOutflow[t] + mf.totalFlow;
 			
 			System.out.printf("%2d | %4.1f  %4.1f %6.1f | %4.1f %5.1f  | %4.1f %6.1f %8.1f %n",
 					t, flowSent[t], ltm.getReceivingFlow(), ltm.inflow[t].totalFlow,

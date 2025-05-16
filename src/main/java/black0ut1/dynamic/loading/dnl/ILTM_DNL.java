@@ -9,8 +9,6 @@ import black0ut1.dynamic.loading.node.Destination;
 import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.node.Origin;
 
-import java.util.Arrays;
-
 /**
  * Iterative LTM network loading (unoptimized version). It circumvents
  * the limit put on step size by the link with lowest free flow time.
@@ -22,7 +20,6 @@ import java.util.Arrays;
  * Bibliography:													  <br>
  * - (Himpe et al., 2016) An efficient iterative link transmission
  * model															  <br>
- * TODO clean up, implement ILTMLink
  */
 public class ILTM_DNL extends DynamicNetworkLoading {
 	
@@ -37,104 +34,107 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 	@Override
 	protected void loadForTime(int t) {
 		
-		// Algorithm part 1: Execute origins
+		// 1. Load traffic from each origin onto the connector
 		for (Origin origin : network.origins) {
+			Link outgoingLink = origin.outgoingLinks[0];
+			outgoingLink.computeReceivingFlow(t);
+			
 			var pair = origin.computeOrientedMixtureFlows(t);
 			
-			Link outgoing = origin.outgoingLinks[0];
-			var Xad = outgoing.cumulativeInflow[t] + pair.second()[0].totalFlow;
-			
-			outgoing.inflow[t] = pair.second()[0];
-			outgoing.cumulativeInflow[t + 1] = Xad;
+			MixtureFlow outgoingFlow = pair.second()[0];
+			outgoingLink.inflow[t] = outgoingFlow;
+			outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
 		}
 		
-		for (Link link : network.originConnectors)
-			link.computeReceivingAndSendingFlows(t);
+		// Initialize update potential of every intersection to inf
+		for (Intersection intersection : network.intersections)
+			intersection.potential = Double.POSITIVE_INFINITY;
 		
-		// update potentials
-		double[] potentials = new double[network.intersections.length];
-		Arrays.fill(potentials, Double.POSITIVE_INFINITY);
-		
-		do { // iterative scheme
+		// 2. Iterate until update potential of every intersection of
+		// is under precision
+		do {
 			iterations++;
 			
-			// for each intersection
+			// 2.1 For each intersection
 			for (Intersection node : network.intersections) {
-				if (potentials[node.index] < precision)
+				
+				// Update potential of this node is sufficiently small
+				// so we do not need to update it.
+				if (node.potential < precision)
 					continue;
 				
 				nodeUpdates++;
 				
-				// update sending flow of incoming links
-				for (Link incomingLink : node.incomingLinks) {
-					if (incomingLink instanceof LTM)
-						((LTM) incomingLink).computeSendingFlow(t);
-				}
+				// 2.1.1 Update sending flow of each incoming link
+				for (Link incomingLink : node.incomingLinks)
+					incomingLink.computeSendingFlow(t);
 				
-				// update receiving flow of outgoing links
-				for (Link outgoingLink : node.outgoingLinks) {
-					if (outgoingLink instanceof LTM)
-						((LTM) outgoingLink).computeReceivingFlow(t);
-				}
+				// 2.1.2 Update receiving flow of each outgoing link
+				for (Link outgoingLink : node.outgoingLinks)
+					outgoingLink.computeReceivingFlow(t);
 				
-				// compute oriented flow
+				// 2.1.3 Compute oriented flows using intersection model
 				var pair = node.computeOrientedMixtureFlows(t);
 				
-				
+				// 2.1.4 Remove oriented flows from incoming links
 				for (int i = 0; i < node.incomingLinks.length; i++) {
 					Link incomingLink = node.incomingLinks[i];
 					MixtureFlow incomingFlow = pair.first()[i];
 					
 					double Xad = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 					
+					// increase update potential of the link tail
 					if (incomingLink instanceof LTM) {
 						double Vi = incomingLink.cumulativeOutflow[t + 1];
-						potentials[incomingLink.tail.index] += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
+						((Intersection) incomingLink.tail).potential += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
 					}
 					
 					incomingLink.outflow[t] = incomingFlow;
 					incomingLink.cumulativeOutflow[t + 1] = Xad;
 				}
 				
+				// 2.1.5 Load oriented flows onto outgoing links
 				for (int j = 0; j < node.outgoingLinks.length; j++) {
 					Link outgoingLink = node.outgoingLinks[j];
 					MixtureFlow outgoingFlow = pair.second()[j];
 					
 					double Xbd = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
 					
+					// increase update potential of the link head
 					if (outgoingLink instanceof LTM) {
 						double Ui = outgoingLink.cumulativeInflow[t + 1];
-						potentials[outgoingLink.head.index] += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
+						((Intersection) outgoingLink.head).potential += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
 					}
 					
 					outgoingLink.inflow[t] = outgoingFlow;
 					outgoingLink.cumulativeInflow[t + 1] = Xbd;
 				}
 				
-				potentials[node.index] = 0;
+				// 2.1.6 This intersection was just updated, thus
+				// potential is 0
+				node.potential = 0;
 			}
-		} while (abovePrecision(potentials));
+		} while (abovePrecision());
 		
 		
-		// Algorithm part 3: Execute destination
-		for (Link link : network.destinationConnectors)
-			link.computeReceivingAndSendingFlows(t);
-		
+		// 3. Sink traffic from connector to each destination
 		for (Destination destination : network.destinations) {
+			Link incomingLink = destination.incomingLinks[0];
+			incomingLink.computeSendingFlow(t);
+			
 			var pair = destination.computeOrientedMixtureFlows(t);
 			
-			Link incoming = destination.incomingLinks[0];
-			var Xad = incoming.cumulativeOutflow[t] + pair.first()[0].totalFlow;
-			
-			incoming.outflow[t] = pair.first()[0];
-			incoming.cumulativeOutflow[t + 1] = Xad;
+			MixtureFlow incomingFlow = pair.first()[0];
+			incomingLink.outflow[t] = incomingFlow;
+			incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 		}
 	}
 	
-	protected boolean abovePrecision(double[] deltas) {
-		for (double delta : deltas)
-			if (delta > precision)
+	protected boolean abovePrecision() {
+		for (Intersection intersection : network.intersections) {
+			if (intersection.potential > precision)
 				return true;
+		}
 		
 		return false;
 	}

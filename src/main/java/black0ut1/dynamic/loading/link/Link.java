@@ -19,25 +19,25 @@ public abstract class Link {
 	
 	///// Fundamental diagram parameters //////
 	
-	/** Length of the link [km] */
+	/** Length of the link [km]. */
 	public final double length;
-	/** Capacity/maximum possible flow of the link [veh/h] */
+	/** Capacity/maximum possible flow of the link [veh/h]. */
 	public final double capacity;
-	/**
-	 * Jam density [veh/km] - the density of vehicles, after which
-	 * flow falls to 0
-	 */
+	/** Jam density [veh/km] - the density of vehicles, after which
+	 * flow falls to 0. */
 	public final double jamDensity;
-	/** The speed of free flow on the link [km/h] */
+	/** The speed of free flow on the link [km/h]. */
 	public final double freeFlowSpeed;
-	/** The backward wave speed [km/h] (must be positive) */
+	/** The backward wave speed [km/h] (must be positive). */
 	public final double backwardWaveSpeed;
 	
 	///// Flow variables //////
 	
-	/** The receiving flow (supply) of this link. */
+	/** The receiving flow (supply) of this link. Should be treated as
+	 * undefined until {@code computeReceivingFlow()} is called. */
 	protected double receivingFlow;
-	/** The sending flow (demand) of this link. */
+	/** The sending flow (demand) of this link. Should be treated as
+	 * undefined until {@code computeSendingFlow()} is called. */
 	protected double sendingFlow;
 	/** The flow that entered this link at each time step. */
 	public final MixtureFlow[] inflow;
@@ -78,12 +78,18 @@ public abstract class Link {
 	}
 	
 	/**
-	 * Computes the receiving (supply) and sending (demand) flow for
-	 * this time step. This method is implemented by the specific link
-	 * model.
+	 * Computes the receiving flow (supply) for this time step. This
+	 * method is implemented by the specific link model.
 	 * @param time Current time step.
 	 */
-	public abstract void computeReceivingAndSendingFlows(int time);
+	public abstract void computeReceivingFlow(int time);
+	
+	/**
+	 * Computes the sending flow (demand) for this time step. This
+	 * method is implemented by the specific link model.
+	 * @param time Current time step.
+	 */
+	public abstract void computeSendingFlow(int time);
 	
 	public double getReceivingFlow() {
 		return receivingFlow;
