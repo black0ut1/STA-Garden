@@ -15,8 +15,8 @@ public class PriorityQueue {
 	}
 	
 	public PriorityQueue(int initialCapacity, double growthFactor) {
-		this.values = new int[initialCapacity];
-		this.priorities = new double[initialCapacity];
+		this.values = new int[initialCapacity + 1];
+		this.priorities = new double[initialCapacity + 1];
 		this.growthFactor = growthFactor;
 	}
 	
@@ -30,6 +30,10 @@ public class PriorityQueue {
 		fixUp(count);
 	}
 	
+	public double getMinPriority() {
+		return priorities[1];
+	}
+	
 	public int popMin() {
 		int min = values[1];
 		
@@ -41,10 +45,19 @@ public class PriorityQueue {
 		return min;
 	}
 	
-	public void decreasePriority(int value, double newPriority) {
+	public void setLowerPriority(int value, double newPriority) {
 		for (int i = 1; i <= count; i++)
 			if (values[i] == value) {
 				priorities[i] = newPriority;
+				fixUp(i);
+				return;
+			}
+	}
+	
+	public void decreasePriority(int value, double priorityDelta) {
+		for (int i = 1; i <= count; i++)
+			if (values[i] == value) {
+				priorities[i] -= priorityDelta;
 				fixUp(i);
 				return;
 			}

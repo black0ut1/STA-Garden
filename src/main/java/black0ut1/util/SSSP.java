@@ -38,7 +38,7 @@ public class SSSP {
 				} else if (mark[toVertex] == 1 && newDistance < distance[toVertex]) {
 					distance[toVertex] = newDistance;
 					previous[toVertex] = edge;
-					pq.decreasePriority(toVertex, newDistance);
+					pq.setLowerPriority(toVertex, newDistance);
 				}
 			}
 		}
@@ -83,7 +83,7 @@ public class SSSP {
 				} else if (mark[toVertex] == 1 && newDistance < distance[toVertex]) {
 					distance[toVertex] = newDistance;
 					previous[toVertex] = edge;
-					pq.decreasePriority(toVertex, newDistance);
+					pq.setLowerPriority(toVertex, newDistance);
 				}
 			}
 		}
@@ -121,7 +121,7 @@ public class SSSP {
 				} else if (mark[fromVertex] == 1 && newDistance < distance[fromVertex]) {
 					distance[fromVertex] = newDistance;
 					next[fromVertex] = edge;
-					pq.decreasePriority(fromVertex, newDistance);
+					pq.setLowerPriority(fromVertex, newDistance);
 				}
 			}
 		}
