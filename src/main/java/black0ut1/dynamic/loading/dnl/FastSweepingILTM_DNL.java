@@ -16,7 +16,6 @@ import java.util.Comparator;
  * Tested on ChicagoSketch - only brings significant speedup for very
  * large step sizes (5 and more). Brings no speedup for step sizes up
  * to 2.
- * TODO Try priority queue instead of sorting
  */
 public class FastSweepingILTM_DNL extends ILTM_DNL {
 	
