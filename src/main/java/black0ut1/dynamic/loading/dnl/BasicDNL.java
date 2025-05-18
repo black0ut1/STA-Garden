@@ -9,8 +9,20 @@ import black0ut1.dynamic.loading.node.Node;
 import black0ut1.dynamic.loading.node.Origin;
 
 /**
- * The basic type of DNL which alternates between executing link
- * models and executing node models.
+ * The basic dynamic network loading scheme. For each time in the
+ * simulation, it does the following:								  <br>
+ * 1. Load traffic from artificial origins onto their connectors.	  <br>
+ * 2. Updates each intersection										  <br>
+ * 2.1. Updates sending flow of each incoming link					  <br>
+ * 2.2. Updates receiving flow of each outgoing link				  <br>
+ * 2.3. Computes oriented flows using the intersection model		  <br>
+ * 2.4. Removes oriented flows from incoming links					  <br>
+ * 2.5. Load oriented flows onto outgoing links						  <br>
+ * 3. Sinks traffic from connectors to destinations					  <br>
+ * <p>
+ * The step size for this scheme has upper limit imposed by the lowest
+ * free flow time, i.e.: 											  <br>
+ * stepSize <= min{ link.length / link.freeFlowSpeed }
  */
 public class BasicDNL extends DynamicNetworkLoading {
 	

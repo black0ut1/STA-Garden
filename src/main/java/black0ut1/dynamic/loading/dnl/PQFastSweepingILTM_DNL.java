@@ -10,10 +10,18 @@ import black0ut1.dynamic.loading.node.Destination;
 import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.node.Origin;
 
+/**
+ * This is an alternative to {@code FastSweepingILTM_DNL} which does
+ * not use inner iterations in the same way. It uses priority queue to
+ * select the intersection with largest update potential and updates
+ * it. This should be more powerful in reducing the amount of node
+ * updates than the ordinary {@code FastSweepingILTM_DNL}.
+ */
 public class PQFastSweepingILTM_DNL extends ILTM_DNL {
 	
-	public PQFastSweepingILTM_DNL(DynamicNetwork network, TimeDependentODM odm, double stepSize, int steps) {
-		super(network, odm, stepSize, steps);
+	public PQFastSweepingILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
+								  double stepSize, int steps, double precision) {
+		super(network, odm, stepSize, steps, precision);
 	}
 	
 	@Override

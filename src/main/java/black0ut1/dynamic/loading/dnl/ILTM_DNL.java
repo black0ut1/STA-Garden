@@ -10,8 +10,13 @@ import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.node.Origin;
 
 /**
- * Iterative LTM network loading (unoptimized version). It circumvents
- * the limit put on step size by the link with lowest free flow time.
+ * Iterative link transmission model dynamic network loading (basic
+ * version). This type of DNL is similar to {@code BasicDNL},  but it
+ * executes step 2. of {@code BasicDNL} multiple times. This allows to
+ * circumvent the limit put on step size by the link with lowest free
+ * flow time. The amount of these inner iterations is dependent on how
+ * consistent the solution should be (which is determined by the
+ * precision).
  * <p>
  * It assumes that the network consists only of connectors and LTM
  * links. It is also much faster, when executed on a network which
@@ -23,12 +28,13 @@ import black0ut1.dynamic.loading.node.Origin;
  */
 public class ILTM_DNL extends DynamicNetworkLoading {
 	
-	protected final double precision = 1e-8;
+	protected final double precision;
 	public int nodeUpdates = 0;
-	public int iterations = 0;
 	
-	public ILTM_DNL(DynamicNetwork network, TimeDependentODM odm, double stepSize, int steps) {
+	public ILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
+					double stepSize, int steps, double precision) {
 		super(network, odm, stepSize, steps);
+		this.precision = precision;
 	}
 	
 	@Override
@@ -53,8 +59,6 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 		// 2. Iterate until update potential of every intersection of
 		// is under precision
 		do {
-			iterations++;
-			
 			// 2.1 For each intersection
 			for (Intersection node : network.intersections) {
 				

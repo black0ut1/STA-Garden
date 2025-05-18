@@ -44,7 +44,7 @@ public class Main {
 		System.out.println("AON took " + (endTime - startTime) + "ms");
 		
 		// Dynamic network loading
-		DynamicNetworkLoading DNL = new ILTM_DNL(network, odm, timeStep, totalSteps);
+		DynamicNetworkLoading DNL = new ILTM_DNL(network, odm, timeStep, totalSteps, 1e-8);
 		DNL.setTurningFractions(mfs);
 		
 		startTime = System.currentTimeMillis();

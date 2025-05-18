@@ -13,14 +13,25 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 /**
+ * This version of {@code ILTM_DNL} (see documentation) uses fast
+ * sweeping, meaning before each iteration, it sorts intersections by
+ * their update potential in descending order. This reduces the amount
+ * of node updates.
+ * <p>
  * Tested on ChicagoSketch - only brings significant speedup for very
  * large step sizes (5 and more). Brings no speedup for step sizes up
  * to 2.
+ * <p>
+ * Bibliography:													  <br>
+ * - (Himpe et al., 2016) An efficient iterative link transmission
+ * model															  <br>
+ * - (Zhao, Hongkai, 2005) A fast sweeping method for eikonal equations
  */
 public class FastSweepingILTM_DNL extends ILTM_DNL {
 	
-	public FastSweepingILTM_DNL(DynamicNetwork network, TimeDependentODM odm, double stepSize, int steps) {
-		super(network, odm, stepSize, steps);
+	public FastSweepingILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
+								double stepSize, int steps, double precision) {
+		super(network, odm, stepSize, steps, precision);
 	}
 	
 	@Override
@@ -47,8 +58,6 @@ public class FastSweepingILTM_DNL extends ILTM_DNL {
 		// 2. Iterate until update potential of every intersection of
 		// is under precision
 		do {
-			iterations++;
-			
 			// 2.1 For each intersection
 			for (Intersection node : intersections) {
 				
