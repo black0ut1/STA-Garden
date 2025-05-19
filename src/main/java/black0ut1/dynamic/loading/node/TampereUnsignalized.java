@@ -1,7 +1,7 @@
 package black0ut1.dynamic.loading.node;
 
 import black0ut1.data.DoubleMatrix;
-import black0ut1.data.IntSet;
+import black0ut1.data.BitSet32;
 import black0ut1.dynamic.loading.link.Link;
 
 /**
@@ -37,20 +37,20 @@ public class TampereUnsignalized extends Intersection {
 		
 		// for each outgoing link j, initialize set Uj of all incoming
 		// links that compete for Rj
-		IntSet[] U = new IntSet[outgoingLinks.length];
+		BitSet32[] U = new BitSet32[outgoingLinks.length];
 		
 		// set of outgoing links j, towards which nonzero sending flow
 		// is directed
-		IntSet J = new IntSet(outgoingLinks.length);
+		BitSet32 J = new BitSet32(outgoingLinks.length);
 		
 		for (int j = 0; j < outgoingLinks.length; j++) {
-			U[j] = new IntSet(incomingLinks.length);
+			U[j] = new BitSet32(incomingLinks.length);
 			
 			// add all i competing for Rj to initial set Uj
 			for (int i = 0; i < incomingLinks.length; i++)
 				if (orientedSendingFlow.get(i, j) > 0) {
-					U[j].add(i);
-					J.add(j);
+					U[j].set(i);
+					J.set(j);
 				}
 		}
 		
@@ -67,18 +67,18 @@ public class TampereUnsignalized extends Intersection {
 		
 		
 		double[] a = new double[outgoingLinks.length]; // level of reduction
-		while (!J.isEmpty()) {
+		while (!J.isClear()) {
 			
 			// 3. Determine most restrictive constraint
 			double minA = Double.POSITIVE_INFINITY;
 			int minJ = -1;
 			
 			for (int j = 0; j < J.size; j++) {
-				if (J.contains(j)) {
+				if (J.get(j)) {
 					double denominator = 0;
 					
 					for (int i = 0; i < U[j].size; i++) {
-						if (U[j].contains(i))
+						if (U[j].get(i))
 							denominator += orientedCapacities.get(i, j);
 					}
 					a[j] = R[j] / denominator;
@@ -94,7 +94,7 @@ public class TampereUnsignalized extends Intersection {
 			// recalculate Rj
 			boolean exists = false;
 			for (int i = 0; i < U[minJ].size; i++)
-				if (U[minJ].contains(i)) {
+				if (U[minJ].get(i)) {
 					
 					if (incomingLinks[i].getSendingFlow() <= minA * incomingLinks[i].capacity) {
 						exists = true;
@@ -106,7 +106,7 @@ public class TampereUnsignalized extends Intersection {
 			if (exists) {
 				
 				for (int i = 0; i < U[minJ].size; i++)
-					if (U[minJ].contains(i)) {
+					if (U[minJ].get(i)) {
 						
 						if (incomingLinks[i].getSendingFlow() <= minA * incomingLinks[i].capacity) {
 							
@@ -115,13 +115,13 @@ public class TampereUnsignalized extends Intersection {
 										orientedSendingFlow.get(i, j));
 							
 							for (int j = 0; j < J.size; j++)
-								if (J.contains(j)) {
+								if (J.get(j)) {
 									R[j] -= orientedSendingFlow.get(i, j);
-									U[j].remove(i);
+									U[j].clear(i);
 									
-									if (U[j].isEmpty()) {
+									if (U[j].isClear()) {
 										a[j] = 1;
-										J.remove(j);
+										J.clear(j);
 									}
 								}
 						}
@@ -130,27 +130,27 @@ public class TampereUnsignalized extends Intersection {
 			} else {
 				
 				for (int i = 0; i < U[minJ].size; i++)
-					if (U[minJ].contains(i)) {
+					if (U[minJ].get(i)) {
 						
 						for (int j = 0; j < outgoingLinks.length; j++)
 							orientedFlows.set(i, j,
 									minA * orientedCapacities.get(i, j));
 						
 						for (int j = 0; j < J.size; j++)
-							if (J.contains(j)) {
+							if (J.get(j)) {
 								
 								R[j] -= minA * orientedCapacities.get(i, j);
 								
 								if (j != minJ) {
-									U[j].removeAll(U[minJ]);
+									U[j].clearAll(U[minJ]);
 									
-									if (U[j].isEmpty()) {
+									if (U[j].isClear()) {
 										a[j] = 1;
-										J.remove(j);
+										J.clear(j);
 									}
 								} else {
 									a[j] = minA;
-									J.remove(j);
+									J.clear(j);
 								}
 							}
 					}
