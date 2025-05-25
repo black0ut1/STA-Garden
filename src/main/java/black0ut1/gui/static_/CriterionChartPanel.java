@@ -1,4 +1,4 @@
-package black0ut1.gui;
+package black0ut1.gui.static_;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;

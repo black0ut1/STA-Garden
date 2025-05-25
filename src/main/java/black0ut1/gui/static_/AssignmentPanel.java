@@ -1,4 +1,4 @@
-package black0ut1.gui;
+package black0ut1.gui.static_;
 
 import black0ut1.data.ColorSpectrum;
 import black0ut1.data.network.Network;
