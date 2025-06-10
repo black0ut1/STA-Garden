@@ -52,7 +52,7 @@ public class Main {
 		endTime = System.currentTimeMillis();
 		System.out.println("DNL took " + (endTime - startTime) + "ms");
 		
-		DNL.checkDestinationInflows(finalAmountOfSteps);
+		DNL.checkDestinationInflows(finalAmountOfSteps, false);
 	}
 	
 	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {

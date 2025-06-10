@@ -120,4 +120,20 @@ public class MixtureFlow {
 		if (sum != 0 && Math.abs(sum - 1) > tolerance)
 			System.out.println("Portions do not sum to 1. Sum: " + sum);
 	}
+	
+	public void rectify() {
+		
+		double sum = 0;
+		int nonZero = 0;
+		for (double portion : portions) {
+			sum += portion;
+			
+			if (portion != 0)
+				nonZero++;
+		}
+		
+		double rectificationValue = (sum - 1) / nonZero;
+		for (int i = 0; i < portions.length; i++)
+			portions[i] -= rectificationValue;
+	}
 }

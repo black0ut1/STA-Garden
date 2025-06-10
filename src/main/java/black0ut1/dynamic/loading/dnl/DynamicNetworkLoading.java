@@ -105,8 +105,9 @@ public abstract class DynamicNetworkLoading {
 	 * destination.
 	 * @param steps The total number of steps the DNL took to finish,
 	 * as returned by {@code loadNetwork()}.
+	 * @param verbose More information.
 	 */
-	public void checkDestinationInflows(int steps) {
+	public void checkDestinationInflows(int steps, boolean verbose) {
 		System.out.println("============ Checking arrived flows ============");
 		double[] odmDestinationInflow = new double[network.destinations.length];
 		
@@ -133,13 +134,14 @@ public abstract class DynamicNetworkLoading {
 			}
 		}
 		
-		for (int i = 0; i < network.destinations.length; i++) {
-			if (Math.abs(odmDestinationInflow[i] - networkDestinationInflow[i]) > 1e-5) {
-				System.out.println("The total inflow into destination " + i + " is different from ODM values. " +
-						"The total flow arrived is " + networkDestinationInflow[i] + ", but ODM says "
-						+ odmDestinationInflow[i] + " should arrive.");
+		if (verbose)
+			for (int i = 0; i < network.destinations.length; i++) {
+				if (Math.abs(odmDestinationInflow[i] - networkDestinationInflow[i]) > 1e-5) {
+					System.out.println("The total inflow into destination " + i + " is different from ODM values. " +
+							"The total flow arrived is " + networkDestinationInflow[i] + ", but ODM says "
+							+ odmDestinationInflow[i] + " should arrive.");
+				}
 			}
-		}
 		
 		double odmTotal = 0;
 		for (double v : odmDestinationInflow)
