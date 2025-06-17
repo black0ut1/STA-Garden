@@ -17,6 +17,7 @@ public final class Constants {
 	public static final Color NODE_COLOR = Color.BLACK;
 	public static final Color LINK_COLOR = Color.LIGHTGRAY;
 	public static final Color HOVER_COLOR = Color.LIGHTBLUE;
+	public static final Color SELECT_COLOR = Color.LIGHTGREEN;
 	
 	public static final double NORMALIZED_SCALE = 500;
 	public static final double WHEEL_ROTATION_SCALE_FACTOR = 1;

@@ -31,6 +31,7 @@ public class DTANetworkPane extends Pane {
 	private Point2D dragStart = null;
 	
 	private Shape hoverShape = null;
+	private Shape selectedShape = null;
 	
 	public DTANetworkPane(DynamicNetwork network, Network.Node[] nodes) {
 		super();
@@ -114,6 +115,11 @@ public class DTANetworkPane extends Pane {
 		});
 	}
 	
+	public void setSelectedShape(boolean isNode, int index) {
+		selectedShape = isNode ? nodeShapes[index] : linkShapes[index];
+		paint();
+	}
+	
 	private void paint() {
 		gc.setFill(Color.WHITE);
 		gc.fillRect(0, 0, getWidth(), getHeight());
@@ -127,6 +133,8 @@ public class DTANetworkPane extends Pane {
 		for (LinkShape linkShape : linkShapes) {
 			Paint color = linkShape == hoverShape
 					? HOVER_COLOR
+					: linkShape == selectedShape
+					? SELECT_COLOR
 					: LINK_COLOR;
 			gc.setStroke(color);
 			
@@ -136,6 +144,8 @@ public class DTANetworkPane extends Pane {
 		for (NodeShape nodeShape : nodeShapes) {
 			Paint color = nodeShape == hoverShape
 					? HOVER_COLOR
+					: nodeShape == selectedShape
+					? SELECT_COLOR
 					: NODE_COLOR;
 			gc.setFill(color);
 			
@@ -188,6 +198,7 @@ public class DTANetworkPane extends Pane {
 		}
 		
 		public abstract void draw();
+		
 		public abstract boolean containsPoint(double x, double y);
 	}
 	
@@ -201,6 +212,7 @@ public class DTANetworkPane extends Pane {
 			this.headIndex = headIndex;
 		}
 		
+		@Override
 		public void draw() {
 			double x1 = normalizedNodesX[tailIndex];
 			double y1 = normalizedNodesY[tailIndex];
@@ -218,6 +230,7 @@ public class DTANetworkPane extends Pane {
 			gc.strokeLine(x1, y1, x2, y2);
 		}
 		
+		@Override
 		public boolean containsPoint(double x, double y) {
 			double x1 = normalizedNodesX[tailIndex];
 			double y1 = normalizedNodesY[tailIndex];
@@ -252,12 +265,14 @@ public class DTANetworkPane extends Pane {
 			super(index);
 		}
 		
+		@Override
 		public void draw() {
 			gc.fillOval(normalizedNodesX[index] - NODE_RADIUS,
 					normalizedNodesY[index] - NODE_RADIUS,
 					2 * NODE_RADIUS, 2 * NODE_RADIUS);
 		}
 		
+		@Override
 		public boolean containsPoint(double x, double y) {
 			double X = normalizedNodesX[index];
 			double Y = normalizedNodesY[index];

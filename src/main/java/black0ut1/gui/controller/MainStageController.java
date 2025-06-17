@@ -28,5 +28,6 @@ public class MainStageController {
 		}
 		
 		mainStage.horizontalRootSplitPane.setDividerPositions(currDividerPosition);
+		mainStage.networkPane.setSelectedShape(isNode, index);
 	}
 }
