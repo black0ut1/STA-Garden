@@ -25,7 +25,7 @@ public class DaganzoDiverge extends Intersection {
 		// the single incoming link
 		Link incomingLink = incomingLinks[0];
 		// its sending flow
-		double S = incomingLink.getReceivingFlow();
+		double S = incomingLink.getSendingFlow();
 		
 		// 1. Compute the portion of sending flow actually sent (theta)
 		double theta = 1;

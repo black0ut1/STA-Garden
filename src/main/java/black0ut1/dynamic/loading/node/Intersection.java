@@ -32,6 +32,7 @@ public abstract class Intersection extends Node {
 		DoubleMatrix totalTurningFractions = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
 		for (int i = 0; i < incomingLinks.length; i++) {
 			
+			// TODO cache this vv and switch loops
 			var mixture = incomingLinks[i].getOutgoingMixtureFlow(time);
 			for (int j = 0; j < outgoingLinks.length; j++) {
 				
@@ -61,8 +62,8 @@ public abstract class Intersection extends Node {
 				outgoingFlows[j] += orientedFlows.get(i, j);
 			}
 		
-		// 4. Compute the mixture flows and shift them accordingly
-		// 4.1. Exit flow from incoming links
+		// 4. Compute the mixture flows
+		// 4.1. Compute the flow exiting from incoming links
 		MixtureFlow[] incomingMixtureFlows = new MixtureFlow[incomingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++) {
 			MixtureFlow of = incomingLinks[i].getOutgoingMixtureFlow(time);
