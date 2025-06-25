@@ -79,6 +79,9 @@ public class StaticRouteChoice {
 					// (which is first incoming link)
 					for (int j = 0; j < intersection.outgoingLinks.length; j++) {
 						int outgoingLinkIndex = intersection.outgoingLinks[j].index;
+						if (!bush.edgeExists(outgoingLinkIndex))
+							continue;
+						
 						double fraction = originFlow * bush.getEdgeFlow(outgoingLinkIndex) / outgoingFlow;
 						destinationTurningFractions.set(0, j, fraction);
 					}

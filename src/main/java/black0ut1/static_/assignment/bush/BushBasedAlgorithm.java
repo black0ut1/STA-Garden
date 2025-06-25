@@ -60,6 +60,10 @@ public abstract class BushBasedAlgorithm extends STAAlgorithm {
 		return bush;
 	}
 	
+	public Bush[] getBushes() {
+		return bushes;
+	}
+	
 	public void checkFlows() {
 		double[] flowCheck = new double[network.edges];
 		
