@@ -60,8 +60,10 @@ public class NetworkUtils {
 					currPath[pathLen - 1] = edge.index;
 					
 					if (edge.startNode == origin) {
+						
 						int[] edges = new int[pathLen];
-						System.arraycopy(currPath, 0, edges, 0, pathLen);
+						for (int i = 0; i < pathLen; i++)
+							edges[pathLen - i - 1] = currPath[i];
 						
 						Path path = new Path(edges);
 						path.flow = flow;

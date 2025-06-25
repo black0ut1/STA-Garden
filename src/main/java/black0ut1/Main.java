@@ -1,15 +1,24 @@
 package black0ut1;
 
 import black0ut1.data.DoubleMatrix;
+import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
+import black0ut1.data.network.Path;
 import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
-import black0ut1.dynamic.equilibrium.DestinationAON;
+import black0ut1.dynamic.equilibrium.StaticRouteChoice;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.dnl.ILTM_DNL;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.io.TNTP;
+import black0ut1.static_.assignment.STAAlgorithm;
+import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.assignment.bush.B;
+import black0ut1.static_.cost.BPR;
+import black0ut1.util.NetworkUtils;
+
+import java.util.Vector;
 
 
 public class Main {
@@ -36,10 +45,12 @@ public class Main {
 			smallestFreeFlowTime = Math.min(smallestFreeFlowTime, link.length / link.freeFlowSpeed);
 		System.out.println("Smallest free flow time: " + smallestFreeFlowTime);
 		
+		var destinationBushes = destinationBushes(pair.first(), pair.second());
+		
 		// The route choice model
-		DestinationAON aon = new DestinationAON(pair.first(), network, pair.second());
+		StaticRouteChoice routeChoice = new StaticRouteChoice(network, destinationBushes);
 		long startTime = System.currentTimeMillis();
-		var mfs = aon.computeTurningFractions(totalSteps);
+		var mfs = routeChoice.computeTurningFractions(totalSteps);
 		long endTime = System.currentTimeMillis();
 		System.out.println("AON took " + (endTime - startTime) + "ms");
 		
@@ -53,6 +64,30 @@ public class Main {
 		System.out.println("DNL took " + (endTime - startTime) + "ms");
 		
 		DNL.checkDestinationInflows(finalAmountOfSteps, false);
+	}
+	
+	private static Bush[] destinationBushes(Network network, DoubleMatrix odm) {
+		B alg = new B(new STAAlgorithm.Parameters(network, odm, new BPR(), 20, new STAConvergence.Builder()
+						.addCriterion(STAConvergence.Criterion.RELATIVE_GAP_1)));
+		alg.assignFlows();
+		NetworkUtils.checkBushFlows(network, odm, alg.getBushes(), alg.getFlows());
+		
+		Bush[] destinationBushes = new Bush[network.zones];
+		for (int dest = 0; dest < network.zones; dest++)
+			destinationBushes[dest] = new Bush(network.edges, dest);
+		
+		Vector<Path> paths = NetworkUtils.calculatePathsFromBushes(network, odm, alg.getBushes());
+		for (Path path : paths) {
+			int lastEdgeIndex = path.edges[path.edges.length - 1];
+			int destination = network.getEdges()[lastEdgeIndex].endNode;
+			
+			for (int index : path.edges) {
+				destinationBushes[destination].addEdge(index);
+				destinationBushes[destination].addFlow(index, path.flow);
+			}
+		}
+		
+		return destinationBushes;
 	}
 	
 	private static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {
