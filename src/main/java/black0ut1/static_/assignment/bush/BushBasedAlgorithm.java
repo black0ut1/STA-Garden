@@ -6,15 +6,15 @@ import black0ut1.data.network.Network;
 import black0ut1.data.network.Path;
 import black0ut1.data.tuple.Pair;
 import black0ut1.data.tuple.Triplet;
-import black0ut1.static_.assignment.STAAlgorithm;
-import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.assignment.Algorithm;
+import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.SSSP;
 
 import java.util.Stack;
 import java.util.Vector;
 
-public abstract class BushBasedAlgorithm extends STAAlgorithm {
+public abstract class BushBasedAlgorithm extends Algorithm {
 	
 	protected static final double FLOW_CHECK_ERROR = 1e-9;
 	
@@ -22,7 +22,7 @@ public abstract class BushBasedAlgorithm extends STAAlgorithm {
 	
 	public BushBasedAlgorithm(Network network, DoubleMatrix odMatrix,
 							  CostFunction costFunction, int maxIterations,
-							  STAConvergence.Builder convergenceBuilder) {
+							  Convergence.Builder convergenceBuilder) {
 		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
 		this.bushes = new Bush[network.zones];
 	}

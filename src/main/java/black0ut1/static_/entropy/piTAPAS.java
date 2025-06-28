@@ -5,7 +5,7 @@ import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.network.PAS;
 import black0ut1.data.tuple.Triplet;
-import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.assignment.bush.iTAPAS;
 import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.SSSP;
@@ -25,7 +25,7 @@ public class piTAPAS extends iTAPAS implements ProportionalityAlgorithm {
 	
 	public piTAPAS(Network network, DoubleMatrix odMatrix,
 				   CostFunction costFunction, int maxIterations,
-				   STAConvergence.Builder convergenceBuilder,
+				   Convergence.Builder convergenceBuilder,
 				   int maxPostprocessIterations, double minProportionGap) {
 		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
 		this.maxPostprocessIterations = maxPostprocessIterations;

@@ -5,7 +5,7 @@ import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Pair;
 import black0ut1.data.tuple.Triplet;
-import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
 
 import java.util.Arrays;
@@ -18,7 +18,7 @@ public class OBA extends BushBasedAlgorithm {
 	
 	public OBA(Network network, DoubleMatrix odMatrix,
 			   CostFunction costFunction, int maxIterations,
-			   STAConvergence.Builder convergenceBuilder) {
+			   Convergence.Builder convergenceBuilder) {
 		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
 	}
 	

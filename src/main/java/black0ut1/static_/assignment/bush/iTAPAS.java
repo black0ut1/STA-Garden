@@ -2,7 +2,7 @@ package black0ut1.static_.assignment.bush;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.*;
-import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.SSSP;
 
@@ -26,7 +26,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 	
 	public iTAPAS(Network network, DoubleMatrix odMatrix,
 				  CostFunction costFunction, int maxIterations,
-				  STAConvergence.Builder convergenceBuilder) {
+				  Convergence.Builder convergenceBuilder) {
 		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
 		this.manager = new PASManager(network);
 	}
@@ -40,7 +40,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 			case 1:
 				yield 0.001;
 			default:
-				double convIndicator = convergence.getData().getLast()[STAConvergence.Criterion.RELATIVE_GAP_1.ordinal()];
+				double convIndicator = convergence.getData().getLast()[Convergence.Criterion.RELATIVE_GAP_1.ordinal()];
 				yield convIndicator / 100;
 		};
 		

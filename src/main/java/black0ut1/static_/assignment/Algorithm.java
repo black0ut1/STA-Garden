@@ -4,21 +4,21 @@ import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.static_.cost.CostFunction;
 
-public abstract class STAAlgorithm {
+public abstract class Algorithm {
 	
 	protected final Network network;
 	protected final DoubleMatrix odMatrix;
 	protected final CostFunction costFunction;
 	protected final int maxIterations;
-	protected final STAConvergence convergence;
+	protected final Convergence convergence;
 	
 	protected int iteration = 0;
 	
 	protected final double[] flows;
 	protected final double[] costs;
 	
-	public STAAlgorithm(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-						int maxIterations, STAConvergence.Builder convergenceBuilder) {
+	public Algorithm(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
+					 int maxIterations, Convergence.Builder convergenceBuilder) {
 		this.network = network;
 		this.odMatrix = odMatrix;
 		this.costFunction = costFunction;
@@ -27,10 +27,10 @@ public abstract class STAAlgorithm {
 		
 		this.flows = new double[network.edges];
 		this.costs = new double[network.edges];
+		updateCosts();
 	}
 	
 	public void assignFlows() {
-		updateCosts();
 		init();
 		
 		System.out.println("===================================");
@@ -47,7 +47,6 @@ public abstract class STAAlgorithm {
 			
 			convergence.computeCriteria(flows, costs);
 			convergence.printCriteriaValues();
-			
 			System.out.println("-----------------------------------");
 			iteration++;
 		}

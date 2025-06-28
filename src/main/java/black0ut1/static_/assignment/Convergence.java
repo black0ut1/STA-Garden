@@ -13,7 +13,7 @@ import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-public class STAConvergence {
+public class Convergence {
 	
 	private final Network network;
 	private final DoubleMatrix odMatrix;
@@ -37,10 +37,10 @@ public class STAConvergence {
 	private double gap = 0;
 	private double beckmannFunction = 0;
 	
-	private STAConvergence(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-						   Map<Criterion, Double> criteria,
-						   Consumer<double[]> callback,
-						   ExecutorService executor) {
+	private Convergence(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
+						Map<Criterion, Double> criteria,
+						Consumer<double[]> callback,
+						ExecutorService executor) {
 		this.criteria = criteria;
 		this.callback = callback;
 		this.network = network;
@@ -240,8 +240,8 @@ public class STAConvergence {
 			return this;
 		}
 		
-		public STAConvergence build(Network network, DoubleMatrix odMatrix, CostFunction costFunction) {
-			return new STAConvergence(network, odMatrix, costFunction, criteria, callback, executor);
+		public Convergence build(Network network, DoubleMatrix odMatrix, CostFunction costFunction) {
+			return new Convergence(network, odMatrix, costFunction, criteria, callback, executor);
 		}
 	}
 	

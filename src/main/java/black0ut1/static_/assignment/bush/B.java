@@ -4,7 +4,7 @@ import black0ut1.data.*;
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Quadruplet;
-import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
 
 import java.util.Arrays;
@@ -21,7 +21,7 @@ public class B extends BushBasedAlgorithm {
 	
 	public B(Network network, DoubleMatrix odMatrix,
 			 CostFunction costFunction, int maxIterations,
-			 STAConvergence.Builder convergenceBuilder) {
+			 Convergence.Builder convergenceBuilder) {
 		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
 		for (int i = 0; i < network.zones; i++)
 			topologicalOrders[i] = new int[network.nodes];
