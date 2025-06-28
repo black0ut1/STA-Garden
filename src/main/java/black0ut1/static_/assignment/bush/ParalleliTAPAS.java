@@ -1,9 +1,11 @@
 package black0ut1.static_.assignment.bush;
 
+import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.network.PAS;
 import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.SSSP;
 import black0ut1.util.Util;
 
@@ -14,11 +16,15 @@ public class ParalleliTAPAS extends iTAPAS {
 	protected final int threads;
 	protected final ExecutorService threadPool;
 	
-	public ParalleliTAPAS(Parameters parameters, int threads) {
-		super(parameters);
+	public ParalleliTAPAS(Network network, DoubleMatrix odMatrix,
+						  CostFunction costFunction, int maxIterations,
+						  STAConvergence.Builder convergenceBuilder,
+						  int threads) {
+		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
 		this.threads = threads;
 		this.threadPool = Executors.newFixedThreadPool(threads);
 	}
+	
 	
 	@Override
 	protected void init() {

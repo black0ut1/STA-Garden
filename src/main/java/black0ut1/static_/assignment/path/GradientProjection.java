@@ -1,8 +1,11 @@
 package black0ut1.static_.assignment.path;
 
+import black0ut1.data.DoubleMatrix;
 import black0ut1.data.Matrix;
 import black0ut1.data.network.Network;
 import black0ut1.static_.assignment.STAAlgorithm;
+import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.SSSP;
 import black0ut1.util.Util;
 
@@ -13,10 +16,13 @@ public class GradientProjection extends STAAlgorithm {
 	
 	protected final Matrix<Vector<Path>> odPairs;
 	
-	public GradientProjection(STAAlgorithm.Parameters parameters) {
-		super(parameters);
+	public GradientProjection(Network network, DoubleMatrix odMatrix,
+							  CostFunction costFunction, int maxIterations,
+							  STAConvergence.Builder convergenceBuilder) {
+		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
 		this.odPairs = new Matrix<>(network.zones);
 	}
+	
 	
 	@Override
 	protected void init() {

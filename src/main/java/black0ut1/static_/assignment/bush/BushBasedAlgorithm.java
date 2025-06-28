@@ -1,11 +1,14 @@
 package black0ut1.static_.assignment.bush;
 
+import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.network.Path;
 import black0ut1.data.tuple.Pair;
 import black0ut1.data.tuple.Triplet;
 import black0ut1.static_.assignment.STAAlgorithm;
+import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.SSSP;
 
 import java.util.Stack;
@@ -17,10 +20,13 @@ public abstract class BushBasedAlgorithm extends STAAlgorithm {
 	
 	protected final Bush[] bushes;
 	
-	public BushBasedAlgorithm(STAAlgorithm.Parameters parameters) {
-		super(parameters);
+	public BushBasedAlgorithm(Network network, DoubleMatrix odMatrix,
+							  CostFunction costFunction, int maxIterations,
+							  STAConvergence.Builder convergenceBuilder) {
+		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
 		this.bushes = new Bush[network.zones];
 	}
+	
 	
 	@Override
 	protected void init() {

@@ -17,12 +17,14 @@ public abstract class STAAlgorithm {
 	protected final double[] flows;
 	protected final double[] costs;
 	
-	public STAAlgorithm(Parameters algorithmParameters) {
-		this.network = algorithmParameters.network;
-		this.odMatrix = algorithmParameters.odMatrix;
-		this.costFunction = algorithmParameters.costFunction;
-		this.maxIterations = algorithmParameters.maxIterations;
-		this.convergence = algorithmParameters.convergence;
+	public STAAlgorithm(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
+						int maxIterations, STAConvergence.Builder convergenceBuilder) {
+		this.network = network;
+		this.odMatrix = odMatrix;
+		this.costFunction = costFunction;
+		this.maxIterations = maxIterations;
+		this.convergence = convergenceBuilder.build(network, odMatrix, costFunction);
+		
 		this.flows = new double[network.edges];
 		this.costs = new double[network.edges];
 	}
@@ -72,23 +74,5 @@ public abstract class STAAlgorithm {
 	protected void updateCosts() {
 		for (int i = 0; i < network.edges; i++)
 			costs[i] = costFunction.function(network.getEdges()[i], flows[i]);
-	}
-	
-	public static class Parameters {
-		
-		public final Network network;
-		public final DoubleMatrix odMatrix;
-		public final CostFunction costFunction;
-		public final int maxIterations;
-		public final STAConvergence convergence;
-		
-		public Parameters(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-			int maxIterations, STAConvergence.Builder convergenceBuilder) {
-			this.network = network;
-			this.odMatrix = odMatrix;
-			this.costFunction = costFunction;
-			this.maxIterations = maxIterations;
-			this.convergence = convergenceBuilder.build(this);
-		}
 	}
 }

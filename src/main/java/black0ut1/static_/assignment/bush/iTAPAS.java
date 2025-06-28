@@ -1,8 +1,9 @@
 package black0ut1.static_.assignment.bush;
 
+import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.*;
-import black0ut1.data.tuple.Pair;
 import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.SSSP;
 
 import java.util.*;
@@ -23,10 +24,13 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected final Random rng = new Random(42);
 	protected final PASManager manager;
 	
-	public iTAPAS(Parameters parameters) {
-		super(parameters);
-		this.manager = new PASManager(parameters.network);
+	public iTAPAS(Network network, DoubleMatrix odMatrix,
+				  CostFunction costFunction, int maxIterations,
+				  STAConvergence.Builder convergenceBuilder) {
+		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+		this.manager = new PASManager(network);
 	}
+	
 	
 	@Override
 	protected void mainLoopIteration() {

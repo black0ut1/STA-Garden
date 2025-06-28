@@ -1,15 +1,21 @@
 package black0ut1.static_.assignment.link;
 
-import black0ut1.static_.assignment.STAAlgorithm;
+import black0ut1.data.DoubleMatrix;
+import black0ut1.data.network.Network;
 import black0ut1.static_.assignment.AON;
+import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.cost.CostFunction;
 
 public class MSA extends LinkBasedAlgorithm {
 	
 	protected int i = 2;
 	
-	public MSA(STAAlgorithm.Parameters parameters) {
-		super(parameters);
+	public MSA(Network network, DoubleMatrix odMatrix,
+			   CostFunction costFunction, int maxIterations,
+			   STAConvergence.Builder convergenceBuilder) {
+		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
 	}
+	
 	
 	@Override
 	protected double[] calculateTarget() {

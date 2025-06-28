@@ -37,13 +37,15 @@ public class STAConvergence {
 	private double gap = 0;
 	private double beckmannFunction = 0;
 	
-	private STAConvergence(STAAlgorithm.Parameters algorithmParameters, Map<Criterion, Double> criteria,
-						   Consumer<double[]> callback, ExecutorService executor) {
+	private STAConvergence(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
+						   Map<Criterion, Double> criteria,
+						   Consumer<double[]> callback,
+						   ExecutorService executor) {
 		this.criteria = criteria;
 		this.callback = callback;
-		this.network = algorithmParameters.network;
-		this.odMatrix = algorithmParameters.odMatrix;
-		this.costFunction = algorithmParameters.costFunction;
+		this.network = network;
+		this.odMatrix = odMatrix;
+		this.costFunction = costFunction;
 		this.data = new Vector<>();
 		this.executor = executor;
 		
@@ -238,8 +240,8 @@ public class STAConvergence {
 			return this;
 		}
 		
-		public STAConvergence build(STAAlgorithm.Parameters algorithmParameters) {
-			return new STAConvergence(algorithmParameters, criteria, callback, executor);
+		public STAConvergence build(Network network, DoubleMatrix odMatrix, CostFunction costFunction) {
+			return new STAConvergence(network, odMatrix, costFunction, criteria, callback, executor);
 		}
 	}
 	
