@@ -20,7 +20,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 	}
 	
 	@Override
-	protected void init() {
+	protected void initialize() {
 		for (int zone = 0; zone < bushes.length; zone++)
 			bushes[zone] = createBush(zone);
 		

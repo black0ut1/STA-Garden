@@ -27,7 +27,7 @@ public class ParalleliTAPAS extends iTAPAS {
 	
 	
 	@Override
-	protected void init() {
+	protected void initialize() {
 		Util.parallelLoop(threadPool, network.zones, origin -> {
 			bushes[origin] = createBush(origin);
 		});

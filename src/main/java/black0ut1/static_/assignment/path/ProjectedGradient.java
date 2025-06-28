@@ -24,7 +24,7 @@ public class ProjectedGradient extends Algorithm {
 	}
 	
 	@Override
-	protected void init() {
+	protected void initialize() {
 		updateCosts();
 		for (int origin = 0; origin < network.zones; origin++) {
 			

@@ -4,6 +4,16 @@ import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.static_.cost.CostFunction;
 
+/**
+ * Base class for all static traffic assignment algorithms. The common parts of such
+ * algorithms are: the traffic network, origin-destination matrix, cost function, maximum
+ * number of iterations and convergence criteria.
+ * <p>
+ * The common process of STA algorithms is:
+ * 1. Initialize (flows, paths, bushes etc.)
+ * 2. While convergence criteria are not met, iterate
+ * 3. Post-process
+ */
 public abstract class Algorithm {
 	
 	protected final Network network;
@@ -31,7 +41,7 @@ public abstract class Algorithm {
 	}
 	
 	public void assignFlows() {
-		init();
+		initialize();
 		
 		System.out.println("===================================");
 		System.out.println("STA Algorithm: " + this.getClass().getSimpleName());
@@ -54,7 +64,7 @@ public abstract class Algorithm {
 		postProcess();
 	}
 	
-	protected abstract void init();
+	protected abstract void initialize();
 	
 	protected abstract void mainLoopIteration();
 	

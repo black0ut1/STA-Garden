@@ -29,8 +29,8 @@ public class B extends BushBasedAlgorithm {
 	
 	
 	@Override
-	protected void init() {
-		super.init();
+	protected void initialize() {
+		super.initialize();
 		
 		for (Bush bush : bushes)
 			updateTopologicalOrder(bush);
