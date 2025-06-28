@@ -34,4 +34,8 @@ public class ArrayView<T> implements Iterator<T>, Iterable<T> {
 	public int size() {
 		return last - first;
 	}
+	
+	public T get(int i) {
+		return source[first + i];
+	}
 }
