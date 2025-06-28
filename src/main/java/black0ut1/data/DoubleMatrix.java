@@ -18,11 +18,11 @@ public class DoubleMatrix {
 	}
 
 	public double get(int i, int j) {
-		return arr[i * n + j];
+		return arr[i * m + j];
 	}
 
 	public void set(int i, int j, double value) {
-		arr[i * n + j] = value;
+		arr[i * m + j] = value;
 	}
 	
 	@Override
