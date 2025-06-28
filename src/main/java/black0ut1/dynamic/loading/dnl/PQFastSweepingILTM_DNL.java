@@ -71,7 +71,7 @@ public class PQFastSweepingILTM_DNL extends ILTM_DNL {
 				
 				double Xad = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 				
-				// increase update potential of the link tail
+				// increase update potential of the incoming link tail
 				if (incomingLink instanceof LTM) {
 					double Vi = incomingLink.cumulativeOutflow[t + 1];
 					double potentialIncrease = ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
@@ -91,7 +91,7 @@ public class PQFastSweepingILTM_DNL extends ILTM_DNL {
 				
 				double Xbd = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
 				
-				// increase update potential of the link head
+				// increase update potential of the outgoing link head
 				if (outgoingLink instanceof LTM) {
 					double Ui = outgoingLink.cumulativeInflow[t + 1];
 					double potentialIncrease = ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);

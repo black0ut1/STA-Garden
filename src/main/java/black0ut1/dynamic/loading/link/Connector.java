@@ -14,12 +14,12 @@ public class Connector extends Link {
 	public Connector(int index, int timeSteps) {
 		super(index, 0, timeSteps, Double.POSITIVE_INFINITY,
 				10_000, Double.POSITIVE_INFINITY, 1, 1);
-		
-		this.receivingFlow = Double.POSITIVE_INFINITY;
 	}
 	
 	@Override
-	public void computeReceivingFlow(int time) {}
+	public void computeReceivingFlow(int time) {
+		this.receivingFlow = Double.POSITIVE_INFINITY;
+	}
 	
 	@Override
 	public void computeSendingFlow(int time) {
