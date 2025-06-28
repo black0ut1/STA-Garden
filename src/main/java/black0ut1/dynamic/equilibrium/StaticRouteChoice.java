@@ -33,6 +33,7 @@ public class StaticRouteChoice {
 	}
 	
 	protected MixtureFractions createMixtureFractionsForIntersection(Intersection intersection) {
+		// Creates turning fractions for each destination
 		
 		int len = 0;
 		int[] destinations = new int[network.intersections.length];
@@ -41,65 +42,41 @@ public class StaticRouteChoice {
 		for (int destination = 0; destination < destinationBushes.length; destination++) {
 			DoubleMatrix destinationTurningFractions = new DoubleMatrix(intersection.incomingLinks.length, intersection.outgoingLinks.length);
 			
-			if (intersection.index == destination) { // intersection is the destination
+			// 1a) Intersection is the destination
+			if (intersection.index == destination) {
 				
-				// all traffic will leave to the virtual desination using the connector
-				// (which is first outgoing link)
+				// traffic from all incoming links will leave using the connector (which
+				// is the first outgoing link)
 				for (int i = 0; i < intersection.incomingLinks.length; i++)
 					destinationTurningFractions.set(i, 0, 1);
 				
-			} else {
+			} // 1b) Intersection is not the destination
+			else {
 				Bush bush = destinationBushes[destination];
 				
+				// All flow going through this intersection
 				double outgoingFlow = 0;
 				for (Link outgoingLink : intersection.outgoingLinks) {
-					if (!bush.edgeExists(outgoingLink.index))
+					if (outgoingLink.index == -1 || !bush.edgeExists(outgoingLink.index))
 						continue;
 					
 					outgoingFlow += bush.getEdgeFlow(outgoingLink.index);
 				}
 				
-				if (outgoingFlow == 0) // this node is not used by destination flow
+				// Destination flow do not use this intersection -> the destination will
+				// be excluded from the mixture fractions
+				if (outgoingFlow == 0)
 					continue;
 				
-				if (intersection.index < network.origins.length) { // intersection is origin
+				for (int j = 0; j < intersection.outgoingLinks.length; j++) {
 					
-					// compute flow originating in this origin
-					double incomingFlow = 0;
-					for (Link incomingLink : intersection.incomingLinks) {
-						if (!bush.edgeExists(incomingLink.index))
-							continue;
-						
-						incomingFlow += bush.getEdgeFlow(incomingLink.index);
-					}
+					int outgoingLinkIndex = intersection.outgoingLinks[j].index;
+					double fraction = (outgoingLinkIndex == -1)
+							? 0 // outgoing link is connector to some other destination
+							: bush.getEdgeFlow(outgoingLinkIndex) / outgoingFlow;
 					
-					double originFlow = outgoingFlow - incomingFlow;
-					
-					// all of this flow will enter from the virtual origin using the connector
-					// (which is first incoming link)
-					for (int j = 0; j < intersection.outgoingLinks.length; j++) {
-						int outgoingLinkIndex = intersection.outgoingLinks[j].index;
-						double fraction = originFlow * bush.getEdgeFlow(outgoingLinkIndex) / outgoingFlow;
-						destinationTurningFractions.set(0, j, fraction);
-					}
-				}
-				
-				for (int i = 0; i < intersection.incomingLinks.length; i++) {
-					if (intersection.index < network.origins.length && i == 0)
-						continue; // if origin, skip the connector (which is handled above)
-					
-					int incomingLinkIndex = intersection.incomingLinks[i].index;
-					if (!bush.edgeExists(incomingLinkIndex))
-						continue;
-					
-					for (int j = 0; j < intersection.outgoingLinks.length; j++) {
-						int outgoingLinkIndex = intersection.outgoingLinks[j].index;
-						if (!bush.edgeExists(outgoingLinkIndex))
-							continue;
-						
-						double fraction = bush.getEdgeFlow(incomingLinkIndex) * bush.getEdgeFlow(outgoingLinkIndex) / outgoingFlow;
+					for (int i = 0; i < intersection.incomingLinks.length; i++)
 						destinationTurningFractions.set(i, j, fraction);
-					}
 				}
 			}
 			
