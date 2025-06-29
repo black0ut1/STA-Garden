@@ -111,8 +111,8 @@ public class DynamicNetwork {
 		int[] outgoingLinkCounts = new int[network.nodes];
 		int[] incomingLinkCounts = new int[network.nodes];
 		for (Network.Edge link : network.getEdges()) {
-			outgoingLinkCounts[link.startNode]++;
-			incomingLinkCounts[link.endNode]++;
+			outgoingLinkCounts[link.tail]++;
+			incomingLinkCounts[link.head]++;
 		}
 		for (int i = 0; i < network.zones; i++) {
 			// intersections of zones have connectors

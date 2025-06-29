@@ -18,7 +18,7 @@ public class AON {
 				
 				for (Network.Edge edge = previous[node];
 					 edge != null;
-					 edge = previous[edge.startNode]) {
+					 edge = previous[edge.tail]) {
 					flows[edge.index] += trips;
 				}
 			}

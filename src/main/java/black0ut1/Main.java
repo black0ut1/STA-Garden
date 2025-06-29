@@ -78,7 +78,7 @@ public class Main {
 		Vector<Path> paths = NetworkUtils.calculatePathsFromBushes(network, odm, alg.getBushes());
 		for (Path path : paths) {
 			int lastEdgeIndex = path.edges[path.edges.length - 1];
-			int destination = network.getEdges()[lastEdgeIndex].endNode;
+			int destination = network.getEdges()[lastEdgeIndex].head;
 			
 			for (int index : path.edges) {
 				destinationBushes[destination].addEdge(index);

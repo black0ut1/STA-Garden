@@ -143,10 +143,10 @@ public class AssignmentPanel extends JPanel {
 		g.setStroke(new BasicStroke(EDGE_WIDTH));
 		
 		for (Network.Edge edge : network.getEdges()) {
-			double x1 = scaledNodesX[edge.startNode];
-			double y1 = scaledNodesY[edge.startNode];
-			double x2 = scaledNodesX[edge.endNode];
-			double y2 = scaledNodesY[edge.endNode];
+			double x1 = scaledNodesX[edge.tail];
+			double y1 = scaledNodesY[edge.tail];
+			double x2 = scaledNodesX[edge.head];
+			double y2 = scaledNodesY[edge.head];
 			
 			double len = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 			double xOffset = EDGE_OFFSET * (-y2 + y1) / len;

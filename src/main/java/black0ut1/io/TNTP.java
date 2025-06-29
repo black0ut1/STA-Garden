@@ -171,8 +171,8 @@ public final class TNTP {
 			
 			bfw.write("From\tTo\tVolume\tCost\n");
 			for (Network.Edge edge : network.getEdges()) {
-				bfw.write((edge.startNode + 1) + "\t"
-						+ (edge.endNode + 1) + "\t"
+				bfw.write((edge.tail + 1) + "\t"
+						+ (edge.head + 1) + "\t"
 						+ String.format(Locale.ROOT, "%.15f", flows[edge.index]) + "\t"
 						+ String.format(Locale.ROOT, "%.15f", costs[edge.index]) + "\n");
 			}

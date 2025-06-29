@@ -41,7 +41,7 @@ public class GradientProjection extends Algorithm {
 				
 				int[] edgeIndices = new int[pathLengths[destination]];
 				int i = 0;
-				for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.startNode])
+				for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.tail])
 					edgeIndices[i++] = edge.index;
 				
 				Path minPath = new Path(edgeIndices);
@@ -123,7 +123,7 @@ public class GradientProjection extends Algorithm {
 	
 	protected Path findMinPath(Network.Edge[] minTree, int[] pathLengths, int destination, Vector<Path> paths) {
 		double minPathCost = 0;
-		for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.startNode])
+		for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.tail])
 			minPathCost += costFunction.function(edge, flows[edge.index]);
 		
 		Path minPath = null;
@@ -137,7 +137,7 @@ public class GradientProjection extends Algorithm {
 		if (minPath == null) {
 			int[] edgeIndices = new int[pathLengths[destination]];
 			int i = 0;
-			for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.startNode])
+			for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.tail])
 				edgeIndices[i++] = edge.index;
 			minPath = new Path(edgeIndices);
 			minPath.cost = minPathCost;

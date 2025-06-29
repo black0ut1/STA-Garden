@@ -60,7 +60,7 @@ public class Network {
 			invAdjList[i] = new Vector<>();
 		
 		for (Edge edge : edgesArr)
-			invAdjList[edge.endNode].add(edge);
+			invAdjList[edge.head].add(edge);
 		
 		offset = 0;
 		for (int endNode = 0; endNode < invAdjList.length; endNode++) {
@@ -78,8 +78,8 @@ public class Network {
 		for (Edge edge : edgesArr) {
 			
 			Network.Edge mirror = null;
-			for (Edge edge1 : forwardStar(edge.endNode))
-				if (edge1.endNode == edge.startNode) {
+			for (Edge edge1 : forwardStar(edge.head))
+				if (edge1.head == edge.tail) {
 					mirror = edge1;
 					break;
 				}
@@ -110,8 +110,8 @@ public class Network {
 	
 	public static class Edge {
 		
-		public final int endNode;
-		public final int startNode;
+		public final int head;
+		public final int tail;
 		public final int index;
 		public final double capacity;
 		public final double length;
@@ -119,10 +119,10 @@ public class Network {
 		public final double alpha;
 		public final double beta;
 
-		public Edge(int startNode, int endNode, double capacity, double length,
+		public Edge(int tail, int head, double capacity, double length,
 					double freeFlow, double alpha, double beta) {
-			this.startNode = startNode;
-			this.endNode = endNode;
+			this.tail = tail;
+			this.head = head;
 			this.capacity = capacity;
 			this.length = length;
 			this.freeFlow = freeFlow;
@@ -132,8 +132,8 @@ public class Network {
 		}
 
 		private Edge(Edge copy, int index) {
-			this.startNode = copy.startNode;
-			this.endNode = copy.endNode;
+			this.tail = copy.tail;
+			this.head = copy.head;
 			this.capacity = copy.capacity;
 			this.length = copy.length;
 			this.freeFlow = copy.freeFlow;
@@ -144,7 +144,7 @@ public class Network {
 		
 		@Override
 		public String toString() {
-			return startNode + "->" + endNode;
+			return tail + "->" + head;
 		}
 	}
 	

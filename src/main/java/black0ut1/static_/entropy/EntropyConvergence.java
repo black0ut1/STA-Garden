@@ -15,7 +15,7 @@ public class EntropyConvergence {
 			
 			for (Network.Edge edge : network.getEdges()) {
 				double x = bush.getEdgeFlow(edge.index);
-				double n = nodeFlows[origin][edge.endNode];
+				double n = nodeFlows[origin][edge.head];
 				entropy += (x == 0) // 0 * ln(0) = 0
 						? 0
 						: x * Math.log(x / n);
@@ -35,10 +35,10 @@ public class EntropyConvergence {
 			double[] minDist = SSSP.dijkstra(network, origin, costs).second();
 			
 			for (Network.Edge edge : network.getEdges()) {
-				if (nodeFlows[origin][edge.endNode] <= flowEpsilon)
+				if (nodeFlows[origin][edge.head] <= flowEpsilon)
 					continue;
 				
-				double reducedCost = minDist[edge.startNode] + costs[edge.index] - minDist[edge.endNode];
+				double reducedCost = minDist[edge.tail] + costs[edge.index] - minDist[edge.head];
 				if (bushes[origin].getEdgeFlow(edge.index) <= flowEpsilon) {
 					sigma = Math.min(sigma, reducedCost);
 				} else {
@@ -52,10 +52,10 @@ public class EntropyConvergence {
 			double[] minDist = SSSP.dijkstra(network, origin, costs).second();
 			
 			for (Network.Edge edge : network.getEdges()) {
-				if (nodeFlows[origin][edge.endNode] <= flowEpsilon)
+				if (nodeFlows[origin][edge.head] <= flowEpsilon)
 					continue;
 				
-				double reducedCost = minDist[edge.startNode] + costs[edge.index] - minDist[edge.endNode];
+				double reducedCost = minDist[edge.tail] + costs[edge.index] - minDist[edge.head];
 				if (bushes[origin].getEdgeFlow(edge.index) <= flowEpsilon) {
 					if (reducedCost <= xi)
 						a++;

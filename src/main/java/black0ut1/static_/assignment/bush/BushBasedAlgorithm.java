@@ -58,7 +58,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 		if (bushUpdateStrategy == BushUpdateStrategy.DIAL) {
 			
 			for (Network.Edge edge : network.getEdges())
-				if (minimalDistance[edge.startNode] < minimalDistance[edge.endNode])
+				if (minimalDistance[edge.tail] < minimalDistance[edge.head])
 					bush.addEdge(edge.index);
 		} else {
 			
@@ -73,7 +73,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 			
 			for (Network.Edge edge = minimalTree[destination];
 				 edge != null;
-				 edge = minimalTree[edge.startNode]) {
+				 edge = minimalTree[edge.tail]) {
 				bush.addFlow(edge.index, trips);
 			}
 		}
@@ -91,7 +91,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 					continue;
 				
 				Network.Edge mirror = network.mirrorEdgeOf(edge.index);
-				if (minimalDistance[edge.startNode] + costs[edge.index] < minimalDistance[edge.endNode]) {
+				if (minimalDistance[edge.tail] + costs[edge.index] < minimalDistance[edge.head]) {
 					bush.removeEdge(edge.index);
 					bush.addEdge(mirror.index);
 				}
@@ -116,7 +116,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 		if (bushUpdateStrategy == BushUpdateStrategy.BARGERA) {
 			
 			for (Network.Edge edge : network.getEdges())
-				if (maximalDistance[edge.startNode] < maximalDistance[edge.endNode])
+				if (maximalDistance[edge.tail] < maximalDistance[edge.head])
 					bush.addEdge(edge.index);
 			return;
 		}
@@ -126,13 +126,13 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 			int linksAdded = 0;
 			for (Network.Edge edge : network.getEdges()) {
 				
-				if (minimalDistance[edge.startNode] == Double.POSITIVE_INFINITY
-						|| minimalDistance[edge.endNode] == Double.POSITIVE_INFINITY) {
+				if (minimalDistance[edge.tail] == Double.POSITIVE_INFINITY
+						|| minimalDistance[edge.head] == Double.POSITIVE_INFINITY) {
 					continue;
 				}
 				
-				if (maximalDistance[edge.startNode] + costs[edge.index] < maximalDistance[edge.endNode]
-						&& minimalDistance[edge.startNode] + costs[edge.index] < minimalDistance[edge.endNode]) {
+				if (maximalDistance[edge.tail] + costs[edge.index] < maximalDistance[edge.head]
+						&& minimalDistance[edge.tail] + costs[edge.index] < minimalDistance[edge.head]) {
 					bush.addEdge(edge.index);
 				}
 			}
@@ -141,12 +141,12 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 			if (linksAdded == 0)
 				for (Network.Edge edge : network.getEdges()) {
 					
-					if (minimalDistance[edge.startNode] == Double.POSITIVE_INFINITY
-							|| minimalDistance[edge.endNode] == Double.POSITIVE_INFINITY) {
+					if (minimalDistance[edge.tail] == Double.POSITIVE_INFINITY
+							|| minimalDistance[edge.head] == Double.POSITIVE_INFINITY) {
 						continue;
 					}
 					
-					if (maximalDistance[edge.startNode] < maximalDistance[edge.endNode])
+					if (maximalDistance[edge.tail] < maximalDistance[edge.head])
 						bush.addEdge(edge.index);
 				}
 		}
@@ -177,7 +177,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 		for (Network.Edge edge : network.getEdges()) {
 			if (!bush.edgeExists(edge.index))
 				continue;
-			indegree[edge.endNode]++;
+			indegree[edge.head]++;
 		}
 		
 		IntQueue queue = new IntQueue(network.nodes);
@@ -191,23 +191,23 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 				
 				if (minimalPath) {
 					double newDistance = minimalDistance[node] + costs[edge.index];
-					if (minimalDistance[edge.endNode] > newDistance) {
-						minimalDistance[edge.endNode] = newDistance;
-						minimalTree[edge.endNode] = edge;
+					if (minimalDistance[edge.head] > newDistance) {
+						minimalDistance[edge.head] = newDistance;
+						minimalTree[edge.head] = edge;
 					}
 				}
 				
 				if (maximalPath) {
 					double newDistance = maximalDistance[node] + costs[edge.index];
-					if (maximalDistance[edge.endNode] < newDistance && (!maximalUsed || bush.getEdgeFlow(edge.index) > 0)) {
-						maximalDistance[edge.endNode] = newDistance;
-						maximalTree[edge.endNode] = edge;
+					if (maximalDistance[edge.head] < newDistance && (!maximalUsed || bush.getEdgeFlow(edge.index) > 0)) {
+						maximalDistance[edge.head] = newDistance;
+						maximalTree[edge.head] = edge;
 					}
 				}
 				
-				indegree[edge.endNode]--;
-				if (indegree[edge.endNode] == 0)
-					queue.enqueue(edge.endNode);
+				indegree[edge.head]--;
+				if (indegree[edge.head] == 0)
+					queue.enqueue(edge.head);
 			}
 		}
 		

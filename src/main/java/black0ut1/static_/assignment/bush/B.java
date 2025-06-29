@@ -139,8 +139,8 @@ public class B extends BushBasedAlgorithm {
 		
 		double bushRCTT = 0;
 		for (int ij = 0; ij < network.edges; ij++) {
-			int i = network.getEdges()[ij].startNode;
-			int j = network.getEdges()[ij].endNode;
+			int i = network.getEdges()[ij].tail;
+			int j = network.getEdges()[ij].head;
 			if (minTreeDistance[i] == Double.POSITIVE_INFINITY
 					|| minTreeDistance[j] == Double.POSITIVE_INFINITY)
 				continue;
@@ -158,10 +158,10 @@ public class B extends BushBasedAlgorithm {
 		double[] maxDistance = getTrees(bush, LongestPathPolicy.DEFAULT).fourth();
 		
 		for (Network.Edge edge : network.getEdges()) {
-			if (maxDistance[edge.startNode] == Double.NEGATIVE_INFINITY || maxDistance[edge.endNode] == Double.NEGATIVE_INFINITY)
+			if (maxDistance[edge.tail] == Double.NEGATIVE_INFINITY || maxDistance[edge.head] == Double.NEGATIVE_INFINITY)
 				continue;
 			
-			if (maxDistance[edge.startNode] < maxDistance[edge.endNode]) {
+			if (maxDistance[edge.tail] < maxDistance[edge.head]) {
 				bush.addEdge(edge.index);
 			}
 		}
@@ -193,9 +193,9 @@ public class B extends BushBasedAlgorithm {
 					continue;
 				
 				double newDistance = minTreeDistance[node] + costs[edge.index];
-				if (minTreeDistance[edge.endNode] > newDistance) {
-					minTreeDistance[edge.endNode] = newDistance;
-					minTreePrevious[edge.endNode] = edge;
+				if (minTreeDistance[edge.head] > newDistance) {
+					minTreeDistance[edge.head] = newDistance;
+					minTreePrevious[edge.head] = edge;
 				}
 				
 				// we dont care for longest path
@@ -203,15 +203,15 @@ public class B extends BushBasedAlgorithm {
 					continue;
 				
 				newDistance = maxTreeDistance[node] + costs[edge.index];
-				if (maxTreeDistance[edge.endNode] < newDistance &&
+				if (maxTreeDistance[edge.head] < newDistance &&
 						// longest distance is the only criterion
 						(policy == LongestPathPolicy.DEFAULT
 								// edges of longest path must contain flow
 								|| (policy == LongestPathPolicy.USED && bush.getEdgeFlow(edge.index) > 0)
 								// edges of longest path must contain flow or must be part of mintree
-								|| (policy == LongestPathPolicy.USED_OR_SP && (bush.getEdgeFlow(edge.index) > 0 || edge == minTreePrevious[edge.endNode])))) {
-					maxTreeDistance[edge.endNode] = newDistance;
-					maxTreePrevious[edge.endNode] = edge;
+								|| (policy == LongestPathPolicy.USED_OR_SP && (bush.getEdgeFlow(edge.index) > 0 || edge == minTreePrevious[edge.head])))) {
+					maxTreeDistance[edge.head] = newDistance;
+					maxTreePrevious[edge.head] = edge;
 				}
 			}
 		}
@@ -226,7 +226,7 @@ public class B extends BushBasedAlgorithm {
 		for (Network.Edge edge : network.getEdges()) {
 			if (!bush.edgeExists(edge.index))
 				continue;
-			indegree[edge.endNode]++;
+			indegree[edge.head]++;
 		}
 		
 		int[] topologicalOrder = topologicalOrders[bush.root];
@@ -244,9 +244,9 @@ public class B extends BushBasedAlgorithm {
 				if (!bush.edgeExists(edge.index))
 					continue;
 				
-				indegree[edge.endNode]--;
-				if (indegree[edge.endNode] == 0)
-					queue.enqueue(edge.endNode);
+				indegree[edge.head]--;
+				if (indegree[edge.head] == 0)
+					queue.enqueue(edge.head);
 			}
 		}
 		
@@ -262,26 +262,26 @@ public class B extends BushBasedAlgorithm {
 		
 		if (ijMin == null || ijMax == null)
 			return -1;
-		if (ijMin.startNode == ijMax.startNode)
+		if (ijMin.tail == ijMax.tail)
 			return -1;
 		
-		while (ijMin.startNode != ijMax.startNode) {
+		while (ijMin.tail != ijMax.tail) {
 			
-			if (minDist[ijMax.startNode] == minDist[ijMin.startNode]) {
-				ijMax = maxTree[ijMax.startNode];
-				ijMin = minTree[ijMin.startNode];
+			if (minDist[ijMax.tail] == minDist[ijMin.tail]) {
+				ijMax = maxTree[ijMax.tail];
+				ijMin = minTree[ijMin.tail];
 			}
 			
-			while (minDist[ijMin.startNode] < minDist[ijMax.startNode]) {
-				ijMax = maxTree[ijMax.startNode];
+			while (minDist[ijMin.tail] < minDist[ijMax.tail]) {
+				ijMax = maxTree[ijMax.tail];
 			}
 			
-			while (minDist[ijMax.startNode] < minDist[ijMin.startNode]) {
-				ijMin = minTree[ijMin.startNode];
+			while (minDist[ijMax.tail] < minDist[ijMin.tail]) {
+				ijMin = minTree[ijMin.tail];
 			}
 		}
 		
-		return ijMin.startNode;
+		return ijMin.tail;
 	}
 	
 	protected int[] findDivergenceNodes(Network.Edge[] minTree, Network.Edge[] maxTree, int root) {
@@ -300,22 +300,22 @@ public class B extends BushBasedAlgorithm {
 				continue;
 			}
 			
-			int SPnode = ijMin.startNode;
-			int LPnode = ijMax.startNode;
+			int SPnode = ijMin.tail;
+			int LPnode = ijMax.tail;
 			while (true) {
 				if (SPnode == root || LPnode == root) {
 					divNodes[node] = root;
 					break;
 				}
 				
-				SPnode = minTree[SPnode].startNode;
+				SPnode = minTree[SPnode].tail;
 				if (mark[SPnode] == node) {
 					divNodes[node] = SPnode;
 					break;
 				}
 				mark[SPnode] = node;
 				
-				LPnode = maxTree[LPnode].startNode;
+				LPnode = maxTree[LPnode].tail;
 				if (mark[LPnode] == node) {
 					divNodes[node] = LPnode;
 					break;
@@ -332,11 +332,11 @@ public class B extends BushBasedAlgorithm {
 		
 		double maxDeltaX = Double.POSITIVE_INFINITY;
 		Network.Edge edge = maxTree[node];
-		while (edge != null && edge.endNode != divNode) {
+		while (edge != null && edge.head != divNode) {
 			if (maxDeltaX > bush.getEdgeFlow(edge.index))
 				maxDeltaX = bush.getEdgeFlow(edge.index);
 			
-			edge = maxTree[edge.startNode];
+			edge = maxTree[edge.tail];
 		}
 		
 		if (maxDeltaX == 0)
@@ -348,22 +348,22 @@ public class B extends BushBasedAlgorithm {
 			double minPathFlow = 0;
 			double minPathFlowDerivative = 0;
 			edge = minTree[node];
-			while (edge != null && edge.endNode != divNode) {
+			while (edge != null && edge.head != divNode) {
 				minPathFlow += costFunction.function(edge, flows[edge.index] + deltaX);
 				minPathFlowDerivative += costFunction.derivative(edge, flows[edge.index] + deltaX);
 				
-				edge = minTree[edge.startNode];
+				edge = minTree[edge.tail];
 			}
 			
 			
 			double maxPathFlow = 0;
 			double maxPathFlowDerivative = 0;
 			edge = maxTree[node];
-			while (edge != null && edge.endNode != divNode) {
+			while (edge != null && edge.head != divNode) {
 				maxPathFlow += costFunction.function(edge, flows[edge.index] - deltaX);
 				maxPathFlowDerivative += costFunction.derivative(edge, flows[edge.index] - deltaX);
 				
-				edge = maxTree[edge.startNode];
+				edge = maxTree[edge.tail];
 			}
 			
 			double newDeltaX = deltaX + (maxPathFlow - minPathFlow) / (maxPathFlowDerivative + minPathFlowDerivative);
@@ -382,19 +382,19 @@ public class B extends BushBasedAlgorithm {
 							  Bush bush, int node, int lca, double deltaX) {
 		
 		Network.Edge edge = minTree[node];
-		while (edge != null && edge.endNode != lca) {
+		while (edge != null && edge.head != lca) {
 			flows[edge.index] += deltaX;
 			bush.addFlow(edge.index, deltaX);
 			
-			edge = minTree[edge.startNode];
+			edge = minTree[edge.tail];
 		}
 		
 		edge = maxTree[node];
-		while (edge != null && edge.endNode != lca) {
+		while (edge != null && edge.head != lca) {
 			flows[edge.index] -= deltaX;
 			bush.addFlow(edge.index, -deltaX);
 			
-			edge = maxTree[edge.startNode];
+			edge = maxTree[edge.tail];
 		}
 	}
 	
@@ -416,7 +416,7 @@ public class B extends BushBasedAlgorithm {
 			if (!bush.edgeExists(edge.index))
 				continue;
 			
-			System.out.println(edge.startNode + " " + edge.endNode);
+			System.out.println(edge.tail + " " + edge.head);
 		}
 	}
 	

@@ -85,7 +85,7 @@ public class ParalleliTAPAS extends iTAPAS {
 					if (bushes[origin].getEdgeFlow(edge.index) <= FLOW_EPSILON)
 						continue;
 					
-					double reducedCost = minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode];
+					double reducedCost = minDistance[edge.tail] + costs[edge.index] - minDistance[edge.head];
 					if (reducedCost < minReducedCost)
 						continue;
 					

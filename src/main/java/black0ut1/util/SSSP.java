@@ -25,7 +25,7 @@ public class SSSP {
 			mark[fromVertex] = 2;
 			
 			for (Network.Edge edge : network.forwardStar(fromVertex)) {
-				int toVertex = edge.endNode;
+				int toVertex = edge.head;
 				if (mark[toVertex] == 2)
 					continue;
 				
@@ -65,12 +65,12 @@ public class SSSP {
 			mark[fromVertex] = 2;
 			
 			if (previous[fromVertex] != null) {
-				int prev = previous[fromVertex].startNode;
+				int prev = previous[fromVertex].tail;
 				pathLength[fromVertex] = pathLength[prev] + 1;
 			}
 			
 			for (Network.Edge edge : network.forwardStar(fromVertex)) {
-				int toVertex = edge.endNode;
+				int toVertex = edge.head;
 				if (mark[toVertex] == 2)
 					continue;
 				
@@ -108,7 +108,7 @@ public class SSSP {
 			mark[toVertex] = 2;
 			
 			for (Network.Edge edge : network.backwardStar(toVertex)) {
-				int fromVertex = edge.startNode;
+				int fromVertex = edge.tail;
 				if (mark[fromVertex] == 2)
 					continue;
 				

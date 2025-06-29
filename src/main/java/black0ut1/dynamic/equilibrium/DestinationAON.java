@@ -112,7 +112,7 @@ public class DestinationAON {
 				
 				for (Network.Edge link = next[origin];
 					 link != null;
-					 link = next[link.endNode]) {
+					 link = next[link.head]) {
 					destinationFlows[destination][link.index] += demand;
 				}
 			}

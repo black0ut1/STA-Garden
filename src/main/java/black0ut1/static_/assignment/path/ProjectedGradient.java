@@ -40,7 +40,7 @@ public class ProjectedGradient extends Algorithm {
 				
 				int[] edgeIndices = new int[pathLengths[destination]];
 				int i = 0;
-				for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.startNode])
+				for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.tail])
 					edgeIndices[i++] = edge.index;
 				
 				Path minPath = new Path(edgeIndices);

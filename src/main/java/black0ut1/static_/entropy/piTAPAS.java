@@ -83,16 +83,16 @@ public class piTAPAS extends iTAPAS implements ProportionalityAlgorithm {
 			// calculate origin-based node flow for each node
 			double[] nodeFlow = new double[network.nodes];
 			for (Network.Edge edge : network.getEdges()) {
-				nodeFlow[edge.endNode] += bush.getEdgeFlow(edge.index);
+				nodeFlow[edge.head] += bush.getEdgeFlow(edge.index);
 			}
 			nodeFlows[origin] = nodeFlow;
 			
 			// calculate origin-based approach proportions for each link
 			double[] approachProportion = new double[network.edges];
 			for (Network.Edge edge : network.getEdges()) {
-				approachProportion[edge.index] = (nodeFlow[edge.endNode] == 0)
+				approachProportion[edge.index] = (nodeFlow[edge.head] == 0)
 						? 0
-						: bush.getEdgeFlow(edge.index) / nodeFlow[edge.endNode];
+						: bush.getEdgeFlow(edge.index) / nodeFlow[edge.head];
 			}
 			approachProportions[origin] = approachProportion;
 		}
@@ -108,10 +108,10 @@ public class piTAPAS extends iTAPAS implements ProportionalityAlgorithm {
 			
 			for (Network.Edge edge : network.getEdges()) {
 				
-				double reducedCost = minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode];
+				double reducedCost = minDistance[edge.tail] + costs[edge.index] - minDistance[edge.head];
 				if (reducedCost <= POSTPROCESS_COST_EPSILON) {
 					
-					Network.Edge maxEdge = mostFlowIncomingEdge(edge.endNode, bush);
+					Network.Edge maxEdge = mostFlowIncomingEdge(edge.head, bush);
 					if (edge == maxEdge)
 						continue;
 					
@@ -205,7 +205,7 @@ public class piTAPAS extends iTAPAS implements ProportionalityAlgorithm {
 		Bush bush = bushes[origin];
 		
 		for (int i : pas.maxSegment()) {
-			int node = edges[i].endNode;
+			int node = edges[i].head;
 			
 			double newNodeFlow = 0;
 			for (Network.Edge edge : network.backwardStar(node)) {
@@ -221,7 +221,7 @@ public class piTAPAS extends iTAPAS implements ProportionalityAlgorithm {
 		}
 		
 		for (int i : pas.minSegment()) {
-			int node = edges[i].endNode;
+			int node = edges[i].head;
 			
 			double newNodeFlow = 0;
 			for (Network.Edge edge : network.backwardStar(node)) {
@@ -247,7 +247,7 @@ public class piTAPAS extends iTAPAS implements ProportionalityAlgorithm {
 			
 			for (Network.Edge edge : network.getEdges()) {
 				double x = bush.getEdgeFlow(edge.index);
-				double n = nodeFlows[origin][edge.endNode];
+				double n = nodeFlows[origin][edge.head];
 				entropy += (x == 0) // 0 * ln(0) = 0
 						? 0
 						: x * Math.log(x / n);

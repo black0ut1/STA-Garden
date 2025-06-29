@@ -90,6 +90,6 @@ public class PAS {
 	}
 	
 	public int head(Network network) {
-		return network.getEdges()[minSegmentLastEdge()].endNode;
+		return network.getEdges()[minSegmentLastEdge()].head;
 	}
 }

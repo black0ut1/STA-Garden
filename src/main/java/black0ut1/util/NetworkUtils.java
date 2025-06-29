@@ -59,7 +59,7 @@ public class NetworkUtils {
 					
 					currPath[pathLen - 1] = edge.index;
 					
-					if (edge.startNode == origin) {
+					if (edge.tail == origin) {
 						
 						int[] edges = new int[pathLen];
 						for (int i = 0; i < pathLen; i++)
@@ -70,7 +70,7 @@ public class NetworkUtils {
 						paths.add(path);
 					}
 					
-					for (Network.Edge nextEdge : network.backwardStar(edge.startNode)) {
+					for (Network.Edge nextEdge : network.backwardStar(edge.tail)) {
 						if (!bush.edgeExists(edge.index) || proportions[nextEdge.index] == 0)
 							continue;
 						
@@ -95,7 +95,7 @@ public class NetworkUtils {
 				
 				if (bush.getEdgeFlow(i) < 0) {
 					System.err.println("Negative flow: edge "
-							+ edge.startNode + "->" + edge.endNode
+							+ edge.tail + "->" + edge.head
 							+ ", bush " + origin + ", flow " + bush.getEdgeFlow(i));
 				}
 				flowCheck[i] += bush.getEdgeFlow(i);
@@ -131,7 +131,7 @@ public class NetworkUtils {
 			
 			if (Math.abs(flowCheck[i] - flows[i]) > FLOW_CHECK_ERROR) {
 				System.err.println("Bush flows not adding up: edge "
-						+ edge.startNode + "->" + edge.endNode
+						+ edge.tail + "->" + edge.head
 						+ ", difference " + Math.abs(flowCheck[i] - flows[i]));
 			}
 		}
@@ -159,13 +159,13 @@ public class NetworkUtils {
 				
 				currPath[pathLen - 1] = edge;
 				
-				int node = edge.startNode;
+				int node = edge.tail;
 				if (nodeFlags[node]) {
 					
 					boolean inPath = false;
 					for (int i = 0; i < pathLen; i++) {
 						Network.Edge edge1 = currPath[i];
-						if (edge1.startNode == node) {
+						if (edge1.tail == node) {
 							inPath = true;
 							break;
 						}
@@ -178,7 +178,7 @@ public class NetworkUtils {
 							 cycleEdge = currPath[--i]) {
 							
 							cycleFlow = Math.min(cycleFlow, bush.getEdgeFlow(cycleEdge.index));
-							if (cycleEdge.startNode == node)
+							if (cycleEdge.tail == node)
 								break;
 						}
 						
@@ -190,14 +190,14 @@ public class NetworkUtils {
 							
 							bush.addFlow(cycleEdge.index, -cycleFlow);
 							flows[cycleEdge.index] -= cycleFlow;
-							if (cycleEdge.startNode == node)
+							if (cycleEdge.tail == node)
 								break;
 						}
 					}
 				} else {
 					nodeFlags[node] = true;
 					
-					for (Network.Edge newEdge : network.forwardStar(edge.endNode)) {
+					for (Network.Edge newEdge : network.forwardStar(edge.head)) {
 						if (bush.getEdgeFlow(newEdge.index) > 0)
 							stack.push(new Pair<>(newEdge, pathLen + 1));
 					}
@@ -226,9 +226,9 @@ public class NetworkUtils {
 				Network.Edge edge = stack.pop();
 				
 				// path end encountered
-				if (!currentPath.isEmpty() && edge.startNode != currentPath.peek().edge.endNode) {
+				if (!currentPath.isEmpty() && edge.tail != currentPath.peek().edge.head) {
 					double pathFlow = currentPath.peek().flow;
-					int destination = currentPath.peek().edge.endNode;
+					int destination = currentPath.peek().edge.head;
 					
 					for (EdgeFlow edgeFlow : currentPath) {
 						invertedBushes[destination].addEdge(edgeFlow.edge.index);
@@ -249,14 +249,14 @@ public class NetworkUtils {
 				else
 					currentPath.push(new EdgeFlow(edge, Math.min(currentPath.peek().flow, bush.getEdgeFlow(edge.index))));
 				
-				for (Network.Edge edge1 : network.forwardStar(edge.endNode))
+				for (Network.Edge edge1 : network.forwardStar(edge.head))
 					if (bush.edgeExists(edge1.index))
 						stack.push(edge1);
 			}
 			
 			while (!currentPath.isEmpty()) {
 				double pathFlow = currentPath.peek().flow;
-				int destination = currentPath.peek().edge.endNode;
+				int destination = currentPath.peek().edge.head;
 				
 				for (EdgeFlow edgeFlow : currentPath) {
 					invertedBushes[destination].addEdge(edgeFlow.edge.index);
