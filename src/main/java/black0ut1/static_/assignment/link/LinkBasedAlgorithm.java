@@ -10,15 +10,17 @@ import black0ut1.static_.cost.CostFunction;
 /**
  * The base class for all link-based STA algorithms. Their common framework is the
  * following:																			  <br>
- * 1. Generate initial solution															  <br>
- * 2. Generate target solution															  <br>
- * 3. Determine a step size towards the target solution									  <br>
- * 4. Update current solution															  <br>
- * 5. Update link costs																	  <br>
- * 6. Go to 2.																			  <br>
+ * 1. Initialize												 						  <br>
+ * 1.1. Generate initial solution using AON												  <br>
+ * 1.2. Update costs																	  <br>
+ * 2. Iterate																			  <br>
+ * 2.1. Generate target solution														  <br>
+ * 2.2. Determine a step size (from interval [0, 1]) towards the target solution		  <br>
+ * 2.3. Update current solution: current = step size * target + (1 - step size) * current <br>
+ * 2.4. Update link costs																  <br>
  * <p>
  * Bibliography:																		  <br>
- * - (Boyles et al., 2025) Transportation Network Analysis, Section 6.2
+ * - (Boyles et al., 2025) Transportation Network Analysis, Section 6.2					  <br>
  */
 public abstract class LinkBasedAlgorithm extends Algorithm {
 	
@@ -30,27 +32,29 @@ public abstract class LinkBasedAlgorithm extends Algorithm {
 	
 	@Override
 	protected void initialize() {
-		// 1. Generate initial solution
+		// 1.1. Generate initial solution using AON
 		AON.assign(network, odMatrix, costs, flows);
+		
+		// 1.2. Update costs
 		updateCosts();
 	}
 	
 	@Override
 	protected void mainLoopIteration() {
-		// 2. Generate target solution
+		// 2.1. Generate target solution
 		double[] target = calculateTarget();
 		
-		// 3. Determine a step size towards the target solution
+		// 2.2. Determine a step size towards the target solution
 		double stepSize = calculateStepSize(target);
 		
-		// 4. Update current solution
+		// 2.3. Update current solution
 		for (int j = 0; j < network.edges; j++)
 			flows[j] = stepSize * target[j] + (1 - stepSize) * flows[j];
 		
-		// alternate expression better showing the step direction
+		// alternative expression better showing the step direction
 		// flows[j] += stepSize * (target[j] - flows[j]);
 		
-		// 5. Update link costs
+		// 2.4 Update link costs
 		updateCosts();
 	}
 	
