@@ -134,6 +134,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 				if (maximalDistance[edge.tail] + costs[edge.index] < maximalDistance[edge.head]
 						&& minimalDistance[edge.tail] + costs[edge.index] < minimalDistance[edge.head]) {
 					bush.addEdge(edge.index);
+					linksAdded++;
 				}
 			}
 			
