@@ -71,7 +71,7 @@ public class DaganzoMerge extends Node {
 			double remainingR = R;
 			double[] remainingS = new double[incomingLinks.length];
 			for (int i = 0; i < incomingLinks.length; i++)
-				remainingS[i] = incomingLinks[i].getReceivingFlow();
+				remainingS[i] = incomingLinks[i].getSendingFlow();
 
 			double[] transitionFlows = new double[incomingLinks.length];
 
