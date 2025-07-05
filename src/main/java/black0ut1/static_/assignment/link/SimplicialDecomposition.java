@@ -10,6 +10,9 @@ import java.util.Vector;
 
 public class SimplicialDecomposition extends LinkBasedAlgorithm {
 	
+	protected static final int SECANT_METHOD_MAX_ITERATIONS = 10;
+	protected static final double SECANT_METHOD_PRECISION = 1e-10;
+	
 	protected final Vector<double[]> hullVertices = new Vector<>();
 	
 	public SimplicialDecomposition(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
@@ -29,22 +32,23 @@ public class SimplicialDecomposition extends LinkBasedAlgorithm {
 		AON.assign(network, odMatrix, costs, newHullVertex);
 		hullVertices.add(newHullVertex);
 		
-		double gap = Double.POSITIVE_INFINITY;
-		System.out.println("Initial Smith gap: " + gap);
+		System.out.println("Init smith gap: " + smithGap(flows, costs));
 		for (int i = 0; i < 20; i++) {
 			System.out.println("---- Inner iteration " + (i + 1) + " ----");
 			
-			double newGap = innerIteration(gap);
-			if (newGap == -1)
+			double lambda = innerIteration();
+			if (lambda == -1)
 				break;
-			else
-				gap = newGap;
 			
-			System.out.println("Smith gap: " + gap);
+			System.out.println("Smith gap: " + smithGap(flows, costs));
+			
+			if (Math.abs(lambda) < 1e-4)
+				break;
 		}
+		System.out.println();
 	}
 	
-	protected double innerIteration(double gap) {
+	protected double innerIteration() {
 		double[] deltaX = new double[network.edges];
 		
 		double demom = 0;
@@ -65,33 +69,38 @@ public class SimplicialDecomposition extends LinkBasedAlgorithm {
 			deltaX[i] /= demom;
 		
 		
-		double[] bestFlows = null;
-		double lambdaChosen = -1;
-		for (int i = 1; i <= 20; i++) {
-			double lambda = 1.0 / i;
+		// determine step size with secant method, finding the root of the derivative of
+		// beckmann's function w.r.t. the step size, thus minimizing beckmann's function itself
+		double lambda0 = 0, lambda1 = 1;
+		for (int i = 0; i < SECANT_METHOD_MAX_ITERATIONS; i++) {
 			
-			double[] newFlows = new double[network.edges];
-			double[] costs = new double[network.edges];
+			double f0 = 0;
+			double f1 = 0;
+			
 			for (int j = 0; j < network.edges; j++) {
-				newFlows[j] = flows[j] + lambda * deltaX[j];
-				costs[j] = costFunction.function(network.getEdges()[j], newFlows[j]);
+				Network.Edge edge = network.getEdges()[j];
+				
+				f0 += costFunction.function(edge, flows[j] + lambda0 * deltaX[j]) * deltaX[j];
+				f1 += costFunction.function(edge, flows[j] + lambda1 * deltaX[j]) * deltaX[j];
 			}
 			
-			double newGap = smithGap(newFlows, costs);
-			if (newGap < gap) {
-				gap = newGap;
-				bestFlows = newFlows;
-				lambdaChosen = lambda;
+			double nextLambda = lambda1 - f1 * (lambda1 - lambda0) / (f1 - f0);
+			
+			if (Math.abs(nextLambda - lambda1) < SECANT_METHOD_PRECISION) {
+				lambda1 = nextLambda;
+				break;
 			}
+			
+			lambda0 = lambda1;
+			lambda1 = nextLambda;
 		}
 		
-		if (bestFlows == null)
-			return -1;
-		
-		System.out.println("Lambda chosen: " + lambdaChosen);
-		System.arraycopy(bestFlows, 0, flows, 0, network.edges);
+		System.out.println("Lambda chosen: " + lambda1);
+		for (int j = 0; j < network.edges; j++)
+			flows[j] += lambda1 * deltaX[j];
 		updateCosts();
-		return gap;
+		
+		return lambda1;
 	}
 	
 	protected double smithGap(double[] flows, double[] costs) {
