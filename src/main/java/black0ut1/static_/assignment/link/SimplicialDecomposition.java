@@ -29,15 +29,22 @@ public class SimplicialDecomposition extends LinkBasedAlgorithm {
 		AON.assign(network, odMatrix, costs, newHullVertex);
 		hullVertices.add(newHullVertex);
 		
-		System.out.println("Initial Smith gap: " + smithGap());
-		for (int i = 0; i < 10; i++) {
-			System.out.println("Inner iteration " + (i + 1));
-			innerIteration();
-			System.out.println("Smith gap: " + smithGap());
+		double gap = Double.POSITIVE_INFINITY;
+		System.out.println("Initial Smith gap: " + gap);
+		for (int i = 0; i < 20; i++) {
+			System.out.println("---- Inner iteration " + (i + 1) + " ----");
+			
+			double newGap = innerIteration(gap);
+			if (newGap == -1)
+				break;
+			else
+				gap = newGap;
+			
+			System.out.println("Smith gap: " + gap);
 		}
 	}
 	
-	protected void innerIteration() {
+	protected double innerIteration(double gap) {
 		double[] deltaX = new double[network.edges];
 		
 		double demom = 0;
@@ -56,9 +63,38 @@ public class SimplicialDecomposition extends LinkBasedAlgorithm {
 		
 		for (int i = 0; i < network.edges; i++)
 			deltaX[i] /= demom;
+		
+		
+		double[] bestFlows = null;
+		double lambdaChosen = -1;
+		for (int i = 1; i <= 20; i++) {
+			double lambda = 1.0 / i;
+			
+			double[] newFlows = new double[network.edges];
+			double[] costs = new double[network.edges];
+			for (int j = 0; j < network.edges; j++) {
+				newFlows[j] = flows[j] + lambda * deltaX[j];
+				costs[j] = costFunction.function(network.getEdges()[j], newFlows[j]);
+			}
+			
+			double newGap = smithGap(newFlows, costs);
+			if (newGap < gap) {
+				gap = newGap;
+				bestFlows = newFlows;
+				lambdaChosen = lambda;
+			}
+		}
+		
+		if (bestFlows == null)
+			return -1;
+		
+		System.out.println("Lambda chosen: " + lambdaChosen);
+		System.arraycopy(bestFlows, 0, flows, 0, network.edges);
+		updateCosts();
+		return gap;
 	}
 	
-	protected double smithGap() {
+	protected double smithGap(double[] flows, double[] costs) {
 		double sum = 0;
 		
 		for (double[] hullVertex : hullVertices) {
