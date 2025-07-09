@@ -4,13 +4,13 @@ public class DoubleMatrix {
 	
 	private final double[] arr;
 	
-	public final int n;
 	public final int m;
+	public final int n;
 	
-	public DoubleMatrix(int n, int m) {
-		this.arr = new double[n * m];
-		this.n = n;
+	public DoubleMatrix(int m, int n) {
+		this.arr = new double[m * n];
 		this.m = m;
+		this.n = n;
 	}
 	
 	public DoubleMatrix(int n) {
