@@ -5,11 +5,9 @@ import black0ut1.data.network.Network;
 import black0ut1.data.network.Path;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
-import black0ut1.util.SSSP;
 import black0ut1.util.Util;
 
 import java.util.BitSet;
-import java.util.Vector;
 
 public class GradientProjection extends PathBasedAlgorithm {
 	
