@@ -7,8 +7,11 @@ import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.Util;
 
-import java.util.BitSet;
-
+/**
+ * Bibliography:																		  <br>
+ * - (Boyles et al., 2025) Transportation Network Analysis, Section 9.5.2				  <br>
+ * - (Jayakrishnan et al., 1994) Faster Path-Based Algorithm for Traffic Assignment
+ */
 public class GradientProjection extends PathBasedAlgorithm {
 	
 	public GradientProjection(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
@@ -22,9 +25,7 @@ public class GradientProjection extends PathBasedAlgorithm {
 			if (path == basicPath)
 				continue;
 			
-			// TODO measure the convergence when using symmetric difference
-			int[] symmetricDifference = symmetricDifference(basicPath, path);
-			double flowDelta = computeFlowDelta(basicPath, path, symmetricDifference);
+			double flowDelta = computeFlowDelta(basicPath, path);
 			if (flowDelta == 0)
 				continue;
 				
@@ -32,32 +33,7 @@ public class GradientProjection extends PathBasedAlgorithm {
 		}
 	}
 	
-	/**
-	 * Computes the symmetric difference of the two paths, i.e. a set of links, where each
-	 * link is contained in either of the paths but not both.
-	 * @return Array of edge indices.
-	 */
-	protected int[] symmetricDifference(Path basicPath, Path path) {
-		BitSet bitSet1 = new BitSet(network.edges);
-		BitSet bitSet2 = new BitSet(network.edges);
-		
-		for (int edgeIndex : basicPath.edges)
-			bitSet1.set(edgeIndex);
-		for (int edgeIndex : path.edges)
-			bitSet2.set(edgeIndex);
-		
-		bitSet1.xor(bitSet2);
-		
-		int[] result = new int[bitSet1.cardinality()];
-		int i = 0;
-		for (int index = bitSet1.nextSetBit(0); index >= 0; index = bitSet1.nextSetBit(index + 1)) {
-			result[i++] = index;
-		}
-		
-		return result;
-	}
-	
-	protected double computeFlowDelta(Path basicPath, Path path, int[] symDiff) {
+	protected double computeFlowDelta(Path basicPath, Path path) {
 		double numerator = path.getCost(costs) - basicPath.getCost(costs);
 		if (numerator == 0)
 			return 0;
