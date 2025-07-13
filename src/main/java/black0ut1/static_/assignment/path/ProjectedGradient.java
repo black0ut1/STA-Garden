@@ -1,135 +1,153 @@
 package black0ut1.static_.assignment.path;
 
 import black0ut1.data.DoubleMatrix;
-import black0ut1.data.Matrix;
 import black0ut1.data.network.Network;
-import black0ut1.static_.assignment.Algorithm;
+import black0ut1.data.network.Path;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
-import black0ut1.util.SSSP;
 import black0ut1.util.Util;
 
 import java.util.Vector;
 
-// TODO under construction
-public class ProjectedGradient extends Algorithm {
+public class ProjectedGradient extends PathBasedAlgorithm {
 	
-	protected final Matrix<Vector<Path>> odPairs;
+	protected static final double INVPHI = (Math.sqrt(5) - 1) / 2;
+	protected static final double STEP_DIRECTION_EPSILON = 1e-5;
 	
-	public ProjectedGradient(Network network, DoubleMatrix odMatrix,
-							 CostFunction costFunction, int maxIterations,
-							 Convergence.Builder convergenceBuilder) {
+	public ProjectedGradient(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
+							 int maxIterations, Convergence.Builder convergenceBuilder) {
 		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
-		this.odPairs = new Matrix<>(network.zones);
 	}
 	
 	@Override
-	protected void initialize() {
+	protected void equilibratePaths(int origin, int destination, Path basicPath) {
+		if (odPairs.get(origin, destination).size() == 1)
+			return;
+		
+		double[] stepDirection = calculateStepDirection(origin, destination);
+		if (stepDirection == null)
+			return;
+		
+		double stepSize = calculateStepSize(origin, destination, stepDirection);
+		if (stepSize == 0)
+			return;
+		
+		shiftFlows(origin, destination, stepDirection, stepSize);
+		
+		odPairs.get(origin, destination).removeIf(path -> path.flow == 0);
+	}
+	
+	protected double[] calculateStepDirection(int origin, int destination) {
+		Vector<Path> paths = odPairs.get(origin, destination);
+		
+		double averageTravelTime = 0;
+		double min = Double.POSITIVE_INFINITY,  max = Double.NEGATIVE_INFINITY;
+		double[] stepDirection = new double[paths.size()];
+		
+		for (int i = 0; i < stepDirection.length; i++) {
+			double pathCost = paths.get(i).getCost(costs);
+			
+			if (pathCost < min)
+				min = pathCost;
+			if (pathCost > max)
+				max = pathCost;
+			
+			stepDirection[i] = pathCost;
+			averageTravelTime += pathCost;
+		}
+		
+		// if step direction is too small, skip this OD pair (avoids numerical errors)
+		if (max - min < STEP_DIRECTION_EPSILON)
+			return null;
+		
+		averageTravelTime /= paths.size();
+		for (int i = 0; i < stepDirection.length; i++)
+			stepDirection[i] = averageTravelTime - stepDirection[i];
+		
+		return stepDirection;
+	}
+	
+	protected double calculateStepSize(int origin, int destination, double[] stepDirection) {
+		Vector<Path> paths = odPairs.get(origin, destination);
+		
+		double maxStepSize = Double.POSITIVE_INFINITY;
+		for (int i = 0; i < paths.size(); i++) {
+			if (stepDirection[i] < 0)
+				maxStepSize = Math.min(maxStepSize, -paths.get(i).flow / stepDirection[i]);
+		}
+		
+		if (maxStepSize == 0)
+			return 0;
+		
+		double[] a = new double[network.edges];
+		for (int i = 0; i < paths.size(); i++) {
+			for (int edgeIndex : paths.get(i).edges)
+				a[edgeIndex] += stepDirection[i];
+		}
+
+		double numerator = 0;
+		double denominator = 0;
+		for (Network.Edge edge : network.getEdges()) {
+			numerator += costFunction.function(edge, flows[edge.index]) * a[edge.index];
+			denominator += costFunction.derivative(edge, flows[edge.index]) * a[edge.index] * a[edge.index];
+		}
+
+		if (numerator == 0)
+			return 0;
+		return Util.projectToInterval(-numerator / denominator, 0, maxStepSize);
+		
+//		double a = 0;
+//		double b = maxStepSize;
+//		while (b - a > 1) {
+//			double c = b - (b - a) * INVPHI;
+//			double d = a + (b - a) * INVPHI;
+//
+//			double f1 = 0;
+//			double f2 = 0;
+//
+//			double[] flows1 = flows.clone();
+//			for (int i = 0; i < paths.size(); i++) {
+//				double flowShift = c * stepDirection[i];
+//				for (int edgeIndex : paths.get(i).edges)
+//					flows1[edgeIndex] += flowShift;
+//			}
+//
+//			for (Network.Edge edge : network.getEdges())
+//				f1 += costFunction.integral(edge, flows1[edge.index]);
+//
+//			double[] flows2 = flows.clone();
+//			for (int i = 0; i < paths.size(); i++) {
+//				double flowShift = d * stepDirection[i];
+//				for (int edgeIndex : paths.get(i).edges)
+//					flows2[edgeIndex] += flowShift;
+//			}
+//
+//			for (Network.Edge edge : network.getEdges())
+//				f2 += costFunction.integral(edge, flows2[edge.index]);
+//
+//			if (f1 < f2)
+//				b = d;
+//			else
+//				a = c;
+//		}
+//
+//		double value = (a + b) / 2;
+//		return Util.projectToInterval(value, 0, maxStepSize);
+	}
+	
+	protected void shiftFlows(int origin, int destination, double[] stepDirection, double stepSize) {
+		Vector<Path> paths = odPairs.get(origin, destination);
+		
+		for (int i = 0; i < paths.size(); i++) {
+			Path path = paths.get(i);
+			
+			double flowShift = stepSize * stepDirection[i];
+			path.flow += flowShift;
+			
+			for (int edgeIndex : path.edges)
+				flows[edgeIndex] += flowShift;
+		}
+		
 		updateCosts();
-		for (int origin = 0; origin < network.zones; origin++) {
-			
-			var a = SSSP.dijkstraLen(network, origin, costs);
-			Network.Edge[] minTree = a.first();
-			int[] pathLengths = a.second();
-			
-			for (int destination = 0; destination < network.zones; destination++) {
-				if (odMatrix.get(origin, destination) == 0)
-					continue;
-				
-				odPairs.set(origin, destination, new Vector<>());
-				
-				int[] edgeIndices = new int[pathLengths[destination]];
-				int i = 0;
-				for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.tail])
-					edgeIndices[i++] = edge.index;
-				
-				Path minPath = new Path(edgeIndices);
-				minPath.updateCost();
-				minPath.addFlow(odMatrix.get(origin, destination));
-				
-				odPairs.get(origin, destination).add(minPath);
-			}
-		}
-		
-		updateCosts();
-	}
-	
-	@Override
-	protected void mainLoopIteration() {
-		for (int origin = 0; origin < network.zones; origin++) {
-			
-			var a = SSSP.dijkstraLen(network, origin, costs);
-			Network.Edge[] minTree = a.first();
-			int[] pathLengths = a.second();
-			
-			for (int destination = 0; destination < network.zones; destination++) {
-				var paths = odPairs.get(origin, destination);
-				if (paths == null)
-					continue;
-				
-				for (Path path : paths)
-					path.updateCost();
-				
-				double avgCost = getAveragePathCost(paths);
-				double stepSize = getStepSize(paths, avgCost);
-				
-				for (Path path : paths) {
-					double deltaX = path.cost - avgCost;
-					
-					path.addFlow(stepSize * deltaX);
-				}
-			}
-			
-			updateCosts();
-		}
-	}
-	
-	protected double getStepSize(Vector<Path> paths, double avgCost) {
-		
-		
-		double maxStepSize = 0;
-		for (Path path : paths) {
-			double a = path.flow / (path.cost - avgCost);
-			if (a > maxStepSize)
-				maxStepSize = a;
-		}
-		
-		double stepSize = maxStepSize / 2;
-		
-		
-		return Util.projectToInterval(stepSize, 0, maxStepSize);
-	}
-	
-	protected double getAveragePathCost(Vector<Path> paths) {
-		int numPaths = paths.size();
-		
-		double totalTT = 0;
-		for (Path path : paths)
-			totalTT += path.cost;
-		
-		return totalTT / numPaths;
-	}
-	
-	protected class Path {
-		
-		public final int[] edgeIndices;
-		private double flow = 0;
-		private double cost;
-		
-		public Path(int[] edgeIndices) {
-			this.edgeIndices = edgeIndices;
-		}
-		
-		public void addFlow(double flow) {
-			this.flow += flow;
-			for (int edgeIndex : edgeIndices)
-				flows[edgeIndex] += flow;
-		}
-		
-		private void updateCost() {
-			cost = 0;
-			for (int index : edgeIndices)
-				cost += costFunction.function(network.getEdges()[index], flows[index]);
-		}
 	}
 }
