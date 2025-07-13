@@ -1,6 +1,7 @@
 package black0ut1.util;
 
 import black0ut1.data.DoubleMatrix;
+import black0ut1.data.Matrix;
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.network.Path;
@@ -132,6 +133,50 @@ public class NetworkUtils {
 			if (Math.abs(flowCheck[i] - flows[i]) > FLOW_CHECK_ERROR) {
 				System.err.println("Bush flows not adding up: edge "
 						+ edge.tail + "->" + edge.head
+						+ ", difference " + Math.abs(flowCheck[i] - flows[i]));
+			}
+		}
+	}
+	
+	public static void checkPathFlows(Network network, DoubleMatrix odMatrix, Matrix<Vector<Path>> odPairs, double[] flows) {
+		double[] flowCheck = new double[network.edges];
+		
+		for (int origin = 0; origin < network.zones; origin++) {
+			for (int destination = 0; destination < network.zones; destination++) {
+				var paths = odPairs.get(origin, destination);
+				
+				if (paths == null) {
+					if (odMatrix.get(origin, destination) != 0)
+						System.err.println("Paths not initialized for nonzero OD flow: " + odMatrix.get(origin, destination));
+					continue;
+				}
+				
+				double odFlow = 0;
+				
+				for (Path path : paths) {
+					if (path.flow < -1e-10) {
+						System.err.println("Flow on path from origin " + origin + " to destination " + destination
+								+ " is negative: " + path.flow);
+					}
+					
+					odFlow += path.flow;
+					
+					for (int edgeIndex : path.edges)
+						flowCheck[edgeIndex] += path.flow;
+				}
+				
+				if (Math.abs(odFlow - odMatrix.get(origin, destination)) > FLOW_CHECK_ERROR) {
+					System.err.println("OD flow from origin " + origin + " to destination " + destination
+							+ " is different. Difference: " + Math.abs(odFlow - odMatrix.get(origin, destination)));
+				}
+			}
+		}
+		
+		for (int i = 0; i < network.edges; i++) {
+			Network.Edge edge = network.getEdges()[i];
+			
+			if (Math.abs(flowCheck[i] - flows[i]) > FLOW_CHECK_ERROR) {
+				System.err.println("Path flows not adding up on edge " + edge.tail + "->" + edge.head
 						+ ", difference " + Math.abs(flowCheck[i] - flows[i]));
 			}
 		}
