@@ -31,8 +31,6 @@ public class GradientProjection extends PathBasedAlgorithm {
 				
 			shiftFlows(flowDelta, basicPath, path);
 		}
-		
-		odPairs.get(origin, destination).removeIf(path -> path.flow <= 0);
 	}
 	
 	protected double computeFlowDelta(Path basicPath, Path path) {

@@ -86,6 +86,8 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 					odPairs.get(origin, destination).add(basicPath);
 				
 				equilibratePaths(origin, destination, basicPath);
+				
+				odPairs.get(origin, destination).removeIf(path -> path.flow <= 0);
 			}
 		}
 	}

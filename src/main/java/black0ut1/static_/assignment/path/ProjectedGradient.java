@@ -12,7 +12,7 @@ import java.util.Vector;
 public class ProjectedGradient extends PathBasedAlgorithm {
 	
 	protected static final double INVPHI = (Math.sqrt(5) - 1) / 2;
-	protected static final double STEP_DIRECTION_EPSILON = 1e-5;
+	protected static final double STEP_DIRECTION_EPSILON = 1e-7;
 	
 	public ProjectedGradient(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
 							 int maxIterations, Convergence.Builder convergenceBuilder) {
@@ -33,8 +33,6 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 			return;
 		
 		shiftFlows(origin, destination, stepDirection, stepSize);
-		
-		odPairs.get(origin, destination).removeIf(path -> path.flow <= 0);
 	}
 	
 	protected double[] calculateStepDirection(int origin, int destination) {
@@ -95,44 +93,6 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 		if (numerator == 0)
 			return 0;
 		return Util.projectToInterval(-numerator / denominator, 0, maxStepSize);
-		
-//		double a = 0;
-//		double b = maxStepSize;
-//		while (b - a > 1) {
-//			double c = b - (b - a) * INVPHI;
-//			double d = a + (b - a) * INVPHI;
-//
-//			double f1 = 0;
-//			double f2 = 0;
-//
-//			double[] flows1 = flows.clone();
-//			for (int i = 0; i < paths.size(); i++) {
-//				double flowShift = c * stepDirection[i];
-//				for (int edgeIndex : paths.get(i).edges)
-//					flows1[edgeIndex] += flowShift;
-//			}
-//
-//			for (Network.Edge edge : network.getEdges())
-//				f1 += costFunction.integral(edge, flows1[edge.index]);
-//
-//			double[] flows2 = flows.clone();
-//			for (int i = 0; i < paths.size(); i++) {
-//				double flowShift = d * stepDirection[i];
-//				for (int edgeIndex : paths.get(i).edges)
-//					flows2[edgeIndex] += flowShift;
-//			}
-//
-//			for (Network.Edge edge : network.getEdges())
-//				f2 += costFunction.integral(edge, flows2[edge.index]);
-//
-//			if (f1 < f2)
-//				b = d;
-//			else
-//				a = c;
-//		}
-//
-//		double value = (a + b) / 2;
-//		return Util.projectToInterval(value, 0, maxStepSize);
 	}
 	
 	protected void shiftFlows(int origin, int destination, double[] stepDirection, double stepSize) {
@@ -146,8 +106,8 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 			
 			for (int edgeIndex : path.edges)
 				flows[edgeIndex] += flowShift;
+			
+			updateCosts(path);
 		}
-		
-		updateCosts();
 	}
 }
