@@ -34,7 +34,7 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 		
 		shiftFlows(origin, destination, stepDirection, stepSize);
 		
-		odPairs.get(origin, destination).removeIf(path -> path.flow == 0);
+		odPairs.get(origin, destination).removeIf(path -> path.flow <= 0);
 	}
 	
 	protected double[] calculateStepDirection(int origin, int destination) {
@@ -76,7 +76,7 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 				maxStepSize = Math.min(maxStepSize, -paths.get(i).flow / stepDirection[i]);
 		}
 		
-		if (maxStepSize == 0)
+		if (maxStepSize <= 0)
 			return 0;
 		
 		double[] a = new double[network.edges];
