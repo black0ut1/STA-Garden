@@ -11,8 +11,7 @@ import java.util.Vector;
 
 public class ProjectedGradient extends PathBasedAlgorithm {
 	
-	protected static final double INVPHI = (Math.sqrt(5) - 1) / 2;
-	protected static final double STEP_DIRECTION_EPSILON = 1e-7;
+	protected static final double STEP_DIRECTION_EPSILON = 1e-12;
 	
 	public ProjectedGradient(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
 							 int maxIterations, Convergence.Builder convergenceBuilder) {
@@ -59,8 +58,16 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 			return null;
 		
 		averageTravelTime /= paths.size();
-		for (int i = 0; i < stepDirection.length; i++)
+		double rectification = 0;
+		for (int i = 0; i < stepDirection.length; i++) {
 			stepDirection[i] = averageTravelTime - stepDirection[i];
+			
+			if (i != stepDirection.length - 1)
+				rectification += stepDirection[i];
+		}
+		// Rectify step direction such that the sum is 0 - without it, the algorithm stops
+		// converging and the relative gap starts oscillating at ~1e-8
+		stepDirection[stepDirection.length - 1] = -rectification;
 		
 		return stepDirection;
 	}
