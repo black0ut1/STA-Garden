@@ -7,6 +7,7 @@ import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.Util;
 
+import java.util.BitSet;
 import java.util.Vector;
 
 public class ProjectedGradient extends PathBasedAlgorithm {
@@ -84,17 +85,31 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 		if (maxStepSize <= 0)
 			return 0;
 		
+		
+		int j = 0;
+		BitSet bitSet = new BitSet(network.edges);
+		int[] nonzeroIndices = new int[network.edges];
 		double[] a = new double[network.edges];
-		for (int i = 0; i < paths.size(); i++) {
-			for (int edgeIndex : paths.get(i).edges)
+		
+		for (int i = 0; i < paths.size(); i++)
+			for (int edgeIndex : paths.get(i).edges) {
+				
+				if (!bitSet.get(edgeIndex)) {
+					bitSet.set(edgeIndex);
+					nonzeroIndices[j++] = edgeIndex;
+				}
+				
 				a[edgeIndex] += stepDirection[i];
-		}
+			}
 
 		double numerator = 0;
 		double denominator = 0;
-		for (Network.Edge edge : network.getEdges()) {
-			numerator += costFunction.function(edge, flows[edge.index]) * a[edge.index];
-			denominator += costFunction.derivative(edge, flows[edge.index]) * a[edge.index] * a[edge.index];
+		for (int i = 0; i < j; i++) {
+			int edgeIndex =  nonzeroIndices[i];
+			Network.Edge edge = network.getEdges()[edgeIndex];
+			
+			numerator += costFunction.function(edge, flows[edgeIndex]) * a[edgeIndex];
+			denominator += costFunction.derivative(edge, flows[edgeIndex]) * a[edgeIndex] * a[edgeIndex];
 		}
 
 		if (numerator == 0)
