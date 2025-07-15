@@ -35,7 +35,7 @@ public class GradientProjection extends PathBasedAlgorithm {
 	
 	protected double computeFlowDelta(Path basicPath, Path path) {
 		double numerator = path.getCost(costs) - basicPath.getCost(costs);
-		if (numerator == 0)
+		if (numerator <= 0)
 			return 0;
 		
 		double denominator = 0;

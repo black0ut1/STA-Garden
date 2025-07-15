@@ -32,6 +32,7 @@ Link-based algorithms:
 
 Path-based algorithms:
 
+- Path Equilibration
 - Gradient Projection
 - Projected Gradient
 
