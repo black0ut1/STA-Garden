@@ -48,17 +48,29 @@ public abstract class DynamicNetworkLoading {
 			
 			loadForTime(t);
 			
-			var pair = network.getTotalInflowOutflow(t);
-			System.out.println("Inflow of all links: " + pair.first());
-			System.out.println("Outflow of all links: " + pair.second());
-			
-			if (pair.first() == 0 && pair.second() == 0)
+			double totalFlow = getTotalFlowOnNetwork(t);
+			System.out.println("Total flow on network: " + totalFlow);
+			if (totalFlow < 1e-5)
 				break;
 		}
 		return t;
 	}
 	
 	protected abstract void loadForTime(int t);
+	
+	/**
+	 * Computes the sum of flows contained on all links at the end of t-th time step.
+	 * @param t Time step.
+	 * @return Sum of all flows on network.
+	 */
+	public double getTotalFlowOnNetwork(int t) {
+		double totalFlow = 0;
+		
+		for (Link link : network.allLinks)
+			totalFlow += link.cumulativeInflow[t + 1] - link.cumulativeOutflow[t + 1];
+		
+		return totalFlow;
+	}
 	
 	/**
 	 * Sets mixture fractions for each intersection and for each time
