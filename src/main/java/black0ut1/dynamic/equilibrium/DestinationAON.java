@@ -103,7 +103,7 @@ public class DestinationAON {
 			costs[i] = network.getEdges()[i].freeFlow;
 		
 		for (int destination = 0; destination < network.zones; destination++) {
-			Network.Edge[] next = SSSP.dijkstraDest(network, destination, costs);
+			Network.Edge[] next = SSSP.dijkstraDest(network, destination, costs).first();
 			
 			for (int origin = 0; origin < network.zones; origin++) {
 				double demand = odMatrix.get(origin, destination);
