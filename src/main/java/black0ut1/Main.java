@@ -47,9 +47,9 @@ public class Main {
 		var destinationBushes = destinationBushes(pair.first(), pair.second());
 		
 		// The route choice model
-		StaticRouteChoice routeChoice = new StaticRouteChoice(network, destinationBushes);
+		StaticRouteChoice routeChoice = new StaticRouteChoice(network, totalSteps, destinationBushes);
 		long startTime = System.currentTimeMillis();
-		var mfs = routeChoice.computeTurningFractions(totalSteps);
+		var mfs = routeChoice.computeTurningFractions();
 		long endTime = System.currentTimeMillis();
 		System.out.println("AON took " + (endTime - startTime) + "ms");
 		
