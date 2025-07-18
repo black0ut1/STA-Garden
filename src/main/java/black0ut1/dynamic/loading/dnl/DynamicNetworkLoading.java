@@ -44,14 +44,14 @@ public abstract class DynamicNetworkLoading {
 	public int loadNetwork() {
 		int t;
 		for (t = 0; t < steps; t++) {
+			
 			System.out.println("========= Time " + t + " =========");
-			
-			loadForTime(t);
-			
 			double totalFlow = getTotalFlowOnNetwork(t);
 			System.out.println("Total flow on network: " + totalFlow);
 			if (totalFlow < 1e-5)
 				break;
+			
+			loadForTime(t);
 		}
 		return t;
 	}

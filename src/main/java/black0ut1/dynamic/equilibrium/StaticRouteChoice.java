@@ -12,15 +12,17 @@ import java.util.Arrays;
 public class StaticRouteChoice {
 	
 	protected final DynamicNetwork network;
+	protected final int maxSteps;
 	protected final Bush[] destinationBushes;
 	
-	public StaticRouteChoice(DynamicNetwork network, Bush[] destinationBushes) {
+	public StaticRouteChoice(DynamicNetwork network, int maxSteps, Bush[] destinationBushes) {
 		this.network = network;
+		this.maxSteps = maxSteps;
 		this.destinationBushes = destinationBushes;
 	}
 	
-	public MixtureFractions[][] computeTurningFractions(int timeSteps) {
-		MixtureFractions[][] result = new MixtureFractions[network.intersections.length][timeSteps];
+	public MixtureFractions[][] computeTurningFractions() {
+		MixtureFractions[][] result = new MixtureFractions[network.intersections.length][maxSteps];
 		
 		for (Intersection intersection : network.intersections)
 			result[intersection.index][0] = createMixtureFractionsForIntersection(intersection);
