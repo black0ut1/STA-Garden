@@ -108,6 +108,9 @@ public class B extends BushBasedAlgorithm {
 		}
 	}
 	
+	@Override
+	protected void equilibrateBush(Bush bush) {}
+	
 	protected void equilibriateBush(Bush bush, Network.Edge[] minTree, Network.Edge[] maxTree) {
 		int[] divergenceNodes = findDivergenceNodes(minTree, maxTree, bush.root);
 		for (int node = 0; node < network.nodes; node++) {

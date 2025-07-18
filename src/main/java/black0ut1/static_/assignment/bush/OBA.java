@@ -74,6 +74,9 @@ public class OBA extends BushBasedAlgorithm {
 		}
 	}
 	
+	@Override
+	protected void equilibrateBush(Bush bush) {}
+	
 	protected void updateNodes(int[] topOrd2, double[] nFlows, double[] alpha, Bush bush) {
 		for (int i = network.nodes - 1; i >= 0; i--) {
 			int n = topOrd2[i];

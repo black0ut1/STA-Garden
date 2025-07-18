@@ -83,6 +83,9 @@ public class iTAPAS extends BushBasedAlgorithm {
 		eliminatePASes();
 	}
 	
+	@Override
+	protected void equilibrateBush(Bush bush) {}
+	
 	/* Potential link is every link in the network, which:
 	 * 1) is not part of mintree from currently processed origin,
 	 * 2) has nonzero (or bigger than some epsilon) origin flow,

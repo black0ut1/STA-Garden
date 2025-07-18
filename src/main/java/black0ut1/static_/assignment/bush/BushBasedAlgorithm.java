@@ -40,14 +40,6 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 		updateCosts();
 	}
 	
-	@Override
-	protected void mainLoopIteration() {
-		for (Bush bush : bushes)
-			updateBush(bush);
-		
-		
-	}
-	
 	protected Bush createBush(int origin) {
 		Bush bush = new Bush(network.edges, origin);
 		
@@ -80,6 +72,17 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 		
 		return bush;
 	}
+	
+	@Override
+	protected void mainLoopIteration() {
+		for (Bush bush : bushes)
+			updateBush(bush);
+		
+		for (Bush bush : bushes)
+			equilibrateBush(bush);
+	}
+	
+	protected abstract void equilibrateBush(Bush bush);
 	
 	protected void updateBush(Bush bush) {
 		// Dial's strategy is different from Bargera's and Nie's
