@@ -7,6 +7,7 @@ import black0ut1.data.network.Path;
 import black0ut1.static_.assignment.Algorithm;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
+import black0ut1.util.NetworkUtils;
 import black0ut1.util.SSSP;
 
 import java.util.List;
@@ -15,12 +16,14 @@ import java.util.Vector;
 public abstract class PathBasedAlgorithm extends Algorithm {
 	
 	protected final Matrix<Vector<Path>> odPairs;
-	protected final ShortestPathStrategy shortestPathStrategy = ShortestPathStrategy.P2PSP;
+	protected final ShortestPathStrategy shortestPathStrategy;
 	protected DoubleMatrix heuristic = null;
 	
 	public PathBasedAlgorithm(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-							  int maxIterations, Convergence.Builder convergenceBuilder) {
+							  int maxIterations, Convergence.Builder convergenceBuilder,
+							  ShortestPathStrategy shortestPathStrategy) {
 		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+		this.shortestPathStrategy = shortestPathStrategy;
 		this.odPairs = new Matrix<>(network.zones);
 	}
 	
@@ -109,17 +112,27 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 		} else if (shortestPathStrategy == ShortestPathStrategy.P2PSP) {
 			
 			for (int origin = 0; origin < network.zones; origin++) {
+				
+				SSSP.Astar astar = new SSSP.Astar(network, heuristic, origin);
+				
 				for (int destination = 0; destination < network.zones; destination++) {
 					if (odMatrix.get(origin, destination) == 0)
 						continue;
 					
-					var pair = SSSP.AstarLen(network, origin, destination, costs, heuristic);
+					double shortestPathCost = Double.POSITIVE_INFINITY;
+					for (Path path : odPairs.get(origin, destination)) {
+						double cost = path.getCost(costs);
+						if (cost < shortestPathCost)
+							shortestPathCost = cost;
+					}
+					
+					var pair = astar.calculate(destination, costs, shortestPathCost);
 					Network.Edge[] minTree = pair.first();
 					int length = pair.second();
 					
 					int[] edgeIndices = new int[length];
 					int i = edgeIndices.length - 1;
-					for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.tail])
+					for (Network.Edge edge = minTree[destination]; i != -1; edge = minTree[edge.tail])
 						edgeIndices[i--] = edge.index;
 					
 					Path basicPath = new Path(edgeIndices);

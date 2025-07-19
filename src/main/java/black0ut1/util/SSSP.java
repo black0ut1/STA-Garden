@@ -130,58 +130,70 @@ public class SSSP {
 		return new Pair<>(next, distance);
 	}
 	
-	public static Pair<Network.Edge[], Integer> AstarLen(Network network, int origin, int destination, double[] costs, DoubleMatrix heuristic) {
-		double[] distance = new double[network.nodes];
-		Arrays.fill(distance, Double.POSITIVE_INFINITY);
-		distance[origin] = 0;
+	public static class Astar {
 		
-		double[] fDistance = new double[network.nodes];
-		Arrays.fill(fDistance, Double.POSITIVE_INFINITY);
-		fDistance[origin] = heuristic.get(origin, destination);
+		private final Network network;
+		private final DoubleMatrix heuristic;
+		private final int origin;
+		private final Network.Edge[] previous;
+		private final double[] distance;
+		private final int[] pathLength;
+		private final byte[] mark;
+		private final PriorityQueue pq = new PriorityQueue();
 		
-		Network.Edge[] previous = new Network.Edge[network.nodes];
-		
-		int[] pathLength = new int[network.nodes];
-		
-		PriorityQueue pq = new PriorityQueue();
-		byte[] mark = new byte[network.nodes];
-		
-		
-		pq.add(origin, fDistance[origin]);
-		while (!pq.isEmpty()) {
-			int fromVertex = pq.popMin();
-			
-			mark[fromVertex] = 2;
-			
-			if (previous[fromVertex] != null) {
-				int prev = previous[fromVertex].tail;
-				pathLength[fromVertex] = pathLength[prev] + 1;
-			}
-			
-			if (fromVertex == destination)
-				break;
-			
-			for (Network.Edge edge : network.forwardStar(fromVertex)) {
-				int toVertex = edge.head;
-				if (mark[toVertex] == 2)
-					continue;
-				
-				double newDistance = distance[fromVertex] + costs[edge.index];
-				if (mark[toVertex] == 0) {
-					mark[toVertex] = 1;
-					distance[toVertex] = newDistance;
-					fDistance[toVertex] = newDistance + heuristic.get(toVertex, destination);
-					previous[toVertex] = edge;
-					pq.add(toVertex, newDistance);
-				} else if (mark[toVertex] == 1 && newDistance < distance[toVertex]) {
-					distance[toVertex] = newDistance;
-					fDistance[toVertex] = newDistance + heuristic.get(toVertex, destination);
-					previous[toVertex] = edge;
-					pq.setLowerPriority(toVertex, newDistance);
-				}
-			}
+		public Astar(Network network, DoubleMatrix heuristic, int origin) {
+			this.network = network;
+			this.heuristic = heuristic;
+			this.origin = origin;
+			this.previous = new Network.Edge[network.nodes];
+			this.distance = new double[network.nodes];
+			this.pathLength = new int[network.nodes];
+			this.mark = new byte[network.nodes];
 		}
 		
-		return new Pair<>(previous, pathLength[destination]);
+		public Pair<Network.Edge[], Integer> calculate(int destination, double[] costs, double shortestPathCost) {
+			Arrays.fill(mark, (byte) 0);
+			Arrays.fill(distance, Double.POSITIVE_INFINITY);
+			distance[origin] = 0;
+			
+			pq.reset();
+			pq.add(origin, 0);
+			while (!pq.isEmpty()) {
+				int fromVertex = pq.popMin();
+				
+				mark[fromVertex] = 2;
+				
+				if (previous[fromVertex] != null) {
+					int prev = previous[fromVertex].tail;
+					pathLength[fromVertex] = pathLength[prev] + 1;
+				}
+				
+				if (fromVertex == destination)
+					break;
+				
+				for (Network.Edge edge : network.forwardStar(fromVertex)) {
+					int toVertex = edge.head;
+					if (mark[toVertex] == 2)
+						continue;
+					
+					double newDistance = distance[fromVertex] + costs[edge.index];
+					if (newDistance + heuristic.get(toVertex, destination) > shortestPathCost)
+						continue;
+					
+					if (mark[toVertex] == 0) {
+						mark[toVertex] = 1;
+						distance[toVertex] = newDistance;
+						previous[toVertex] = edge;
+						pq.add(toVertex, newDistance);
+					} else if (mark[toVertex] == 1 && newDistance < distance[toVertex]) {
+						distance[toVertex] = newDistance;
+						previous[toVertex] = edge;
+						pq.setLowerPriority(toVertex, newDistance);
+					}
+				}
+			}
+			
+			return new Pair<>(previous, pathLength[destination]);
+		}
 	}
 }

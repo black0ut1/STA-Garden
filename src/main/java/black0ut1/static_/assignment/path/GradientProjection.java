@@ -14,9 +14,11 @@ import black0ut1.util.Util;
  */
 public class GradientProjection extends PathBasedAlgorithm {
 	
+	
 	public GradientProjection(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-							  int maxIterations, Convergence.Builder convergenceBuilder) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+							  int maxIterations, Convergence.Builder convergenceBuilder,
+							  ShortestPathStrategy shortestPathStrategy) {
+		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder, shortestPathStrategy);
 	}
 	
 	@Override

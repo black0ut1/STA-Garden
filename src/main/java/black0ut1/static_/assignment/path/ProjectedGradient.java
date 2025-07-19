@@ -17,8 +17,9 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 	protected final IntDoubleHashMap edgeIndicesToCoeff = new IntDoubleHashMap();
 	
 	public ProjectedGradient(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-							 int maxIterations, Convergence.Builder convergenceBuilder) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+							 int maxIterations, Convergence.Builder convergenceBuilder,
+							 ShortestPathStrategy shortestPathStrategy) {
+		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder, shortestPathStrategy);
 	}
 	
 	@Override

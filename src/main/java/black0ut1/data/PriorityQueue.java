@@ -67,6 +67,10 @@ public class PriorityQueue {
 		return count == 0;
 	}
 	
+	public void reset() {
+		count = 0;
+	}
+	
 	private void fixUp(int n) {
 		
 		while (n != 1) {
