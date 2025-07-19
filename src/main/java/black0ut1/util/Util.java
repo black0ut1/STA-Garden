@@ -67,7 +67,9 @@ public class Util {
 	public static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {
 		System.out.print("Loading network... ");
 		long startTime = System.currentTimeMillis();
-		Network network = TNTP.parseNetwork(networkFile, nodeFile);
+		Network network = nodeFile == null
+				? TNTP.parseNetwork(networkFile)
+				: TNTP.parseNetwork(networkFile, nodeFile);
 		long endTime = System.currentTimeMillis();
 		System.out.println("OK (" + (endTime - startTime) + "ms)");
 		

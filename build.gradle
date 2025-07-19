@@ -20,6 +20,11 @@ dependencies {
     implementation 'com.carrotsearch:hppc:0.10.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 jar {

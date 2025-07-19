@@ -3,6 +3,7 @@ package black0ut1;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.gui.CriterionChartPanel;
+import black0ut1.gui.GUI;
 import black0ut1.static_.assignment.Algorithm;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.assignment.link.*;
@@ -10,18 +11,25 @@ import black0ut1.static_.assignment.path.*;
 import black0ut1.static_.cost.BPR;
 import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.Util;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
 public class RelativeGapVisualizationIntegrationTest {
 	
-	static Class<? extends Algorithm>[] algorithms = new Class[]{MSA.class, FrankWolfe.class, FukushimaFrankWolfe.class, ConjugateFrankWolfe.class, BiconjugateFrankWolfe.class, PathEquilibration.class, GradientProjection.class, ProjectedGradient.class,};
+	static Class<? extends Algorithm>[] algorithms = new Class[]{
+			MSA.class, FrankWolfe.class, FukushimaFrankWolfe.class, ConjugateFrankWolfe.class,
+			BiconjugateFrankWolfe.class, SimplicialDecomposition.class,
+			PathEquilibration.class, GradientProjection.class, ProjectedGradient.class,
+	};
 	
 	static CriterionChartPanel panel;
 	
@@ -42,6 +50,13 @@ public class RelativeGapVisualizationIntegrationTest {
 		var pair = Util.loadData(networkFile, odmFile, null);
 		network = pair.first();
 		odm = pair.second();
+		
+		new GUI(panel);
+	}
+	
+	@AfterAll
+	static void tearDownAfterAll() throws InterruptedException {
+		Thread.currentThread().join();
 	}
 	
 	@ParameterizedTest
@@ -52,7 +67,9 @@ public class RelativeGapVisualizationIntegrationTest {
 			panel.addValue(relativeGap, algorithm.getSimpleName());
 		})};
 		
-		Algorithm alg = (Algorithm) algorithm.getDeclaredConstructors()[0].newInstance();
+		Algorithm alg = (Algorithm) Arrays.stream(algorithm.getDeclaredConstructors())
+				.filter(constructor -> constructor.getParameterCount() == arguments.length)
+				.findFirst().get().newInstance(arguments);
 		
 		alg.assignFlows();
 	}

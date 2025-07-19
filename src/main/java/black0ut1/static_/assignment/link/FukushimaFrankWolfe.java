@@ -14,16 +14,15 @@ public class FukushimaFrankWolfe extends FrankWolfe {
 	
 	protected final double[][] queue;
 	
-//	public FukushimaFrankWolfe(Network network, DoubleMatrix odMatrix,
-//							   CostFunction costFunction, int maxIterations,
-//							   Convergence.Builder convergenceBuilder) {
-//		this(network, );
-//	}
+	public FukushimaFrankWolfe(Network network, DoubleMatrix odMatrix,
+							   CostFunction costFunction, int maxIterations,
+							   Convergence.Builder convergenceBuilder) {
+		this(network, odMatrix, costFunction, maxIterations, convergenceBuilder, 2);
+	}
 	
 	public FukushimaFrankWolfe(Network network, DoubleMatrix odMatrix,
 							   CostFunction costFunction, int maxIterations,
-							   Convergence.Builder convergenceBuilder,
-							   int L) {
+							   Convergence.Builder convergenceBuilder, int L) {
 		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
 		this.L = L;
 		this.queue = new double[L][];
