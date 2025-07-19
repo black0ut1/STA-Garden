@@ -6,13 +6,15 @@ import black0ut1.data.network.Path;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.Util;
+import com.carrotsearch.hppc.IntDoubleHashMap;
+import com.carrotsearch.hppc.cursors.IntDoubleCursor;
 
-import java.util.BitSet;
 import java.util.Vector;
 
 public class ProjectedGradient extends PathBasedAlgorithm {
 	
 	protected static final double STEP_DIRECTION_EPSILON = 1e-12;
+	protected final IntDoubleHashMap edgeIndicesToCoeff = new IntDoubleHashMap();
 	
 	public ProjectedGradient(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
 							 int maxIterations, Convergence.Builder convergenceBuilder) {
@@ -85,31 +87,20 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 		if (maxStepSize <= 0)
 			return 0;
 		
-		
-		int j = 0;
-		BitSet bitSet = new BitSet(network.edges);
-		int[] nonzeroIndices = new int[network.edges];
-		double[] a = new double[network.edges];
-		
+		edgeIndicesToCoeff.clear();
 		for (int i = 0; i < paths.size(); i++)
-			for (int edgeIndex : paths.get(i).edges) {
-				
-				if (!bitSet.get(edgeIndex)) {
-					bitSet.set(edgeIndex);
-					nonzeroIndices[j++] = edgeIndex;
-				}
-				
-				a[edgeIndex] += stepDirection[i];
-			}
+			for (int edgeIndex : paths.get(i).edges)
+				edgeIndicesToCoeff.addTo(edgeIndex, stepDirection[i]);
 
 		double numerator = 0;
 		double denominator = 0;
-		for (int i = 0; i < j; i++) {
-			int edgeIndex =  nonzeroIndices[i];
-			Network.Edge edge = network.getEdges()[edgeIndex];
+		for (IntDoubleCursor intDoubleCursor : edgeIndicesToCoeff) {
+			int edgeIndex = intDoubleCursor.key;
+			double coeff = intDoubleCursor.value;
 			
-			numerator += costFunction.function(edge, flows[edgeIndex]) * a[edgeIndex];
-			denominator += costFunction.derivative(edge, flows[edgeIndex]) * a[edgeIndex] * a[edgeIndex];
+			Network.Edge edge = network.getEdges()[edgeIndex];
+			numerator += costFunction.function(edge, flows[edgeIndex]) * coeff;
+			denominator += costFunction.derivative(edge, flows[edgeIndex]) * coeff * coeff;
 		}
 
 		if (numerator == 0)
