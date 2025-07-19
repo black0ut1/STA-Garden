@@ -19,10 +19,10 @@ public class Matrix<T> {
 	}
 	
 	public T get(int i, int j) {
-		return arr[i * m + j];
+		return arr[i * n + j];
 	}
 	
 	public void set(int i, int j, T value) {
-		arr[i * m + j] = value;
+		arr[i * n + j] = value;
 	}
 }

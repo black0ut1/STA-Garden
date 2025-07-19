@@ -135,6 +135,10 @@ public class SSSP {
 		Arrays.fill(distance, Double.POSITIVE_INFINITY);
 		distance[origin] = 0;
 		
+		double[] fDistance = new double[network.nodes];
+		Arrays.fill(fDistance, Double.POSITIVE_INFINITY);
+		fDistance[origin] = heuristic.get(origin, destination);
+		
 		Network.Edge[] previous = new Network.Edge[network.nodes];
 		
 		int[] pathLength = new int[network.nodes];
@@ -143,11 +147,9 @@ public class SSSP {
 		byte[] mark = new byte[network.nodes];
 		
 		
-		pq.add(origin, 0);
+		pq.add(origin, fDistance[origin]);
 		while (!pq.isEmpty()) {
 			int fromVertex = pq.popMin();
-			if (fromVertex == destination)
-				break;
 			
 			mark[fromVertex] = 2;
 			
@@ -156,19 +158,24 @@ public class SSSP {
 				pathLength[fromVertex] = pathLength[prev] + 1;
 			}
 			
+			if (fromVertex == destination)
+				break;
+			
 			for (Network.Edge edge : network.forwardStar(fromVertex)) {
 				int toVertex = edge.head;
 				if (mark[toVertex] == 2)
 					continue;
 				
-				double newDistance = distance[fromVertex] + costs[edge.index] - heuristic.get(toVertex, destination);
+				double newDistance = distance[fromVertex] + costs[edge.index];
 				if (mark[toVertex] == 0) {
 					mark[toVertex] = 1;
 					distance[toVertex] = newDistance;
+					fDistance[toVertex] = newDistance + heuristic.get(toVertex, destination);
 					previous[toVertex] = edge;
 					pq.add(toVertex, newDistance);
 				} else if (mark[toVertex] == 1 && newDistance < distance[toVertex]) {
 					distance[toVertex] = newDistance;
+					fDistance[toVertex] = newDistance + heuristic.get(toVertex, destination);
 					previous[toVertex] = edge;
 					pq.setLowerPriority(toVertex, newDistance);
 				}
