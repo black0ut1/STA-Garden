@@ -134,24 +134,27 @@ public class SSSP {
 		
 		private final Network network;
 		private final DoubleMatrix heuristic;
-		private final int origin;
 		private final Network.Edge[] previous;
 		private final double[] distance;
 		private final int[] pathLength;
 		private final byte[] mark;
 		private final PriorityQueue pq = new PriorityQueue();
 		
-		public Astar(Network network, DoubleMatrix heuristic, int origin) {
+		public Astar(Network network, DoubleMatrix heuristic) {
 			this.network = network;
 			this.heuristic = heuristic;
-			this.origin = origin;
 			this.previous = new Network.Edge[network.nodes];
 			this.distance = new double[network.nodes];
 			this.pathLength = new int[network.nodes];
 			this.mark = new byte[network.nodes];
 		}
 		
-		public Pair<Network.Edge[], Integer> calculate(int destination, double[] costs, double shortestPathCost) {
+		public void resetForOrigin(int origin) {
+			Arrays.fill(previous, null);
+			pathLength[origin] = 0;
+		}
+		
+		public Pair<Network.Edge[], Integer> calculate(int origin, int destination, double[] costs, double shortestPathCost) {
 			Arrays.fill(mark, (byte) 0);
 			Arrays.fill(distance, Double.POSITIVE_INFINITY);
 			distance[origin] = 0;

@@ -11,7 +11,7 @@ import black0ut1.static_.cost.CostFunction;
  * The base class for all link-based STA algorithms. Their common framework is the
  * following:																			  <br>
  * 1. Initialize												 						  <br>
- * 1.1. Generate initial solution using AON												  <br>
+ * 1.1. Generate initial link solution using AON										  <br>
  * 1.2. Update costs																	  <br>
  * 2. Iterate																			  <br>
  * 2.1. Generate target solution														  <br>
