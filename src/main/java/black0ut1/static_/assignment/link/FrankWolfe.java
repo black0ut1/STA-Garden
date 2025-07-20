@@ -7,6 +7,16 @@ import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.Util;
 
+
+/**
+ * Frank-Wolfe algorithm. It is different from MSA in the calculation of step size. Here,
+ * the step size is computed such that the move towards the target minimizes the Beckmann
+ * function.
+ * <p>
+ * Bibliography:																		  <br>
+ * - (Frank and Wolfe, 1956) An algorithm for quadratic programming						  <br>
+ * - (Boyles et al., 2025) Transportation Network Analysis, Section 6.2.2				  <br>
+ */
 public class FrankWolfe extends LinkBasedAlgorithm {
 	
 	protected static final int NEWTON_MAX_ITERATIONS = 100;

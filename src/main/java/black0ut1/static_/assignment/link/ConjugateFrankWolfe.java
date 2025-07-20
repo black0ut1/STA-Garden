@@ -7,6 +7,15 @@ import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.Util;
 
+/**
+ * Conjugate Frank-Wolfe algorithm differs from ordinary Frank-Wolfe by smarter
+ * computation of target, for which it uses the previous target.
+ * <p>
+ * Bibliography:																		  <br>
+ * - (Mitradjieva and Lindberg, 2013) The stiff is moving — conjugate direction
+ * Frank-Wolfe methods with application to traffic assignment							  <br>
+ * - (Boyles et al., 2025) Transportation Network Analysis, Section 6.2.3				  <br>
+ */
 public class ConjugateFrankWolfe extends FrankWolfe {
 	
 	protected static final double ALPHA_TOLERANCE = 0.1;
