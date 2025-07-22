@@ -61,9 +61,7 @@ public class TampereUnsignalized extends Intersection {
 		for (int i = 0; i < incomingLinks.length; i++)
 			for (int j = 0; j < outgoingLinks.length; j++) {
 				orientedCapacities.set(i, j,
-						orientedSendingFlow.get(i, j)
-								/ incomingLinks[i].getSendingFlow()
-								* incomingLinks[i].capacity);
+						turningFractions.get(i, j) * incomingLinks[i].capacity);
 			}
 		
 		

@@ -20,9 +20,6 @@ public class PathEquilibration extends GradientProjection {
 	
 	@Override
 	protected void equilibratePaths(int origin, int destination, Path basicPath) {
-		if (odPairs.get(origin, destination).size() == 1)
-			return;
-		
 		Path maxPath = null;
 		double maxPathCost = Double.NEGATIVE_INFINITY;
 		for (Path path : odPairs.get(origin, destination)) {

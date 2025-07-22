@@ -24,9 +24,6 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 	
 	@Override
 	protected void equilibratePaths(int origin, int destination, Path basicPath) {
-		if (odPairs.get(origin, destination).size() == 1)
-			return;
-		
 		double[] stepDirection = calculateStepDirection(origin, destination);
 		if (stepDirection == null)
 			return;

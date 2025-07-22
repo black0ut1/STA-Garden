@@ -162,6 +162,8 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 					}
 				if (!exists) // if not, add it
 					odPairs.get(origin, destination).add(basicPath);
+				if (odPairs.get(origin, destination).size() == 1)
+					continue;
 				
 				equilibratePaths(origin, destination, basicPath);
 				
