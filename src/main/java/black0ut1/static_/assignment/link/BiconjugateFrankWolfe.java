@@ -6,6 +6,15 @@ import black0ut1.static_.assignment.AON;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.cost.CostFunction;
 
+/**
+ * Similar to {@link ConjugateFrankWolfe} in its smarter computation of target, but it
+ * uses last two previous targets.
+ * <p>
+ * Bibliography:																		  <br>
+ * - (Mitradjieva and Lindberg, 2013) The stiff is moving — conjugate direction
+ * Frank-Wolfe methods with application to traffic assignment							  <br>
+ * - (Boyles et al., 2025) Transportation Network Analysis, Section 6.2.3				  <br>
+ */
 public class BiconjugateFrankWolfe extends FrankWolfe {
 	
 	protected double[] oldTarget;

@@ -9,7 +9,7 @@ import black0ut1.util.Util;
 
 
 /**
- * Frank-Wolfe algorithm. It is different from MSA in the calculation of step size. Here,
+ * Frank-Wolfe algorithm. It is different from {@link MSA} in the calculation of step size. Here,
  * the step size is computed such that the move towards the target minimizes the Beckmann
  * function.
  * <p>

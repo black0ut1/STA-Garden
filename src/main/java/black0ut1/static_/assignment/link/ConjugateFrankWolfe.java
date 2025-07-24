@@ -8,7 +8,7 @@ import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.Util;
 
 /**
- * Conjugate Frank-Wolfe algorithm differs from ordinary Frank-Wolfe by smarter
+ * Conjugate Frank-Wolfe algorithm differs from ordinary {@link FrankWolfe} by smarter
  * computation of target, for which it uses the previous target.
  * <p>
  * Bibliography:																		  <br>
