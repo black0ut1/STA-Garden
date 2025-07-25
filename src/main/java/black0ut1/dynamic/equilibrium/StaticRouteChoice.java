@@ -5,7 +5,7 @@ import black0ut1.data.network.Bush;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
-import black0ut1.dynamic.loading.node.Intersection;
+import black0ut1.dynamic.loading.node.RoutedIntersection;
 
 import java.util.Arrays;
 
@@ -22,24 +22,24 @@ public class StaticRouteChoice {
 	}
 	
 	public MixtureFractions[][] computeTurningFractions() {
-		MixtureFractions[][] result = new MixtureFractions[network.intersections.length][maxSteps];
+		MixtureFractions[][] result = new MixtureFractions[network.routedIntersections.length][maxSteps];
 		
-		for (Intersection intersection : network.intersections)
+		for (RoutedIntersection intersection : network.routedIntersections)
 			result[intersection.index][0] = createMixtureFractionsForIntersection(intersection);
 		
 		// copy the first mixture fraction to each time step
-		for (int i = 0; i < network.intersections.length; i++)
+		for (int i = 0; i < network.routedIntersections.length; i++)
 			Arrays.fill(result[i], result[i][0]);
 		
 		return result;
 	}
 	
-	protected MixtureFractions createMixtureFractionsForIntersection(Intersection intersection) {
+	protected MixtureFractions createMixtureFractionsForIntersection(RoutedIntersection intersection) {
 		// Creates turning fractions for each destination
 		
 		int len = 0;
-		int[] destinations = new int[network.intersections.length];
-		DoubleMatrix[] turningFractions = new DoubleMatrix[network.intersections.length];
+		int[] destinations = new int[network.routedIntersections.length];
+		DoubleMatrix[] turningFractions = new DoubleMatrix[network.routedIntersections.length];
 		
 		for (int destination = 0; destination < destinationBushes.length; destination++) {
 			DoubleMatrix destinationTurningFractions = new DoubleMatrix(intersection.incomingLinks.length, intersection.outgoingLinks.length);

@@ -5,7 +5,7 @@ import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.node.Destination;
-import black0ut1.dynamic.loading.node.Node;
+import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.node.Origin;
 
 /**
@@ -46,7 +46,7 @@ public class BasicDNL extends DynamicNetworkLoading {
 		}
 		
 		// 2. For each intersection
-		for (Node node : network.intersections) {
+		for (Intersection node : network.routedIntersections) {
 			
 			// 2.1 Update sending flow of each incoming link
 			for (Link incomingLink : node.incomingLinks)

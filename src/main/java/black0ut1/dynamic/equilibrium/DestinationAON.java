@@ -4,7 +4,7 @@ import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
-import black0ut1.dynamic.loading.node.Node;
+import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.util.SSSP;
 
 import java.util.Arrays;
@@ -42,7 +42,7 @@ public class DestinationAON {
 		int[] destinations = new int[network.nodes];
 		DoubleMatrix[] destinationTurningFractions = new DoubleMatrix[network.nodes];
 		
-		Node node = dNetwork.intersections[node1];
+		Intersection node = dNetwork.routedIntersections[node1];
 		
 		// compute fractions for a destination
 		for (int destination = 0; destination < network.zones; destination++) {

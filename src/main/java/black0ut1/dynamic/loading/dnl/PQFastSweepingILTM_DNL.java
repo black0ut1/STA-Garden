@@ -7,7 +7,7 @@ import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.node.Destination;
-import black0ut1.dynamic.loading.node.Intersection;
+import black0ut1.dynamic.loading.node.RoutedIntersection;
 import black0ut1.dynamic.loading.node.Origin;
 
 /**
@@ -40,8 +40,8 @@ public class PQFastSweepingILTM_DNL extends ILTM_DNL {
 		}
 		
 		
-		PriorityQueue pq = new PriorityQueue(network.intersections.length, 0);
-		for (int i = 0; i < network.intersections.length; i++)
+		PriorityQueue pq = new PriorityQueue(network.routedIntersections.length, 0);
+		for (int i = 0; i < network.routedIntersections.length; i++)
 			pq.add(i, -Double.POSITIVE_INFINITY);
 		
 		// 2. Iterate until update potential of every intersection of
@@ -51,7 +51,7 @@ public class PQFastSweepingILTM_DNL extends ILTM_DNL {
 			nodeUpdates++;
 			
 			int index = pq.popMin();
-			Intersection node = network.intersections[index];
+			RoutedIntersection node = network.routedIntersections[index];
 			
 			// 2.1.1 Update sending flow of each incoming link
 			for (Link incomingLink : node.incomingLinks)

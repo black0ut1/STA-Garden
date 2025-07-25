@@ -11,7 +11,7 @@ import black0ut1.dynamic.loading.link.Link;
  * and none incoming. The outgoing link must be able to accomodate for
  * all of the flow outgoing out of this origin.
  */
-public class Origin extends Node {
+public class Origin extends Intersection {
 	
 	protected final TimeDependentODM odm;
 	

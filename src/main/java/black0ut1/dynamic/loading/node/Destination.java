@@ -12,7 +12,7 @@ import java.util.Arrays;
  * incoming link and none outgoing. All of the flow from the incoming
  * link is consumed during a time step.
  */
-public class Destination extends Node {
+public class Destination extends Intersection {
 	
 	public final MixtureFlow[] inflow;
 	

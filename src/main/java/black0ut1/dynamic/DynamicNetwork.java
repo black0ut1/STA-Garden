@@ -21,11 +21,11 @@ import black0ut1.util.Util;
  */
 public class DynamicNetwork {
 	
-	public final Intersection[] intersections;
+	public final RoutedIntersection[] routedIntersections;
 	public final Origin[] origins;
 	public final Destination[] destinations;
 	/** The above three arrays merged into one for convenient use. */
-	public final Node[] allNodes;
+	public final Intersection[] intersections;
 	
 	public final Link[] links;
 	public final Connector[] originConnectors;
@@ -33,12 +33,12 @@ public class DynamicNetwork {
 	/** The above three arrays merged into one for convenient use. */
 	public final Link[] allLinks;
 	
-	public DynamicNetwork(Intersection[] intersections, Origin[] origins, Destination[] destinations,
+	public DynamicNetwork(RoutedIntersection[] intersections, Origin[] origins, Destination[] destinations,
 						  Link[] links, Connector[] originConnectors, Connector[] destinationConnectors) {
-		this.intersections = intersections;
+		this.routedIntersections = intersections;
 		this.origins = origins;
 		this.destinations = destinations;
-		this.allNodes = Util.concat(Node.class, intersections, origins, destinations);
+		this.intersections = Util.concat(Intersection.class, intersections, origins, destinations);
 		
 		this.links = links;
 		this.originConnectors = originConnectors;
@@ -93,7 +93,7 @@ public class DynamicNetwork {
 		
 		// 2. Create array of intersections and arrays of virtual
 		// origins and destinations
-		Intersection[] nodeArray = new Intersection[network.nodes];
+		RoutedIntersection[] nodeArray = new RoutedIntersection[network.nodes];
 		Origin[] originArray = new Origin[network.zones];
 		Destination[] destinationArray = new Destination[network.zones];
 		

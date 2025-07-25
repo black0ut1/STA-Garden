@@ -1,7 +1,7 @@
 package black0ut1.dynamic.loading.link;
 
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
-import black0ut1.dynamic.loading.node.Node;
+import black0ut1.dynamic.loading.node.Intersection;
 
 import java.util.Arrays;
 
@@ -12,8 +12,8 @@ import java.util.Arrays;
 public abstract class Link {
 	
 	public final int index;
-	public Node head;
-	public Node tail;
+	public Intersection head;
+	public Intersection tail;
 	
 	protected final double stepSize;
 	

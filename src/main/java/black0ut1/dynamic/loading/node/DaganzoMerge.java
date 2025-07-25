@@ -22,7 +22,7 @@ import java.util.Vector;
  * - (Boyles et al., 2025) Transportation Network Analysis, Section
  *    9.2.2
  */
-public class DaganzoMerge extends Node {
+public class DaganzoMerge extends Intersection {
 
 	/**
 	 * Priorites of incoming links, each must be from interval (0, 1)

@@ -17,7 +17,7 @@ import black0ut1.dynamic.loading.link.Link;
  * clock. Of course, there are pitfalls when {@code stepSize} is a
  * multiple of {@code cycle time} (or vice versa).
  */
-public class BasicSignals extends Intersection {
+public class BasicSignals extends RoutedIntersection {
 	
 	/** stepSize of the DNL. */
 	protected final double stepSize;
