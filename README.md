@@ -35,6 +35,7 @@ Path-based algorithms:
 - Path Equilibration
 - Gradient Projection
 - Projected Gradient
+- Improved Social Pressure
 
 Bush-based algorithms:
 

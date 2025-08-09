@@ -28,7 +28,7 @@ public class RelativeGapVisualizationIntegrationTest {
 	static Class<? extends Algorithm>[] algorithms = new Class[]{
 			MSA.class, FrankWolfe.class, FukushimaFrankWolfe.class, ConjugateFrankWolfe.class,
 			BiconjugateFrankWolfe.class, SimplicialDecomposition.class,
-			PathEquilibration.class, GradientProjection.class, ProjectedGradient.class,
+			PathEquilibration.class, GradientProjection.class, ProjectedGradient.class, ImprovedSocialPressure.class,
 			iTAPAS.class,
 	};
 	
@@ -65,7 +65,7 @@ public class RelativeGapVisualizationIntegrationTest {
 	void runAlgorithm(Class<? extends Algorithm> algorithm) throws InvocationTargetException, InstantiationException, IllegalAccessException {
 		Object[] arguments = new Object[]{network, odm, costFunction, maxIterations, builder.setCallback(values -> {
 			double relativeGap = values[Convergence.Criterion.RELATIVE_GAP_1.ordinal()];
-			panel.addValue(relativeGap, algorithm.getSimpleName());
+			panel.addValue(relativeGap + 0.000000000000005, algorithm.getSimpleName());
 		})};
 		if (PathBasedAlgorithm.class.isAssignableFrom(algorithm)) {
 			arguments = Util.concat(Object.class, arguments, new Object[] {PathBasedAlgorithm.ShortestPathStrategy.SSSP});

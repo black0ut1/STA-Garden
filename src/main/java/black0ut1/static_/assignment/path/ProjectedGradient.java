@@ -24,7 +24,7 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 	
 	@Override
 	protected void equilibratePaths(int origin, int destination, Path basicPath) {
-		double[] stepDirection = calculateStepDirection(origin, destination);
+		double[] stepDirection = calculateStepDirection(origin, destination, basicPath);
 		if (stepDirection == null)
 			return;
 		
@@ -35,7 +35,7 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 		shiftFlows(origin, destination, stepDirection, stepSize);
 	}
 	
-	protected double[] calculateStepDirection(int origin, int destination) {
+	protected double[] calculateStepDirection(int origin, int destination, Path basicPath) {
 		Vector<Path> paths = odPairs.get(origin, destination);
 		
 		double averageTravelTime = 0;
@@ -62,13 +62,12 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 		double rectification = 0;
 		for (int i = 0; i < stepDirection.length; i++) {
 			stepDirection[i] = averageTravelTime - stepDirection[i];
-			
-			if (i != stepDirection.length - 1)
-				rectification += stepDirection[i];
+			rectification += stepDirection[i];
 		}
-		// Rectify step direction such that the sum is 0 - without it, the algorithm stops
-		// converging and the relative gap starts oscillating at ~1e-8
-		stepDirection[stepDirection.length - 1] = -rectification;
+		
+		// Rectify step direction such that the sum is 0 - without it, the errors of
+		// double precision will induce infeasible flows
+		stepDirection[stepDirection.length - 1] -= rectification;
 		
 		return stepDirection;
 	}
