@@ -8,11 +8,6 @@ import java.util.Vector;
 
 public class SimplicialDecomposition extends LinkBasedAlgorithm {
 	
-	protected static final int INNER_ITERATIONS = 50;
-	
-	protected static final int NEWTON_MAX_ITERATIONS = 100;
-	protected static final double NEWTON_EPSILON = 1e-10;
-	
 	protected final Vector<double[]> hullVertices = new Vector<>();
 	
 	public SimplicialDecomposition(Settings settings) {
@@ -31,7 +26,7 @@ public class SimplicialDecomposition extends LinkBasedAlgorithm {
 		AON.assign(network, odm, costs, newHullVertex);
 		hullVertices.add(newHullVertex);
 		
-		for (int i = 0; i < INNER_ITERATIONS; i++) {
+		for (int i = 0; i < s.SD_INNER_ITERATIONS; i++) {
 			
 			double[] target = calculateTarget();
 			double stepSize = calculateStepSize(target);
@@ -74,20 +69,20 @@ public class SimplicialDecomposition extends LinkBasedAlgorithm {
 	protected double calculateStepSize(double[] deltaX) {
 		double stepSize = 0;
 		
-		for (int i = 0; i < NEWTON_MAX_ITERATIONS; i++) {
+		for (int i = 0; i < s.NEWTON_MAX_ITERATIONS; i++) {
 			
 			double numerator = 0;
 			double denominator = 0;
 			for (Network.Edge edge : network.getEdges()) {
 				
 				double newFlow = flows[edge.index] + stepSize * deltaX[edge.index];
-				numerator += costFunction.function(edge, newFlow) * deltaX[edge.index];
-				denominator += costFunction.derivative(edge, newFlow) * deltaX[edge.index] * deltaX[edge.index];
+				numerator += s.costFunction.function(edge, newFlow) * deltaX[edge.index];
+				denominator += s.costFunction.derivative(edge, newFlow) * deltaX[edge.index] * deltaX[edge.index];
 			}
 			
 			double newStepSize = stepSize - (numerator / denominator);
 			
-			if (Math.abs(stepSize - newStepSize) < NEWTON_EPSILON) {
+			if (Math.abs(stepSize - newStepSize) < s.NEWTON_EPSILON) {
 				stepSize = newStepSize;
 				break;
 			}

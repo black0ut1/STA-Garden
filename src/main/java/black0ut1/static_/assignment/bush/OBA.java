@@ -208,14 +208,14 @@ public class OBA extends BushBasedAlgorithm {
 		double deltaX = 0;
 		for (int i = 0; i < NEWTON_MAX_ITERATIONS; i++) {
 			double M_Basic = meanDistance[basic.tail] +
-					costFunction.function(nonbasic, flows[nonbasic.index] + deltaX);
+					s.costFunction.function(nonbasic, flows[nonbasic.index] + deltaX);
 			double M_Nonbasic = meanDistance[nonbasic.tail] +
-					costFunction.function(nonbasic, flows[nonbasic.index] - deltaX);
+					s.costFunction.function(nonbasic, flows[nonbasic.index] - deltaX);
 			
 			double D_Basic = derivativeDistance[basic.tail] +
-					costFunction.derivative(nonbasic, flows[nonbasic.index] + deltaX);
+					s.costFunction.derivative(nonbasic, flows[nonbasic.index] + deltaX);
 			double D_Nonbasic = derivativeDistance[nonbasic.tail] +
-					costFunction.derivative(nonbasic, flows[nonbasic.index] - deltaX);
+					s.costFunction.derivative(nonbasic, flows[nonbasic.index] - deltaX);
 			
 			double newDeltaX = deltaX - (M_Nonbasic - M_Basic) / (D_Nonbasic + D_Basic);
 			
@@ -276,7 +276,7 @@ public class OBA extends BushBasedAlgorithm {
 				meanDistance[edge.head] += alpha[edge.index] * edgeDistance;
 				
 				double edgeDerivativeDistance = derivativeDistance[startNode] +
-						costFunction.derivative(edge, flows[edge.index]);
+						s.costFunction.derivative(edge, flows[edge.index]);
 				derivativeDistance[edge.head] += alpha[edge.index] * alpha[edge.index] * edgeDerivativeDistance;
 				
 				indegree[edge.head]--;

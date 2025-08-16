@@ -50,7 +50,7 @@ public class BiconjugateFrankWolfe extends FrankWolfe {
 		double denominator = 0;
 		var edges = network.getEdges();
 		for (int i = 0; i < network.edges; i++) {
-			double a = costFunction.derivative(edges[i], flows[i]) *
+			double a = s.costFunction.derivative(edges[i], flows[i]) *
 					(oldStepSize * oldTarget[i] - flows[i] + (1 - oldStepSize) * oldOldTarget[i]);
 			numerator += a * (newTarget[i] - flows[i]);
 			denominator += a * (oldOldTarget[i] - oldTarget[i]);
@@ -66,7 +66,7 @@ public class BiconjugateFrankWolfe extends FrankWolfe {
 		numerator = 0;
 		denominator = 0;
 		for (int i = 0; i < network.edges; i++) {
-			double a = costFunction.derivative(edges[i], flows[i]) * (oldTarget[i] - flows[i]);
+			double a = s.costFunction.derivative(edges[i], flows[i]) * (oldTarget[i] - flows[i]);
 			numerator += a * (newTarget[i] - flows[i]);
 			denominator += a * (oldTarget[i] - flows[i]);
 		}

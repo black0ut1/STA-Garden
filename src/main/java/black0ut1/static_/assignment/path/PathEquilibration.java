@@ -6,8 +6,8 @@ import black0ut1.static_.assignment.Settings;
 public class PathEquilibration extends GradientProjection {
 	
 	
-	public PathEquilibration(Settings settings, ShortestPathStrategy shortestPathStrategy) {
-		super(settings, shortestPathStrategy);
+	public PathEquilibration(Settings settings) {
+		super(settings);
 	}
 	
 	@Override

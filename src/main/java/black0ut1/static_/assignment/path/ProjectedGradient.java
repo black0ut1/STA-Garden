@@ -14,8 +14,8 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 	protected static final double STEP_DIRECTION_EPSILON = 1e-12;
 	protected final IntDoubleHashMap edgeIndicesToCoeff = new IntDoubleHashMap();
 	
-	public ProjectedGradient(Settings settings, ShortestPathStrategy shortestPathStrategy) {
-		super(settings, shortestPathStrategy);
+	public ProjectedGradient(Settings settings) {
+		super(settings);
 	}
 	
 	@Override
@@ -92,8 +92,8 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 			double coeff = intDoubleCursor.value;
 			
 			Network.Edge edge = network.getEdges()[edgeIndex];
-			numerator += costFunction.function(edge, flows[edgeIndex]) * coeff;
-			denominator += costFunction.derivative(edge, flows[edgeIndex]) * coeff * coeff;
+			numerator += s.costFunction.function(edge, flows[edgeIndex]) * coeff;
+			denominator += s.costFunction.derivative(edge, flows[edgeIndex]) * coeff * coeff;
 		}
 
 		if (numerator == 0)

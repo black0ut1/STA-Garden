@@ -12,9 +12,8 @@ import black0ut1.util.Util;
  */
 public class GradientProjection extends PathBasedAlgorithm {
 	
-	
-	public GradientProjection(Settings settings, ShortestPathStrategy shortestPathStrategy) {
-		super(settings, shortestPathStrategy);
+	public GradientProjection(Settings settings) {
+		super(settings);
 	}
 	
 	@Override
@@ -39,11 +38,11 @@ public class GradientProjection extends PathBasedAlgorithm {
 		double denominator = 0;
 		for (int edgeIndex : basicPath.edges) {
 			Network.Edge edge = network.getEdges()[edgeIndex];
-			denominator += costFunction.derivative(edge, flows[edgeIndex]);
+			denominator += s.costFunction.derivative(edge, flows[edgeIndex]);
 		}
 		for (int edgeIndex : path.edges) {
 			Network.Edge edge = network.getEdges()[edgeIndex];
-			denominator += costFunction.derivative(edge, flows[edgeIndex]);
+			denominator += s.costFunction.derivative(edge, flows[edgeIndex]);
 		}
 		
 		return Util.projectToInterval(numerator / denominator, 0, path.flow);

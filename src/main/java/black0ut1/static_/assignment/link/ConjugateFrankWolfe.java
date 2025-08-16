@@ -15,8 +15,6 @@ import black0ut1.util.Util;
  */
 public class ConjugateFrankWolfe extends FrankWolfe {
 	
-	protected static final double ALPHA_TOLERANCE = 0.1;
-	
 	protected double[] oldTarget;
 	protected double oldStepSize;
 	
@@ -48,14 +46,14 @@ public class ConjugateFrankWolfe extends FrankWolfe {
 		double denominator = 0;
 		var edges = network.getEdges();
 		for (int i = 0; i < network.edges; i++) {
-			double a = costFunction.derivative(edges[i], flows[i]) * (oldTarget[i] - flows[i]);
+			double a = s.costFunction.derivative(edges[i], flows[i]) * (oldTarget[i] - flows[i]);
 			numerator += a * (newTarget[i] - flows[i]);
 			denominator += a * (newTarget[i] - oldTarget[i]);
 		}
 		
 		double alpha = (denominator == 0)
 				? 0
-				: Util.projectToInterval(numerator / denominator, 0, 1 - ALPHA_TOLERANCE);
+				: Util.projectToInterval(numerator / denominator, 0, 1 - s.CONJUGATE_FW_ALPHA_TOLERANCE);
 		
 		for (int i = 0; i < network.edges; i++)
 			newTarget[i] = alpha * oldTarget[i] + (1 - alpha) * newTarget[i];

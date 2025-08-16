@@ -352,7 +352,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 		while (true) {
 			bush.addFlow(cycleEdge.index, -minCycleFlow);
 			flows[cycleEdge.index] -= minCycleFlow;
-			costs[cycleEdge.index] = costFunction.function(cycleEdge, flows[cycleEdge.index]);
+			costs[cycleEdge.index] = s.costFunction.function(cycleEdge, flows[cycleEdge.index]);
 			
 			if (cycleEdge.head == cycleNode)
 				break;
@@ -379,13 +379,13 @@ public class iTAPAS extends BushBasedAlgorithm {
 		for (int edgeIndex : pas.minSegment()) {
 			bush.addFlow(edgeIndex, flowShift);
 			flows[edgeIndex] += flowShift;
-			costs[edgeIndex] = costFunction.function(edges[edgeIndex], flows[edgeIndex]);
+			costs[edgeIndex] = s.costFunction.function(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		for (int edgeIndex : pas.maxSegment()) {
 			bush.addFlow(edgeIndex, -flowShift);
 			flows[edgeIndex] -= flowShift;
-			costs[edgeIndex] = costFunction.function(edges[edgeIndex], flows[edgeIndex]);
+			costs[edgeIndex] = s.costFunction.function(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		return true;
@@ -397,12 +397,12 @@ public class iTAPAS extends BushBasedAlgorithm {
 		
 		double minSegmentCostDerivative = 0;
 		for (int edgeIndex : pas.minSegment()) {
-			minSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
+			minSegmentCostDerivative += s.costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		double maxSegmentCostDerivative = 0;
 		for (int edgeIndex : pas.maxSegment()) {
-			maxSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
+			maxSegmentCostDerivative += s.costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		return pas.segmentsCostDifference() / (maxSegmentCostDerivative + minSegmentCostDerivative);

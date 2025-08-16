@@ -10,9 +10,6 @@ import java.util.Arrays;
 
 public class B extends BushBasedAlgorithm {
 	
-	protected static final int NEWTON_MAX_ITERATIONS = 100;
-	protected static final double NEWTON_EPSILON = 1e-10;
-	
 	protected static final double FLOW_EPSILON = 1e-10;
 	
 	protected final int[][] topologicalOrders = new int[network.zones][];
@@ -343,14 +340,14 @@ public class B extends BushBasedAlgorithm {
 			return 0;
 		
 		double deltaX = 0;
-		for (int i = 0; i < NEWTON_MAX_ITERATIONS; i++) {
+		for (int i = 0; i < s.NEWTON_MAX_ITERATIONS; i++) {
 			
 			double minPathFlow = 0;
 			double minPathFlowDerivative = 0;
 			edge = minTree[node];
 			while (edge != null && edge.head != divNode) {
-				minPathFlow += costFunction.function(edge, flows[edge.index] + deltaX);
-				minPathFlowDerivative += costFunction.derivative(edge, flows[edge.index] + deltaX);
+				minPathFlow += s.costFunction.function(edge, flows[edge.index] + deltaX);
+				minPathFlowDerivative += s.costFunction.derivative(edge, flows[edge.index] + deltaX);
 				
 				edge = minTree[edge.tail];
 			}
@@ -360,15 +357,15 @@ public class B extends BushBasedAlgorithm {
 			double maxPathFlowDerivative = 0;
 			edge = maxTree[node];
 			while (edge != null && edge.head != divNode) {
-				maxPathFlow += costFunction.function(edge, flows[edge.index] - deltaX);
-				maxPathFlowDerivative += costFunction.derivative(edge, flows[edge.index] - deltaX);
+				maxPathFlow += s.costFunction.function(edge, flows[edge.index] - deltaX);
+				maxPathFlowDerivative += s.costFunction.derivative(edge, flows[edge.index] - deltaX);
 				
 				edge = maxTree[edge.tail];
 			}
 			
 			double newDeltaX = deltaX + (maxPathFlow - minPathFlow) / (maxPathFlowDerivative + minPathFlowDerivative);
 			
-			if (Math.abs(deltaX - newDeltaX) < NEWTON_EPSILON) {
+			if (Math.abs(deltaX - newDeltaX) < s.NEWTON_EPSILON) {
 				deltaX = newDeltaX;
 				break;
 			} else

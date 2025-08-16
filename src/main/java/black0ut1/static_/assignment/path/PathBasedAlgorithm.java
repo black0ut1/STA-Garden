@@ -44,12 +44,10 @@ import java.util.Vector;
 public abstract class PathBasedAlgorithm extends Algorithm {
 	
 	protected final Matrix<Vector<Path>> odPairs;
-	protected final ShortestPathStrategy shortestPathStrategy;
 	protected DoubleMatrix heuristic = null;
 	
-	public PathBasedAlgorithm(Settings settings, ShortestPathStrategy shortestPathStrategy) {
+	public PathBasedAlgorithm(Settings settings) {
 		super(settings);
-		this.shortestPathStrategy = shortestPathStrategy;
 		this.odPairs = new Matrix<>(network.zones);
 	}
 	
@@ -83,7 +81,7 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 			}
 		}
 		
-		if (shortestPathStrategy == ShortestPathStrategy.P2PSP) {
+		if (s.SHORTEST_PATH_STRATEGY == Settings.ShortestPathStrategy.P2PSP) {
 			heuristic = new DoubleMatrix(network.nodes, network.zones);
 			
 			for (int destination = 0; destination < network.zones; destination++) {
@@ -101,12 +99,14 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 	protected void mainLoopIteration() {
 		Network.Edge[] minTree = null;
 		int[] pathLengths = null;
-		SSSP.Astar astar = (shortestPathStrategy == ShortestPathStrategy.P2PSP) ? new SSSP.Astar(network, heuristic) : null;
+		SSSP.Astar astar = (s.SHORTEST_PATH_STRATEGY == Settings.ShortestPathStrategy.P2PSP)
+				? new SSSP.Astar(network, heuristic)
+				: null;
 		
 		// For each origin
 		for (int origin = 0; origin < network.zones; origin++) {
 			
-			switch (shortestPathStrategy) {
+			switch (s.SHORTEST_PATH_STRATEGY) {
 				case P2PSP:
 					// Reset A* for new origin
 					astar.resetForOrigin(origin);
@@ -126,7 +126,7 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 				if (odm.get(origin, destination) == 0) // Skip empty OD pairs
 					continue;
 				
-				int length = switch (shortestPathStrategy) {
+				int length = switch (s.SHORTEST_PATH_STRATEGY) {
 					case P2PSP:
 						// Find shortest path from origin to destination
 						double shortestPathCost = Double.POSITIVE_INFINITY;
@@ -175,11 +175,7 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 	protected void updateCosts(Path path) {
 		for (int edgeIndex : path.edges) {
 			Network.Edge edge = network.getEdges()[edgeIndex];
-			costs[edgeIndex] = costFunction.function(edge, flows[edgeIndex]);
+			costs[edgeIndex] = s.costFunction.function(edge, flows[edgeIndex]);
 		}
-	}
-	
-	public enum ShortestPathStrategy {
-		P2PSP, SSSP,
 	}
 }

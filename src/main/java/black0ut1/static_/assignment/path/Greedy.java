@@ -9,8 +9,8 @@ import java.util.Comparator;
 
 public class Greedy extends PathBasedAlgorithm {
 	
-	public Greedy(Settings settings, ShortestPathStrategy shortestPathStrategy) {
-		super(settings, shortestPathStrategy);
+	public Greedy(Settings settings) {
+		super(settings);
 	}
 	
 	@Override
@@ -26,7 +26,7 @@ public class Greedy extends PathBasedAlgorithm {
 			
 			for (int edgeIndex : paths.get(i).edges) {
 				Network.Edge edge = network.getEdges()[edgeIndex];
-				pathCostDerivatives[i] += costFunction.derivative(edge, flows[edgeIndex]);
+				pathCostDerivatives[i] += s.costFunction.derivative(edge, flows[edgeIndex]);
 			}
 			
 			pathCosts[i] = paths.get(i).getCost(costs);

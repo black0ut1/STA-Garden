@@ -5,20 +5,14 @@ import black0ut1.static_.assignment.AON;
 
 public class FukushimaFrankWolfe extends FrankWolfe {
 	
-	protected final int L;
 	protected int currL = 0;
 	protected int queueEnd = 0;
 	
 	protected final double[][] queue;
 	
 	public FukushimaFrankWolfe(Settings settings) {
-		this(settings, 2);
-	}
-	
-	public FukushimaFrankWolfe(Settings settings, int L) {
 		super(settings);
-		this.L = L;
-		this.queue = new double[L][];
+		this.queue = new double[s.FUKUSHIMA_FW_L][];
 	}
 	
 	
@@ -28,11 +22,11 @@ public class FukushimaFrankWolfe extends FrankWolfe {
 		AON.assign(network, odm, costs, aonFlows);
 		
 		// add the AON flow to queue
-		if (currL < L) { // the queue is filling up
+		if (currL < s.FUKUSHIMA_FW_L) { // the queue is filling up
 			queue[currL++] = aonFlows;
 		} else { // the queue if filled up, we replace last element
 			queue[queueEnd] = aonFlows;
-			queueEnd = (queueEnd + 1) % L;
+			queueEnd = (queueEnd + 1) % s.FUKUSHIMA_FW_L;
 		}
 		
 		// compute arithmetic mean of flows in queue

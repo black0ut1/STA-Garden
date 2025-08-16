@@ -63,17 +63,13 @@ public class RelativeGapVisualizationIntegrationTest {
 	void runAlgorithm(Class<? extends Algorithm> algorithm) throws InvocationTargetException, InstantiationException, IllegalAccessException {
 		Settings settings = new Settings(network, odm, maxIterations, builder.setCallback(values -> {
 			double relativeGap = values[Convergence.Criterion.RELATIVE_GAP_1.ordinal()];
-			panel.addValue(relativeGap + 0.000000000000005, algorithm.getSimpleName());
+			panel.addValue(relativeGap + 1e-15, algorithm.getSimpleName());
 		}));
 		
 		Object[] arguments = new Object[]{settings};
-		if (PathBasedAlgorithm.class.isAssignableFrom(algorithm)) {
-			arguments = Util.concat(Object.class, arguments, new Object[] {PathBasedAlgorithm.ShortestPathStrategy.SSSP});
-		}
 		
-		Object[] finalArguments = arguments;
 		Algorithm alg = (Algorithm) Arrays.stream(algorithm.getDeclaredConstructors())
-				.filter(constructor -> constructor.getParameterCount() == finalArguments.length)
+				.filter(constructor -> constructor.getParameterCount() == arguments.length)
 				.findFirst().get().newInstance(arguments);
 		
 		alg.assignFlows();

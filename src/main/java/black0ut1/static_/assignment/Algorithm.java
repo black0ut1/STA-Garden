@@ -18,9 +18,10 @@ public abstract class Algorithm {
 	
 	protected final Network network;
 	protected final DoubleMatrix odm;
-	protected final CostFunction costFunction;
 	protected final int maxIterations;
 	protected final Convergence convergence;
+	
+	protected final Settings s;
 	
 	protected int iteration = 0;
 	
@@ -30,10 +31,11 @@ public abstract class Algorithm {
 	public Algorithm(Settings settings) {
 		this.network = settings.network;
 		this.odm = settings.odm;
-		this.costFunction = settings.costFunction;
 		this.maxIterations = settings.maxIterations;
 		this.convergence = settings.convergenceBuilder
-				.build(network, odm, costFunction);
+				.build(network, odm, settings.costFunction);
+		
+		this.s = settings;
 		
 		this.flows = new double[network.edges];
 		this.costs = new double[network.edges];
@@ -82,6 +84,6 @@ public abstract class Algorithm {
 	
 	protected void updateCosts() {
 		for (int i = 0; i < network.edges; i++)
-			costs[i] = costFunction.function(network.getEdges()[i], flows[i]);
+			costs[i] = s.costFunction.function(network.getEdges()[i], flows[i]);
 	}
 }

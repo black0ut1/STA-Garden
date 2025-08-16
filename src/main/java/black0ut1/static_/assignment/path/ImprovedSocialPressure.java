@@ -8,8 +8,8 @@ public class ImprovedSocialPressure extends ProjectedGradient {
 	
 	protected static final double DELTA = 0.15;
 	
-	public ImprovedSocialPressure(Settings settings, ShortestPathStrategy shortestPathStrategy) {
-		super(settings, shortestPathStrategy);
+	public ImprovedSocialPressure(Settings settings) {
+		super(settings);
 	}
 	
 	@Override
@@ -54,7 +54,7 @@ public class ImprovedSocialPressure extends ProjectedGradient {
 			if (costs[i] <= pi) {
 				for (int edgeIndex : paths.get(i).edges) {
 					Network.Edge edge = network.getEdges()[i];
-					costDerivatives[i] += costFunction.derivative(edge, flows[edgeIndex]);
+					costDerivatives[i] += s.costFunction.derivative(edge, flows[edgeIndex]);
 				}
 				invSum += 1 / costDerivatives[i];
 			}
