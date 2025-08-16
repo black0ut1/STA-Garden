@@ -17,7 +17,7 @@ import black0ut1.static_.cost.CostFunction;
 public abstract class Algorithm {
 	
 	protected final Network network;
-	protected final DoubleMatrix odMatrix;
+	protected final DoubleMatrix odm;
 	protected final CostFunction costFunction;
 	protected final int maxIterations;
 	protected final Convergence convergence;
@@ -27,13 +27,13 @@ public abstract class Algorithm {
 	protected final double[] flows;
 	protected final double[] costs;
 	
-	public Algorithm(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-					 int maxIterations, Convergence.Builder convergenceBuilder) {
-		this.network = network;
-		this.odMatrix = odMatrix;
-		this.costFunction = costFunction;
-		this.maxIterations = maxIterations;
-		this.convergence = convergenceBuilder.build(network, odMatrix, costFunction);
+	public Algorithm(Settings settings) {
+		this.network = settings.network;
+		this.odm = settings.odm;
+		this.costFunction = settings.costFunction;
+		this.maxIterations = settings.maxIterations;
+		this.convergence = settings.convergenceBuilder
+				.build(network, odm, costFunction);
 		
 		this.flows = new double[network.edges];
 		this.costs = new double[network.edges];

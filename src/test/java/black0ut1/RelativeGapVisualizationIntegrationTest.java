@@ -4,13 +4,12 @@ import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.gui.CriterionChartPanel;
 import black0ut1.gui.GUI;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.Algorithm;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.assignment.bush.iTAPAS;
 import black0ut1.static_.assignment.link.*;
 import black0ut1.static_.assignment.path.*;
-import black0ut1.static_.cost.BPR;
-import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.Util;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,7 +35,6 @@ public class RelativeGapVisualizationIntegrationTest {
 	
 	static Network network;
 	static DoubleMatrix odm;
-	static CostFunction costFunction = new BPR();
 	static int maxIterations = 300;
 	static Convergence.Builder builder = new Convergence.Builder().addCriterion(Convergence.Criterion.RELATIVE_GAP_1, 1e-14);
 	
@@ -63,10 +61,12 @@ public class RelativeGapVisualizationIntegrationTest {
 	@ParameterizedTest
 	@MethodSource("provideAlgorithms")
 	void runAlgorithm(Class<? extends Algorithm> algorithm) throws InvocationTargetException, InstantiationException, IllegalAccessException {
-		Object[] arguments = new Object[]{network, odm, costFunction, maxIterations, builder.setCallback(values -> {
+		Settings settings = new Settings(network, odm, maxIterations, builder.setCallback(values -> {
 			double relativeGap = values[Convergence.Criterion.RELATIVE_GAP_1.ordinal()];
 			panel.addValue(relativeGap + 0.000000000000005, algorithm.getSimpleName());
-		})};
+		}));
+		
+		Object[] arguments = new Object[]{settings};
 		if (PathBasedAlgorithm.class.isAssignableFrom(algorithm)) {
 			arguments = Util.concat(Object.class, arguments, new Object[] {PathBasedAlgorithm.ShortestPathStrategy.SSSP});
 		}

@@ -1,13 +1,11 @@
 package black0ut1.static_.entropy;
 
-import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.network.PAS;
 import black0ut1.data.tuple.Triplet;
-import black0ut1.static_.assignment.Convergence;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.bush.iTAPAS;
-import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.SSSP;
 
 import java.util.Arrays;
@@ -23,11 +21,8 @@ public class piTAPAS extends iTAPAS implements ProportionalityAlgorithm {
 	
 	protected double[][] nodeFlows, approachProportions;
 	
-	public piTAPAS(Network network, DoubleMatrix odMatrix,
-				   CostFunction costFunction, int maxIterations,
-				   Convergence.Builder convergenceBuilder,
-				   int maxPostprocessIterations, double minProportionGap) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+	public piTAPAS(Settings settings, int maxPostprocessIterations, double minProportionGap) {
+		super(settings);
 		this.maxPostprocessIterations = maxPostprocessIterations;
 		this.minProportionGap = minProportionGap;
 	}

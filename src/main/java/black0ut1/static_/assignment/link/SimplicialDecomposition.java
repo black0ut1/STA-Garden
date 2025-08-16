@@ -1,10 +1,8 @@
 package black0ut1.static_.assignment.link;
 
-import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.AON;
-import black0ut1.static_.assignment.Convergence;
-import black0ut1.static_.cost.CostFunction;
 
 import java.util.Vector;
 
@@ -17,9 +15,8 @@ public class SimplicialDecomposition extends LinkBasedAlgorithm {
 	
 	protected final Vector<double[]> hullVertices = new Vector<>();
 	
-	public SimplicialDecomposition(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-								   int maxIterations, Convergence.Builder convergenceBuilder) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+	public SimplicialDecomposition(Settings settings) {
+		super(settings);
 	}
 	
 	@Override
@@ -31,7 +28,7 @@ public class SimplicialDecomposition extends LinkBasedAlgorithm {
 	@Override
 	protected void mainLoopIteration() {
 		double[] newHullVertex = new double[network.edges];
-		AON.assign(network, odMatrix, costs, newHullVertex);
+		AON.assign(network, odm, costs, newHullVertex);
 		hullVertices.add(newHullVertex);
 		
 		for (int i = 0; i < INNER_ITERATIONS; i++) {

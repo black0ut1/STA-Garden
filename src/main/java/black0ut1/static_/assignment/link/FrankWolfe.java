@@ -1,10 +1,8 @@
 package black0ut1.static_.assignment.link;
 
-import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.AON;
-import black0ut1.static_.assignment.Convergence;
-import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.Util;
 
 
@@ -22,16 +20,14 @@ public class FrankWolfe extends LinkBasedAlgorithm {
 	protected static final int NEWTON_MAX_ITERATIONS = 100;
 	protected static final double NEWTON_EPSILON = 1e-10;
 	
-	public FrankWolfe(Network network, DoubleMatrix odMatrix,
-					  CostFunction costFunction, int maxIterations,
-					  Convergence.Builder convergenceBuilder) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+	public FrankWolfe(Settings settings) {
+		super(settings);
 	}
 	
 	@Override
 	protected double[] calculateTarget() {
 		double[] newTarget = new double[network.edges];
-		AON.assign(network, odMatrix, costs, newTarget);
+		AON.assign(network, odm, costs, newTarget);
 		return newTarget;
 	}
 	

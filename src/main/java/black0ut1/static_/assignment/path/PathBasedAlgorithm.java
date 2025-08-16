@@ -4,9 +4,8 @@ import black0ut1.data.DoubleMatrix;
 import black0ut1.data.Matrix;
 import black0ut1.data.network.Network;
 import black0ut1.data.network.Path;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.Algorithm;
-import black0ut1.static_.assignment.Convergence;
-import black0ut1.static_.cost.CostFunction;
 import black0ut1.util.SSSP;
 
 import java.util.List;
@@ -48,13 +47,12 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 	protected final ShortestPathStrategy shortestPathStrategy;
 	protected DoubleMatrix heuristic = null;
 	
-	public PathBasedAlgorithm(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-							  int maxIterations, Convergence.Builder convergenceBuilder,
-							  ShortestPathStrategy shortestPathStrategy) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+	public PathBasedAlgorithm(Settings settings, ShortestPathStrategy shortestPathStrategy) {
+		super(settings);
 		this.shortestPathStrategy = shortestPathStrategy;
 		this.odPairs = new Matrix<>(network.zones);
 	}
+	
 	
 	@Override
 	protected void initialize() {
@@ -66,7 +64,7 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 			int[] pathLengths = a.second();
 			
 			for (int destination = 0; destination < network.zones; destination++) {
-				if (odMatrix.get(origin, destination) == 0)
+				if (odm.get(origin, destination) == 0)
 					continue;
 				
 				int[] edgeIndices = new int[pathLengths[destination]];
@@ -75,7 +73,7 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 					edgeIndices[i--] = edge.index;
 				
 				Path path = new Path(edgeIndices);
-				double trips = odMatrix.get(origin, destination);
+				double trips = odm.get(origin, destination);
 				
 				path.flow = trips;
 				for (int edge : path.edges)
@@ -125,7 +123,7 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 			
 			// For each destination
 			for (int destination = 0; destination < network.zones; destination++) {
-				if (odMatrix.get(origin, destination) == 0) // Skip empty OD pairs
+				if (odm.get(origin, destination) == 0) // Skip empty OD pairs
 					continue;
 				
 				int length = switch (shortestPathStrategy) {

@@ -1,20 +1,16 @@
 package black0ut1.static_.assignment.path;
 
-import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.data.network.Path;
-import black0ut1.static_.assignment.Convergence;
-import black0ut1.static_.cost.CostFunction;
+import black0ut1.static_.assignment.Settings;
 
 import java.util.Arrays;
 import java.util.Comparator;
 
 public class Greedy extends PathBasedAlgorithm {
 	
-	public Greedy(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-				  int maxIterations, Convergence.Builder convergenceBuilder,
-				  ShortestPathStrategy shortestPathStrategy) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder, shortestPathStrategy);
+	public Greedy(Settings settings, ShortestPathStrategy shortestPathStrategy) {
+		super(settings, shortestPathStrategy);
 	}
 	
 	@Override
@@ -49,14 +45,14 @@ public class Greedy extends PathBasedAlgorithm {
 		double w = Double.POSITIVE_INFINITY;
 		int h;
 		for (h = 0; h < paths.size() && c[indices[h]] < w; h++) {
-			double tmp = pathCostDerivatives[indices[h]] * odMatrix.get(origin, destination);
+			double tmp = pathCostDerivatives[indices[h]] * odm.get(origin, destination);
 			B += 1 / tmp;
 			C += c[indices[h]] / tmp;
 			w = (1 + C) / B;
 		}
 		
 		// 4. Update flow
-		double rectification = odMatrix.get(origin, destination);
+		double rectification = odm.get(origin, destination);
 		for (int i = 0; i < paths.size(); i++) {
 			Path path = paths.get(indices[i]);
 			

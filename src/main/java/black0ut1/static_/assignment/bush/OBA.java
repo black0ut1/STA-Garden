@@ -5,8 +5,7 @@ import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Pair;
 import black0ut1.data.tuple.Triplet;
-import black0ut1.static_.assignment.Convergence;
-import black0ut1.static_.cost.CostFunction;
+import black0ut1.static_.assignment.Settings;
 
 import java.util.Arrays;
 import java.util.Vector;
@@ -16,10 +15,8 @@ public class OBA extends BushBasedAlgorithm {
 	protected static final int NEWTON_MAX_ITERATIONS = 100;
 	protected static final double NEWTON_EPSILON = 1e-10;
 	
-	public OBA(Network network, DoubleMatrix odMatrix,
-			   CostFunction costFunction, int maxIterations,
-			   Convergence.Builder convergenceBuilder) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+	public OBA(Settings settings) {
+		super(settings);
 	}
 	
 	
@@ -81,7 +78,7 @@ public class OBA extends BushBasedAlgorithm {
 		for (int i = network.nodes - 1; i >= 0; i--) {
 			int n = topOrd2[i];
 			
-			nFlows[n] = odMatrix.get(bush.root, n);
+			nFlows[n] = odm.get(bush.root, n);
 			for (Network.Edge edge : network.forwardStar(n)) {
 				if (!bush.edgeExists(edge.index))
 					continue;

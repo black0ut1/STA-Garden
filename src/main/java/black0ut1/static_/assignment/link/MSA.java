@@ -1,10 +1,7 @@
 package black0ut1.static_.assignment.link;
 
-import black0ut1.data.DoubleMatrix;
-import black0ut1.data.network.Network;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.AON;
-import black0ut1.static_.assignment.Convergence;
-import black0ut1.static_.cost.CostFunction;
 
 /**
  * Method of successive averages - the simplest of STA algorithms. The target is just a
@@ -20,17 +17,15 @@ import black0ut1.static_.cost.CostFunction;
  */
 public class MSA extends LinkBasedAlgorithm {
 	
-	public MSA(Network network, DoubleMatrix odMatrix,
-			   CostFunction costFunction, int maxIterations,
-			   Convergence.Builder convergenceBuilder) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+	public MSA(Settings settings) {
+		super(settings);
 	}
 	
 	
 	@Override
 	protected double[] calculateTarget() {
 		double[] newTarget = new double[network.edges];
-		AON.assign(network, odMatrix, costs, newTarget);
+		AON.assign(network, odm, costs, newTarget);
 		return newTarget;
 	}
 	

@@ -1,10 +1,7 @@
 package black0ut1.static_.assignment.link;
 
-import black0ut1.data.DoubleMatrix;
-import black0ut1.data.network.Network;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.AON;
-import black0ut1.static_.assignment.Convergence;
-import black0ut1.static_.cost.CostFunction;
 
 /**
  * Similar to {@link ConjugateFrankWolfe} in its smarter computation of target, but it
@@ -22,10 +19,8 @@ public class BiconjugateFrankWolfe extends FrankWolfe {
 	protected double oldStepSize;
 	protected double oldOldStepSize;
 	
-	public BiconjugateFrankWolfe(Network network, DoubleMatrix odMatrix,
-								 CostFunction costFunction, int maxIterations,
-								 Convergence.Builder convergenceBuilder) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+	public BiconjugateFrankWolfe(Settings settings) {
+		super(settings);
 	}
 	
 	
@@ -41,7 +36,7 @@ public class BiconjugateFrankWolfe extends FrankWolfe {
 	protected double[] calculateTarget() {
 		if (iteration < 2 || oldStepSize == 1 || oldOldStepSize == 1) {
 			double[] newTarget = new double[network.edges];
-			AON.assign(network, odMatrix, costs, newTarget);
+			AON.assign(network, odm, costs, newTarget);
 			
 			oldOldTarget = oldTarget;
 			oldTarget = newTarget;
@@ -49,7 +44,7 @@ public class BiconjugateFrankWolfe extends FrankWolfe {
 		}
 		
 		double[] newTarget = new double[network.edges];
-		AON.assign(network, odMatrix, costs, newTarget);
+		AON.assign(network, odm, costs, newTarget);
 		
 		double numerator = 0;
 		double denominator = 0;

@@ -11,6 +11,7 @@ import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.dnl.ILTM_DNL;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.static_.assignment.Convergence;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.bush.B;
 import black0ut1.static_.cost.BPR;
 import black0ut1.util.NetworkUtils;
@@ -65,8 +66,9 @@ public class Main {
 	}
 	
 	private static Bush[] destinationBushes(Network network, DoubleMatrix odm) {
-		B alg = new B(network, odm, new BPR(), 20, new Convergence.Builder()
-						.addCriterion(Convergence.Criterion.RELATIVE_GAP_1));
+		Settings settings = new Settings(network, odm, 20, new Convergence.Builder()
+				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1));
+		B alg = new B(settings);
 		alg.assignFlows();
 		NetworkUtils.checkBushFlows(network, odm, alg.getBushes(), alg.getFlows());
 		

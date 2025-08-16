@@ -1,10 +1,7 @@
 package black0ut1.static_.assignment.link;
 
-import black0ut1.data.DoubleMatrix;
-import black0ut1.data.network.Network;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.AON;
-import black0ut1.static_.assignment.Convergence;
-import black0ut1.static_.cost.CostFunction;
 
 public class FukushimaFrankWolfe extends FrankWolfe {
 	
@@ -14,16 +11,12 @@ public class FukushimaFrankWolfe extends FrankWolfe {
 	
 	protected final double[][] queue;
 	
-	public FukushimaFrankWolfe(Network network, DoubleMatrix odMatrix,
-							   CostFunction costFunction, int maxIterations,
-							   Convergence.Builder convergenceBuilder) {
-		this(network, odMatrix, costFunction, maxIterations, convergenceBuilder, 2);
+	public FukushimaFrankWolfe(Settings settings) {
+		this(settings, 2);
 	}
 	
-	public FukushimaFrankWolfe(Network network, DoubleMatrix odMatrix,
-							   CostFunction costFunction, int maxIterations,
-							   Convergence.Builder convergenceBuilder, int L) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+	public FukushimaFrankWolfe(Settings settings, int L) {
+		super(settings);
 		this.L = L;
 		this.queue = new double[L][];
 	}
@@ -32,7 +25,7 @@ public class FukushimaFrankWolfe extends FrankWolfe {
 	@Override
 	protected double[] calculateTarget() {
 		double[] aonFlows = new double[network.edges];
-		AON.assign(network, odMatrix, costs, aonFlows);
+		AON.assign(network, odm, costs, aonFlows);
 		
 		// add the AON flow to queue
 		if (currL < L) { // the queue is filling up

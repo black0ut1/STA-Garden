@@ -4,8 +4,7 @@ import black0ut1.data.*;
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Quadruplet;
-import black0ut1.static_.assignment.Convergence;
-import black0ut1.static_.cost.CostFunction;
+import black0ut1.static_.assignment.Settings;
 
 import java.util.Arrays;
 
@@ -19,10 +18,8 @@ public class B extends BushBasedAlgorithm {
 	protected final int[][] topologicalOrders = new int[network.zones][];
 	protected double bushRelativeGap = 0;
 	
-	public B(Network network, DoubleMatrix odMatrix,
-			 CostFunction costFunction, int maxIterations,
-			 Convergence.Builder convergenceBuilder) {
-		super(network, odMatrix, costFunction, maxIterations, convergenceBuilder);
+	public B(Settings settings) {
+		super(settings);
 		for (int i = 0; i < network.zones; i++)
 			topologicalOrders[i] = new int[network.nodes];
 	}
@@ -84,10 +81,10 @@ public class B extends BushBasedAlgorithm {
 			double[] minDistance = getTrees(bush, LongestPathPolicy.NONE).third();
 			
 			for (int destination = 0; destination < network.zones; destination++) {
-				if (odMatrix.get(bush.root, destination) == 0)
+				if (odm.get(bush.root, destination) == 0)
 					continue;
 				
-				sptt += odMatrix.get(bush.root, destination) * minDistance[destination];
+				sptt += odm.get(bush.root, destination) * minDistance[destination];
 			}
 		}
 		
@@ -134,10 +131,10 @@ public class B extends BushBasedAlgorithm {
 	protected boolean isEquilibriated(Bush bush, double[] minTreeDistance) {
 		double bushSPTT = 0;
 		for (int i = 0; i < network.zones; i++) {
-			if (odMatrix.get(bush.root, i) == 0)
+			if (odm.get(bush.root, i) == 0)
 				continue;
 			
-			bushSPTT += odMatrix.get(bush.root, i) * minTreeDistance[i];
+			bushSPTT += odm.get(bush.root, i) * minTreeDistance[i];
 		}
 		
 		double bushRCTT = 0;
@@ -254,7 +251,7 @@ public class B extends BushBasedAlgorithm {
 		}
 		
 		for (int i : topologicalOrder) {
-			assert odMatrix.get(bush.root, i) == 0;
+			assert odm.get(bush.root, i) == 0;
 		}
 	}
 	
