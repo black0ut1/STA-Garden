@@ -19,10 +19,13 @@ public class Settings {
 	public double NEWTON_EPSILON = 1e-10;
 	
 	public double CONJUGATE_FW_ALPHA_TOLERANCE = 0.01;
-	
 	public int FUKUSHIMA_FW_L = 2;
-	
 	public int SD_INNER_ITERATIONS = 50;
+	
+	public boolean PBA_ENABLE_INNER_LOOP = true;
+	public int PBA_INNER_ITERATIONS = 10;
+	public int PBA_UPDATE_DELTAS = 1;
+	public Convergence.Criterion PBA_SKIP_CRITERION = Convergence.Criterion.RELATIVE_GAP_1;
 	
 	public ShortestPathStrategy SHORTEST_PATH_STRATEGY = ShortestPathStrategy.SSSP;
 	

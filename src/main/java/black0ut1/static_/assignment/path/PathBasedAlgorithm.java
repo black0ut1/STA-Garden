@@ -38,8 +38,13 @@ import java.util.Vector;
  * finds the most up-to-date shortest path. This is generally slower, but could be faster
  * for sparse OD matrices.
  * <p>
+ * In function {@link #innerLoop()} is implemented additional scheme that equilibrates
+ * paths without finding new shortest ones. This greatly speeds up path-based algorithms.
+ * For details see Algorithm 2 in (Xie et al., 2018).
+ * <p>
  * Bibliography:																		  <br>
  * - (Boyles et al., 2025) Transportation Network Analysis, Section 6.3					  <br>
+ * - (Xie et al., 2018) A Greedy Path-Based Algorithm for Traffic Assignment			  <br>
  */
 public abstract class PathBasedAlgorithm extends Algorithm {
 	
@@ -97,51 +102,30 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 	
 	@Override
 	protected void mainLoopIteration() {
-		Network.Edge[] minTree = null;
-		int[] pathLengths = null;
-		SSSP.Astar astar = (s.SHORTEST_PATH_STRATEGY == Settings.ShortestPathStrategy.P2PSP)
-				? new SSSP.Astar(network, heuristic)
-				: null;
+		switch (s.SHORTEST_PATH_STRATEGY) {
+			case SSSP -> equilibrateSSSP();
+			case P2PSP -> equilibrateP2PSP();
+		}
+		
+		if (s.PBA_ENABLE_INNER_LOOP)
+			innerLoop();
+	}
+	
+	protected void equilibrateSSSP() {
 		
 		// For each origin
 		for (int origin = 0; origin < network.zones; origin++) {
 			
-			switch (s.SHORTEST_PATH_STRATEGY) {
-				case P2PSP:
-					// Reset A* for new origin
-					astar.resetForOrigin(origin);
-					break;
-				
-				case SSSP:
-					// Find shortest paths from this origin to all other destinations
-					var a = SSSP.dijkstraLen(network, origin, costs);
-					minTree = a.first();
-					pathLengths = a.second();
-					break;
-			}
-			
+			var a = SSSP.dijkstraLen(network, origin, costs);
+			Network.Edge[] minTree = a.first();
+			int[] pathLengths = a.second();
 			
 			// For each destination
 			for (int destination = 0; destination < network.zones; destination++) {
 				if (odm.get(origin, destination) == 0) // Skip empty OD pairs
 					continue;
 				
-				int length = switch (s.SHORTEST_PATH_STRATEGY) {
-					case P2PSP:
-						// Find shortest path from origin to destination
-						double shortestPathCost = Double.POSITIVE_INFINITY;
-						for (Path path : odPairs.get(origin, destination)) {
-							double cost = path.getCost(costs);
-							if (cost < shortestPathCost)
-								shortestPathCost = cost;
-						}
-						
-						var pair = astar.calculate(origin, destination, costs, shortestPathCost);
-						minTree = pair.first();
-						yield pair.second();
-					case SSSP:
-						yield pathLengths[destination];
-				};
+				int length = pathLengths[destination];
 				
 				int[] edgeIndices = new int[length];
 				int i = edgeIndices.length - 1;
@@ -167,6 +151,118 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 				
 				odPairs.get(origin, destination).removeIf(path -> path.flow <= 0);
 			}
+		}
+	}
+	
+	protected void equilibrateP2PSP() {
+		SSSP.Astar astar = new SSSP.Astar(network, heuristic);
+		
+		// For each origin
+		for (int origin = 0; origin < network.zones; origin++) {
+			
+			astar.resetForOrigin(origin);
+			
+			// For each destination
+			for (int destination = 0; destination < network.zones; destination++) {
+				if (odm.get(origin, destination) == 0) // Skip empty OD pairs
+					continue;
+				
+				// Find shortest path from origin to destination
+				double shortestPathCost = Double.POSITIVE_INFINITY;
+				for (Path path : odPairs.get(origin, destination)) {
+					double cost = path.getCost(costs);
+					if (cost < shortestPathCost)
+						shortestPathCost = cost;
+				}
+				
+				var pair = astar.calculate(origin, destination, costs, shortestPathCost);
+				Network.Edge[] minTree = pair.first();
+				int length = pair.second();
+				
+				
+				int[] edgeIndices = new int[length];
+				int i = edgeIndices.length - 1;
+				for (Network.Edge edge = minTree[destination]; i != -1; edge = minTree[edge.tail])
+					edgeIndices[i--] = edge.index;
+				
+				Path basicPath = new Path(edgeIndices);
+				
+				// Check if this shortest path is already in the set
+				boolean exists = false;
+				for (Path path : odPairs.get(origin, destination))
+					if (basicPath.equals(path)) {
+						basicPath = path;
+						exists = true;
+						break;
+					}
+				if (!exists) // if not, add it
+					odPairs.get(origin, destination).add(basicPath);
+				if (odPairs.get(origin, destination).size() == 1)
+					continue;
+				
+				equilibratePaths(origin, destination, basicPath);
+				
+				odPairs.get(origin, destination).removeIf(path -> path.flow <= 0);
+			}
+		}
+	}
+	
+	protected void innerLoop() {
+		DoubleMatrix deltas = new DoubleMatrix(network.zones);
+		
+		for (int i = 0; i < s.PBA_INNER_ITERATIONS; i++) {
+			int updated = 0;
+			
+			if (i % s.PBA_UPDATE_DELTAS == 0) {
+				// Each 100 iterations, update deltas
+				for (int origin = 0; origin < network.zones; origin++) {
+					for (int destination = 0; destination < network.zones; destination++) {
+						Vector<Path> paths = odPairs.get(origin, destination);
+						if (paths == null || paths.size() <= 1)
+							continue;
+						
+						double min = Double.POSITIVE_INFINITY, max = Double.NEGATIVE_INFINITY;
+						for (Path path : paths) {
+							double cost = path.getCost(costs);
+							if (cost < min)
+								min = cost;
+							if (cost > max)
+								max = cost;
+						}
+						
+						deltas.set(origin, destination, max - min);
+					}
+				}
+			}
+			
+			for (int origin = 0; origin < network.zones; origin++) {
+				for (int destination = 0; destination < network.zones; destination++) {
+					Vector<Path> paths = odPairs.get(origin, destination);
+					if (paths == null || paths.size() <= 1)
+						continue;
+					
+					if (deltas.get(origin, destination) < convergence.getData()
+							.lastElement()[s.PBA_SKIP_CRITERION.ordinal()] / 2)
+						continue;
+					
+					double minCost = Double.POSITIVE_INFINITY;
+					Path basicPath = null;
+					for (Path path : paths) {
+						double cost = path.getCost(costs);
+						if (cost < minCost) {
+							minCost = cost;
+							basicPath = path;
+						}
+					}
+					
+					equilibratePaths(origin, destination, basicPath);
+					
+					updated++;
+				}
+			}
+			
+			if (updated == 0)
+				break;
 		}
 	}
 	
