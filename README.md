@@ -36,6 +36,10 @@ Path-based algorithms:
 - Gradient Projection
 - Projected Gradient
 - Improved Social Pressure
+- Xie's Greedy algorithm
+
+Also, for path-based algorithms, a convergence speed improvement is employed which is
+described in the same paper as Xie's Greedy algorithm.
 
 Bush-based algorithms:
 

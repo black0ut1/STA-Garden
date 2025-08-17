@@ -23,7 +23,8 @@ public class RelativeGapVisualizationIntegrationTest {
 	static Class<? extends Algorithm>[] algorithms = new Class[]{
 			MSA.class, FrankWolfe.class, FukushimaFrankWolfe.class, ConjugateFrankWolfe.class,
 			BiconjugateFrankWolfe.class, SimplicialDecomposition.class,
-			PathEquilibration.class, GradientProjection.class, ProjectedGradient.class, ImprovedSocialPressure.class,
+			PathEquilibration.class, GradientProjection.class, ProjectedGradient.class,
+			ImprovedSocialPressure.class, Greedy.class,
 			iTAPAS.class,
 	};
 	
