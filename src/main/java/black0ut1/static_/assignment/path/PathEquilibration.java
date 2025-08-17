@@ -5,7 +5,6 @@ import black0ut1.static_.assignment.Settings;
 
 public class PathEquilibration extends GradientProjection {
 	
-	
 	public PathEquilibration(Settings settings) {
 		super(settings);
 	}

@@ -11,7 +11,6 @@ import java.util.Vector;
 
 public class ProjectedGradient extends PathBasedAlgorithm {
 	
-	protected static final double STEP_DIRECTION_EPSILON = 1e-12;
 	protected final IntDoubleHashMap edgeIndicesToCoeff = new IntDoubleHashMap();
 	
 	public ProjectedGradient(Settings settings) {
@@ -49,10 +48,6 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 			stepDirection[i] = pathCost;
 			averageTravelTime += pathCost;
 		}
-		
-		// if step direction is too small, skip this OD pair (avoids numerical errors)
-		if (max - min < STEP_DIRECTION_EPSILON)
-			return null;
 		
 		averageTravelTime /= paths.size();
 		double rectification = 0;

@@ -6,8 +6,6 @@ import black0ut1.static_.assignment.Settings;
 
 public class ImprovedSocialPressure extends ProjectedGradient {
 	
-	protected static final double DELTA = 0.15;
-	
 	public ImprovedSocialPressure(Settings settings) {
 		super(settings);
 	}
@@ -29,7 +27,7 @@ public class ImprovedSocialPressure extends ProjectedGradient {
 				minPathCost = costs[i];
 		}
 		
-		double pi = minPathCost + DELTA * (maxPathCost - minPathCost);
+		double pi = minPathCost + s.ISP_DELTA * (maxPathCost - minPathCost);
 		
 		
 		double[] stepDirection = new double[paths.size()];
