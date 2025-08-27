@@ -32,6 +32,9 @@ public class Settings {
 	
 	public double ISP_DELTA = 0.15;
 	
+	/* Settings of bush-based algorithms */
+	public BushUpdateStrategy bushUpdateStrategy = BushUpdateStrategy.BARGERA;
+	
 	public Settings(Network network, DoubleMatrix odm, int maxIterations,
 					Convergence.Builder convergenceBuilder) {
 		this.network = network;
@@ -42,5 +45,9 @@ public class Settings {
 	
 	public enum ShortestPathStrategy {
 		P2PSP, SSSP
+	}
+	
+	public enum BushUpdateStrategy {
+		BARGERA, DIAL, NIE,
 	}
 }
