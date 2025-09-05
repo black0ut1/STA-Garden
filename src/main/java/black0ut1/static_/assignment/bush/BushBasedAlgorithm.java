@@ -25,7 +25,6 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 	
 	@Override
 	protected void initialize() {
-		//
 		for (int zone = 0; zone < bushes.length; zone++)
 			bushes[zone] = createBush(zone);
 		
@@ -71,11 +70,16 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 	
 	@Override
 	protected void mainLoopIteration() {
-		for (Bush bush : bushes)
+		for (Bush bush : bushes) {
 			updateBush(bush);
-		
-		for (Bush bush : bushes)
 			equilibrateBush(bush);
+		}
+		
+		for (int i = 0; i < 10; i++) {
+			for (Bush bush : bushes) {
+				equilibrateBush(bush);
+			}
+		}
 	}
 	
 	protected abstract void equilibrateBush(Bush bush);
@@ -212,6 +216,37 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 		}
 		
 		return new Quadruplet<>(minimalTree, maximalTree, minimalDistance, maximalDistance);
+	}
+	
+	protected int[] topologicalOrder(Bush bush) {
+		int[] indegree = new int[network.nodes];
+		for (Network.Edge edge : network.getEdges()) {
+			if (!bush.edgeExists(edge.index))
+				continue;
+			indegree[edge.head]++;
+		}
+		
+		int[] result = new int[network.nodes];
+		Arrays.fill(result, -1);
+		
+		IntQueue queue = new IntQueue(network.nodes);
+		queue.enqueue(bush.root);
+		int i = 0;
+		while (!queue.isEmpty()) {
+			int node = queue.dequeue();
+			result[i++] = node;
+			
+			for (Network.Edge edge : network.forwardStar(node)) {
+				if (!bush.edgeExists(edge.index))
+					continue;
+				
+				indegree[edge.head]--;
+				if (indegree[edge.head] == 0)
+					queue.enqueue(edge.head);
+			}
+		}
+		
+		return result;
 	}
 	
 	public Bush[] getBushes() {
