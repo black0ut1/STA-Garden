@@ -9,7 +9,9 @@ But right now, there are also implemented some parts of dynamic traffic assignme
 is also some visualisation (see branch `gui`).
 
 This project uses the [TNTP](https://github.com/bstabler/TransportationNetworks) format as
-input and output (there are already some networks in `data` folder).
+input and output (there are already some networks in `data` folder). 
+[GMNS datasets](https://github.com/HanZhengIntelliTransport/GMNS_Plus_Dataset/) are also
+viable.
 
 ## Implemented features
 

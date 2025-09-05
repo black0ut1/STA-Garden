@@ -22,26 +22,33 @@ public class Network {
 	public final int zones;
 	public final int edges;
 	
-	public Network(List<Edge>[] adjacencyList, int zones) {
-		this(adjacencyList, zones, null);
-	}
-	
-	public Network(List<Edge>[] adjacencyList, int zones, Node[] nodes) {
-		this.nodesArr = nodes;
+	public Network(List<Edge> edgesArray, Node[] nodesArray, int nodes, int zones) {
+		this.nodesArr = nodesArray;
 		
-		int numOfEdges = 0;
-		for (List<Edge> edgeVector : adjacencyList)
-			numOfEdges += edgeVector.size();
-		
-		this.nodes = adjacencyList.length;
+		this.edges = edgesArray.size();
 		this.zones = zones;
-		this.edges = numOfEdges;
+		this.nodes = nodes;
+		
 		this.indices = new int[this.nodes + 1];
 		this.inverseIndices = new int[this.nodes + 1];
-		this.edgesArr = new Edge[numOfEdges];
-		this.inverseEdgesArr = new Edge[numOfEdges];
-		this.mirrorEdgesArr = new Edge[numOfEdges];
+		this.edgesArr = new Edge[this.edges];
+		this.inverseEdgesArr = new Edge[this.edges];
+		this.mirrorEdgesArr = new Edge[this.edges];
 		
+		// build adjacency lists
+		Vector<Edge>[] adjacencyList = new Vector[this.nodes];
+		for (int i = 0; i < this.nodes; i++)
+			adjacencyList[i] = new Vector<>();
+		Vector<Edge>[] inverseAdjacencyList = new Vector[this.nodes];
+		for (int i = 0; i < this.nodes; i++)
+			inverseAdjacencyList[i] = new Vector<>();
+		
+		for (Edge edge : edgesArray) {
+			adjacencyList[edge.tail].add(edge);
+			inverseAdjacencyList[edge.head].add(edge);
+		}
+		
+		// build compressed sparse row arrays for forward stars
 		int offset = 0;
 		for (int startNode = 0; startNode < adjacencyList.length; startNode++) {
 			indices[startNode] = offset;
@@ -54,19 +61,12 @@ public class Network {
 		}
 		indices[indices.length - 1] = offset;
 		
-		
-		Vector<Edge>[] invAdjList = new Vector[this.nodes];
-		for (int i = 0; i < this.nodes; i++)
-			invAdjList[i] = new Vector<>();
-		
-		for (Edge edge : edgesArr)
-			invAdjList[edge.head].add(edge);
-		
+		// build compressed sparse row arrays for backward stars
 		offset = 0;
-		for (int endNode = 0; endNode < invAdjList.length; endNode++) {
+		for (int endNode = 0; endNode < inverseAdjacencyList.length; endNode++) {
 			inverseIndices[endNode] = offset;
 			
-			var incoming = invAdjList[endNode];
+			var incoming = inverseAdjacencyList[endNode];
 			for (int i = 0; i < incoming.size(); i++)
 				inverseEdgesArr[offset + i] = incoming.get(i);
 			
@@ -74,9 +74,8 @@ public class Network {
 		}
 		inverseIndices[inverseIndices.length - 1] = offset;
 		
-		
+		// build array for mirror edges
 		for (Edge edge : edgesArr) {
-			
 			Network.Edge mirror = null;
 			for (Edge edge1 : forwardStar(edge.head))
 				if (edge1.head == edge.tail) {

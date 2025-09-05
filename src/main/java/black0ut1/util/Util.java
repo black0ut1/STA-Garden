@@ -3,6 +3,8 @@ package black0ut1.util;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Pair;
+import black0ut1.io.CSV;
+import black0ut1.io.InputOutput;
 import black0ut1.io.TNTP;
 
 import java.lang.reflect.Array;
@@ -64,18 +66,16 @@ public class Util {
 		return smallest;
 	}
 	
-	public static Pair<Network, DoubleMatrix> loadData(String networkFile, String odmFile, String nodeFile) {
-		System.out.print("Loading network... ");
+	public static Pair<Network, DoubleMatrix> loadData(InputOutput io, String networkFile, String odmFile, String nodeFile) {
+		System.out.print("Loading OD matrix... ");
 		long startTime = System.currentTimeMillis();
-		Network network = nodeFile == null
-				? TNTP.parseNetwork(networkFile)
-				: TNTP.parseNetwork(networkFile, nodeFile);
+		DoubleMatrix odMatrix = io.parseODMatrix(odmFile);
 		long endTime = System.currentTimeMillis();
 		System.out.println("OK (" + (endTime - startTime) + "ms)");
 		
-		System.out.print("Loading OD matrix... ");
+		System.out.print("Loading network... ");
 		startTime = System.currentTimeMillis();
-		DoubleMatrix odMatrix = TNTP.parseODMatrix(odmFile);
+		Network network = io.parseNetwork(networkFile, nodeFile, odMatrix.n);
 		endTime = System.currentTimeMillis();
 		System.out.println("OK (" + (endTime - startTime) + "ms)");
 		

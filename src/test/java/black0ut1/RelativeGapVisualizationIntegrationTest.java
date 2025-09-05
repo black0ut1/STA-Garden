@@ -2,6 +2,7 @@ package black0ut1;
 
 import black0ut1.gui.CriterionChartPanel;
 import black0ut1.gui.GUI;
+import black0ut1.io.TNTP;
 import black0ut1.static_.assignment.*;
 import black0ut1.static_.assignment.bush.*;
 import black0ut1.static_.assignment.link.*;
@@ -36,7 +37,7 @@ public class RelativeGapVisualizationIntegrationTest {
 		String map = "ChicagoSketch";
 		String networkFile = "data/" + map + "/" + map + "_net.tntp";
 		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
-		var pair = Util.loadData(networkFile, odmFile, null);
+		var pair = Util.loadData(new TNTP(), networkFile, odmFile, null);
 		
 		panel = new CriterionChartPanel(map);
 		settings = new Settings(pair.first(), pair.second(), 300,

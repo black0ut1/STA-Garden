@@ -5,33 +5,87 @@ import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Pair;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
-@SuppressWarnings("unchecked")
-public final class TNTP {
+public class TNTP extends InputOutput {
 	
 	private final static String COMMENT_SIGN = "~";
 	private final static String HEADER_END = "<END OF METADATA>";
 	private final static String ZONES_NUMBER = "<NUMBER OF ZONES>";
-	private final static String NODES_NUMBER = "<NUMBER OF NODES>";
 	
-	//////////////////// Reading ////////////////////
-	
-	public static Network parseNetwork(String netFile) {
-		var pair = readAdjacencyList(netFile);
-		return new Network(pair.first(), pair.second());
+	@Override
+	protected List<Network.Edge> readEdges(String netFile) {
+		try (var reader = new BufferedReader(new FileReader(netFile))) {
+			int zeroFreeFlowEdges = 0;
+			
+			parseHeader(reader);
+			
+			var edges = new Vector<Network.Edge>();
+			
+			String line;
+			while ((line = reader.readLine()) != null) {
+				line = sanitize(line);
+				if (line.isEmpty())
+					continue;
+				
+				String[] split = line.split("[ \t]+");
+				
+				int fromNode = Integer.parseInt(split[0]) - 1;
+				int endNode = Integer.parseInt(split[1]) - 1;
+				double capacity = Double.parseDouble(split[2]);
+				double length = Double.parseDouble(split[3]);
+				double freeFlow = Double.parseDouble(split[4]);
+				double alpha = Double.parseDouble(split[5]);
+				double beta = Double.parseDouble(split[6]);
+				
+				if (freeFlow == 0) {
+					zeroFreeFlowEdges++;
+					freeFlow = 0.0001;
+				}
+				
+				edges.add(new Network.Edge(
+						fromNode, endNode, capacity, length, freeFlow, alpha, beta
+				));
+			}
+			
+			if (zeroFreeFlowEdges > 0)
+				System.out.println("Warning! Found " + zeroFreeFlowEdges + " edges with zero free flow.");
+			
+			return edges;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
-	public static Network parseNetwork(String netFile, String nodeFile) {
-		var pair = readAdjacencyList(netFile);
-		Network.Node[] nodes = readNodes(nodeFile, pair.first().length);
-		return new Network(pair.first(), pair.second(), nodes);
+	@Override
+	protected Network.Node[] readNodes(String nodeFile, int nodesNum) {
+		try (var reader = new BufferedReader(new FileReader(nodeFile))) {
+			Network.Node[] nodes = new Network.Node[nodesNum];
+			
+			reader.readLine();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				line = sanitize(line);
+				if (line.isEmpty())
+					continue;
+				
+				String[] split = line.split("[ \t]+");
+				
+				int node = Integer.parseInt(split[0]) - 1;
+				double x = Double.parseDouble(split[1]);
+				double y = Double.parseDouble(split[2]);
+				
+				nodes[node] = new Network.Node(node, x, y);
+			}
+			
+			return nodes;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
-	public static DoubleMatrix parseODMatrix(String path) {
+	@Override
+	public DoubleMatrix parseODMatrix(String path) {
 		try (var reader = new BufferedReader(new FileReader(path))) {
 			var header = parseHeader(reader);
 			
@@ -66,80 +120,6 @@ public final class TNTP {
 		}
 	}
 	
-	private static Pair<Vector<Network.Edge>[], Integer> readAdjacencyList(String netFile) {
-		try (var reader = new BufferedReader(new FileReader(netFile))) {
-			int zeroFreeFlowEdges = 0;
-			
-			var header = parseHeader(reader);
-			
-			int nodes = Integer.parseInt(header.get(NODES_NUMBER));
-			int zones = Integer.parseInt(header.get(ZONES_NUMBER));
-			
-			Vector<Network.Edge>[] adjacencyList = new Vector[nodes];
-			for (int i = 0; i < adjacencyList.length; i++)
-				adjacencyList[i] = new Vector<>();
-			
-			String line;
-			while ((line = reader.readLine()) != null) {
-				line = sanitize(line);
-				if (line.isEmpty())
-					continue;
-				
-				String[] split = line.split("[ \t]+");
-				
-				int fromNode = Integer.parseInt(split[0]) - 1;
-				int endNode = Integer.parseInt(split[1]) - 1;
-				double capacity = Double.parseDouble(split[2]);
-				double length = Double.parseDouble(split[3]);
-				double freeFlow = Double.parseDouble(split[4]);
-				double alpha = Double.parseDouble(split[5]);
-				double beta = Double.parseDouble(split[6]);
-				
-				if (freeFlow == 0) {
-					zeroFreeFlowEdges++;
-					freeFlow = 0.0001;
-				}
-				
-				adjacencyList[fromNode].add(new Network.Edge(
-						fromNode, endNode, capacity, length, freeFlow, alpha, beta
-				));
-			}
-			
-			if (zeroFreeFlowEdges > 0)
-				System.out.println("Warning! Found " + zeroFreeFlowEdges + " edges with zero free flow.");
-			
-			return new Pair<>(adjacencyList, zones);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	private static Network.Node[] readNodes(String nodeFile, int nodesNum) {
-		try (var reader = new BufferedReader(new FileReader(nodeFile))) {
-			Network.Node[] nodes = new Network.Node[nodesNum];
-			
-			reader.readLine();
-			String line;
-			while ((line = reader.readLine()) != null) {
-				line = sanitize(line);
-				if (line.isEmpty())
-					continue;
-				
-				String[] split = line.split("[ \t]+");
-				
-				int node = Integer.parseInt(split[0]) - 1;
-				double x = Double.parseDouble(split[1]);
-				double y = Double.parseDouble(split[2]);
-				
-				nodes[node] = new Network.Node(node, x, y);
-			}
-			
-			return nodes;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
 	private static Map<String, String> parseHeader(BufferedReader reader) throws IOException {
 		HashMap<String, String> header = new HashMap<>();
 		
@@ -164,9 +144,7 @@ public final class TNTP {
 		return line.split(COMMENT_SIGN)[0].trim();
 	}
 	
-	//////////////////// Writing ////////////////////
-	
-	public static void writeFlows(String outputFile, Network network, double[] flows, double[] costs) {
+	public void writeFlows(String outputFile, Network network, double[] flows, double[] costs) {
 		try (BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFile))) {
 			
 			bfw.write("From\tTo\tVolume\tCost\n");
@@ -182,7 +160,7 @@ public final class TNTP {
 		}
 	}
 	
-	public static void writeODmatrix(String outputFile, DoubleMatrix ODMatrix) {
+	public void writeODmatrix(String outputFile, DoubleMatrix ODMatrix) {
 		try (BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFile))) {
 			
 			for (int i = 0; i < ODMatrix.n; i++) {
