@@ -16,7 +16,6 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 	protected static final double FLOW_EPSILON = 1e-10;
 	
 	protected final Bush[] bushes;
-	protected final BushUpdateStrategy bushUpdateStrategy = BushUpdateStrategy.DIAL;
 	
 	public BushBasedAlgorithm(Settings settings) {
 		super(settings);
@@ -42,7 +41,8 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 		Network.Edge[] minimalTree = pair.first();
 		double[] minimalDistance = pair.second();
 		
-		if (bushUpdateStrategy == BushUpdateStrategy.DIAL) {
+		// add edges to bush
+		if (s.bushUpdateStrategy == Settings.BushUpdateStrategy.DIAL) {
 			
 			for (Network.Edge edge : network.getEdges())
 				if (minimalDistance[edge.tail] < minimalDistance[edge.head])
@@ -53,6 +53,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 				bush.addEdge(edge.index);
 		}
 		
+		// assign flows to shortest paths (AON)
 		for (int destination = 0; destination < network.zones; destination++) {
 			double trips = odm.get(origin, destination);
 			if (trips == 0)
@@ -86,7 +87,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 	
 	protected void updateBush(Bush bush) {
 		// Dial's strategy is different from Bargera's and Nie's
-		if (bushUpdateStrategy == BushUpdateStrategy.DIAL) {
+		if (s.bushUpdateStrategy == Settings.BushUpdateStrategy.DIAL) {
 			double[] minimalDistance = getTrees(bush, true, false, false).third();
 			
 			for (Network.Edge edge : network.getEdges()) {
@@ -116,7 +117,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 			if (edge != null)
 				bush.addEdge(edge.index);
 		
-		if (bushUpdateStrategy == BushUpdateStrategy.BARGERA) {
+		if (s.bushUpdateStrategy == Settings.BushUpdateStrategy.BARGERA) {
 			
 			for (Network.Edge edge : network.getEdges())
 				if (maximalDistance[edge.tail] < maximalDistance[edge.head])
@@ -124,7 +125,7 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 			return;
 		}
 		
-		if (bushUpdateStrategy == BushUpdateStrategy.NIE) {
+		if (s.bushUpdateStrategy == Settings.BushUpdateStrategy.NIE) {
 			
 			int linksAdded = 0;
 			for (Network.Edge edge : network.getEdges()) {
@@ -251,11 +252,5 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 	
 	public Bush[] getBushes() {
 		return bushes;
-	}
-	
-	public enum BushUpdateStrategy {
-		BARGERA,
-		DIAL,
-		NIE,
 	}
 }
