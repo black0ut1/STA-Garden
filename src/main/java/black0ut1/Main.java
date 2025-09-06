@@ -10,14 +10,12 @@ import black0ut1.dynamic.equilibrium.StaticRouteChoice;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.dnl.ILTM_DNL;
 import black0ut1.dynamic.loading.link.Link;
+import black0ut1.io.TNTP;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.assignment.Settings;
-import black0ut1.static_.assignment.bush.B;
-import black0ut1.static_.cost.BPR;
+import black0ut1.static_.assignment.path.ProjectedGradient;
 import black0ut1.util.NetworkUtils;
 import black0ut1.util.Util;
-
-import java.util.Vector;
 
 
 public class Main {
@@ -28,7 +26,7 @@ public class Main {
 		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
 		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
 		
-		var pair = Util.loadData(networkFile, odmFile, nodeFile);
+		var pair = Util.loadData(new TNTP(), networkFile, odmFile, nodeFile);
 //		new GUI(new AssignmentPanel(pair.first()));
 		
 		double timeStep = 0.4;
@@ -68,24 +66,28 @@ public class Main {
 	private static Bush[] destinationBushes(Network network, DoubleMatrix odm) {
 		Settings settings = new Settings(network, odm, 20, new Convergence.Builder()
 				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1));
-		B alg = new B(settings);
-		alg.assignFlows();
-		NetworkUtils.checkBushFlows(network, odm, alg.getBushes(), alg.getFlows());
+		ProjectedGradient pg = new ProjectedGradient(settings);
+		pg.assignFlows();
+		NetworkUtils.checkPathFlows(network, odm, pg.getPaths(), pg.getFlows());
+		
 		
 		Bush[] destinationBushes = new Bush[network.zones];
 		for (int dest = 0; dest < network.zones; dest++)
 			destinationBushes[dest] = new Bush(network.edges, dest);
 		
-		Vector<Path> paths = NetworkUtils.calculatePathsFromBushes(network, odm, alg.getBushes());
-		for (Path path : paths) {
-			int lastEdgeIndex = path.edges[path.edges.length - 1];
-			int destination = network.getEdges()[lastEdgeIndex].head;
-			
-			for (int index : path.edges) {
-				destinationBushes[destination].addEdge(index);
-				destinationBushes[destination].addFlow(index, path.flow);
+		var paths = pg.getPaths();
+		for (int origin = 0; origin < network.zones; origin++)
+			for (int destination = 0; destination < network.zones; destination++) {
+				var odPaths = paths.get(origin, destination);
+				if (odPaths == null)
+					continue;
+				
+				for (Path path : odPaths)
+					for (int index : path.edges) {
+						destinationBushes[destination].addEdge(index);
+						destinationBushes[destination].addFlow(index, path.flow);
+					}
 			}
-		}
 		
 		return destinationBushes;
 	}

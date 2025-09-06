@@ -12,7 +12,7 @@ public class ImprovedSocialPressure extends ProjectedGradient {
 	
 	@Override
 	protected double[] calculateStepDirection(int origin, int destination, Path basicPath) {
-		var paths = odPairs.get(origin, destination);
+		var paths = this.paths.get(origin, destination);
 		
 		// 1. Determine pi
 		double[] costs =  new double[paths.size()];

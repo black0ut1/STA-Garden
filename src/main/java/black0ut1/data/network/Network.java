@@ -22,10 +22,10 @@ public class Network {
 	public final int zones;
 	public final int edges;
 	
-	public Network(List<Edge> edgesArray, Node[] nodesArray, int nodes, int zones) {
+	public Network(List<Edge> edgesList, Node[] nodesArray, int nodes, int zones) {
 		this.nodesArr = nodesArray;
 		
-		this.edges = edgesArray.size();
+		this.edges = edgesList.size();
 		this.zones = zones;
 		this.nodes = nodes;
 		
@@ -35,20 +35,14 @@ public class Network {
 		this.inverseEdgesArr = new Edge[this.edges];
 		this.mirrorEdgesArr = new Edge[this.edges];
 		
-		// build adjacency lists
+		// build adjacency list and compressed sparse row arrays for forward stars
 		Vector<Edge>[] adjacencyList = new Vector[this.nodes];
 		for (int i = 0; i < this.nodes; i++)
 			adjacencyList[i] = new Vector<>();
-		Vector<Edge>[] inverseAdjacencyList = new Vector[this.nodes];
-		for (int i = 0; i < this.nodes; i++)
-			inverseAdjacencyList[i] = new Vector<>();
 		
-		for (Edge edge : edgesArray) {
+		for (Edge edge : edgesList)
 			adjacencyList[edge.tail].add(edge);
-			inverseAdjacencyList[edge.head].add(edge);
-		}
 		
-		// build compressed sparse row arrays for forward stars
 		int offset = 0;
 		for (int startNode = 0; startNode < adjacencyList.length; startNode++) {
 			indices[startNode] = offset;
@@ -61,7 +55,14 @@ public class Network {
 		}
 		indices[indices.length - 1] = offset;
 		
-		// build compressed sparse row arrays for backward stars
+		// build inverse adjacency list and compressed sparse row arrays for backward stars
+		Vector<Edge>[] inverseAdjacencyList = new Vector[this.nodes];
+		for (int i = 0; i < this.nodes; i++)
+			inverseAdjacencyList[i] = new Vector<>();
+		
+		for (Edge edge : edgesArr)
+			inverseAdjacencyList[edge.head].add(edge);
+		
 		offset = 0;
 		for (int endNode = 0; endNode < inverseAdjacencyList.length; endNode++) {
 			inverseIndices[endNode] = offset;

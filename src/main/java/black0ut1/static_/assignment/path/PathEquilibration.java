@@ -13,7 +13,7 @@ public class PathEquilibration extends GradientProjection {
 	protected void equilibratePaths(int origin, int destination, Path basicPath) {
 		Path maxPath = null;
 		double maxPathCost = Double.NEGATIVE_INFINITY;
-		for (Path path : odPairs.get(origin, destination)) {
+		for (Path path : paths.get(origin, destination)) {
 			double pathCost = path.getCost(costs);
 			if (pathCost > maxPathCost) {
 				maxPath = path;

@@ -48,14 +48,13 @@ import java.util.Vector;
  */
 public abstract class PathBasedAlgorithm extends Algorithm {
 	
-	protected final Matrix<Vector<Path>> odPairs;
+	protected final Matrix<Vector<Path>> paths;
 	protected DoubleMatrix heuristic = null;
 	
 	public PathBasedAlgorithm(Settings settings) {
 		super(settings);
-		this.odPairs = new Matrix<>(network.zones);
+		this.paths = new Matrix<>(network.zones);
 	}
-	
 	
 	@Override
 	protected void initialize() {
@@ -82,7 +81,7 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 				for (int edge : path.edges)
 					flows[edge] += trips;
 				
-				odPairs.set(origin, destination, new Vector<>(List.of(path)));
+				paths.set(origin, destination, new Vector<>(List.of(path)));
 			}
 		}
 		
@@ -136,20 +135,20 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 				
 				// Check if this shortest path is already in the set
 				boolean exists = false;
-				for (Path path : odPairs.get(origin, destination))
+				for (Path path : paths.get(origin, destination))
 					if (basicPath.equals(path)) {
 						basicPath = path;
 						exists = true;
 						break;
 					}
 				if (!exists) // if not, add it
-					odPairs.get(origin, destination).add(basicPath);
-				if (odPairs.get(origin, destination).size() == 1)
+					paths.get(origin, destination).add(basicPath);
+				if (paths.get(origin, destination).size() == 1)
 					continue;
 				
 				equilibratePaths(origin, destination, basicPath);
 				
-				odPairs.get(origin, destination).removeIf(path -> path.flow <= 0);
+				paths.get(origin, destination).removeIf(path -> path.flow <= 0);
 			}
 		}
 	}
@@ -169,7 +168,7 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 				
 				// Find shortest path from origin to destination
 				double shortestPathCost = Double.POSITIVE_INFINITY;
-				for (Path path : odPairs.get(origin, destination)) {
+				for (Path path : paths.get(origin, destination)) {
 					double cost = path.getCost(costs);
 					if (cost < shortestPathCost)
 						shortestPathCost = cost;
@@ -189,20 +188,20 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 				
 				// Check if this shortest path is already in the set
 				boolean exists = false;
-				for (Path path : odPairs.get(origin, destination))
+				for (Path path : paths.get(origin, destination))
 					if (basicPath.equals(path)) {
 						basicPath = path;
 						exists = true;
 						break;
 					}
 				if (!exists) // if not, add it
-					odPairs.get(origin, destination).add(basicPath);
-				if (odPairs.get(origin, destination).size() == 1)
+					paths.get(origin, destination).add(basicPath);
+				if (paths.get(origin, destination).size() == 1)
 					continue;
 				
 				equilibratePaths(origin, destination, basicPath);
 				
-				odPairs.get(origin, destination).removeIf(path -> path.flow <= 0);
+				paths.get(origin, destination).removeIf(path -> path.flow <= 0);
 			}
 		}
 	}
@@ -217,7 +216,7 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 				// Each 100 iterations, update deltas
 				for (int origin = 0; origin < network.zones; origin++) {
 					for (int destination = 0; destination < network.zones; destination++) {
-						Vector<Path> paths = odPairs.get(origin, destination);
+						Vector<Path> paths = this.paths.get(origin, destination);
 						if (paths == null || paths.size() <= 1)
 							continue;
 						
@@ -237,7 +236,7 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 			
 			for (int origin = 0; origin < network.zones; origin++) {
 				for (int destination = 0; destination < network.zones; destination++) {
-					Vector<Path> paths = odPairs.get(origin, destination);
+					Vector<Path> paths = this.paths.get(origin, destination);
 					if (paths == null || paths.size() <= 1)
 						continue;
 					
@@ -273,5 +272,9 @@ public abstract class PathBasedAlgorithm extends Algorithm {
 			Network.Edge edge = network.getEdges()[edgeIndex];
 			costs[edgeIndex] = s.costFunction.function(edge, flows[edgeIndex]);
 		}
+	}
+	
+	public Matrix<Vector<Path>> getPaths() {
+		return paths;
 	}
 }

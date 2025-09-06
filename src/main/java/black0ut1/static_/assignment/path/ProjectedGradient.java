@@ -31,7 +31,7 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 	}
 	
 	protected double[] calculateStepDirection(int origin, int destination, Path basicPath) {
-		Vector<Path> paths = odPairs.get(origin, destination);
+		Vector<Path> paths = this.paths.get(origin, destination);
 		
 		double averageTravelTime = 0;
 		double min = Double.POSITIVE_INFINITY,  max = Double.NEGATIVE_INFINITY;
@@ -64,7 +64,7 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 	}
 	
 	protected double calculateStepSize(int origin, int destination, double[] stepDirection) {
-		Vector<Path> paths = odPairs.get(origin, destination);
+		Vector<Path> paths = this.paths.get(origin, destination);
 		
 		double maxStepSize = Double.POSITIVE_INFINITY;
 		for (int i = 0; i < paths.size(); i++) {
@@ -97,7 +97,7 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 	}
 	
 	protected void shiftFlows(int origin, int destination, double[] stepDirection, double stepSize) {
-		Vector<Path> paths = odPairs.get(origin, destination);
+		Vector<Path> paths = this.paths.get(origin, destination);
 		
 		for (int i = 0; i < paths.size(); i++) {
 			Path path = paths.get(i);

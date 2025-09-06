@@ -18,7 +18,7 @@ public class GradientProjection extends PathBasedAlgorithm {
 	
 	@Override
 	protected void equilibratePaths(int origin, int destination, Path basicPath) {
-		for (Path path : odPairs.get(origin, destination)) {
+		for (Path path : paths.get(origin, destination)) {
 			if (path == basicPath)
 				continue;
 			

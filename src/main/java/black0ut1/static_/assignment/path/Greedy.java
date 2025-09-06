@@ -15,7 +15,7 @@ public class Greedy extends PathBasedAlgorithm {
 	
 	@Override
 	protected void equilibratePaths(int origin, int destination, Path basicPath) {
-		var paths = odPairs.get(origin, destination);
+		var paths = this.paths.get(origin, destination);
 		
 		// 1. Initialization
 		double[] pathCosts = new double[paths.size()];
