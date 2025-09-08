@@ -106,4 +106,8 @@ public abstract class RoutedIntersection extends Intersection {
 	}
 	
 	protected abstract DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions);
+	
+	public MixtureFractions[] getTurningFractions() {
+		return turningFractions;
+	}
 }

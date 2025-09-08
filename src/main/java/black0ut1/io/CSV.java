@@ -2,8 +2,13 @@ package black0ut1.io;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
+import black0ut1.dynamic.DynamicNetwork;
+import black0ut1.dynamic.loading.link.Link;
+import black0ut1.dynamic.loading.node.RoutedIntersection;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -58,7 +63,7 @@ public class CSV extends InputOutput {
 					.skip(1)
 					.map(line -> line.split(DELIMITER))
 					.forEach(arr -> {
-						int nodeIndex =  Integer.parseInt(arr[1]) - 1;
+						int nodeIndex = Integer.parseInt(arr[1]) - 1;
 						double x = Double.parseDouble(arr[3]);
 						double y = Double.parseDouble(arr[4]);
 						nodes[nodeIndex] = new Network.Node(nodeIndex, x, y);
@@ -79,7 +84,7 @@ public class CSV extends InputOutput {
 					.map(arr -> {
 						int origin = Integer.parseInt(arr[0]) - 1;
 						int destination = Integer.parseInt(arr[1]) - 1;
-						double demand =  Double.parseDouble(arr[2]);
+						double demand = Double.parseDouble(arr[2]);
 						return new Object[]{origin, destination, demand};
 					})
 					.toList();
@@ -105,4 +110,49 @@ public class CSV extends InputOutput {
 	
 	@Override
 	public void writeODmatrix(String outputFile, DoubleMatrix ODMatrix) {}
+	
+	public void writeCumulativeFlows(String outputFile, DynamicNetwork network, int stepsTaken) {
+		try (BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFile))) {
+			
+			bfw.write("from_node_id,to_node_id,time,cumulative_inflow,cumulative_outflow\n");
+			for (Link link : network.links) {
+				int fromNodeId = link.tail.index + 1;
+				int toNodeId = link.head.index + 1;
+				
+				for (int t = 0; t < link.cumulativeInflow.length; t++) {
+					double cinflow = (t <= stepsTaken)
+							? link.cumulativeInflow[t]
+							: link.cumulativeInflow[stepsTaken]; // last defined value
+					double coutflow = (t <= stepsTaken)
+							? link.cumulativeOutflow[t]
+							: link.cumulativeOutflow[stepsTaken]; // last defined value
+					
+					bfw.write(fromNodeId + "," + toNodeId + "," + t + "," + cinflow + "," + coutflow + "\n");
+				}
+			}
+			
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void writeTurningFractions(String outputFile, DynamicNetwork network) {
+		try (BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFile))) {
+			
+			bfw.write("node_id,time,destination,from_node_id,to_node_id,fraction");
+			for (RoutedIntersection intersection : network.routedIntersections) {
+				
+				var mfs = intersection.getTurningFractions();
+				for (int t = 0; t < mfs.length; t++) {
+					
+					for (int d = 0; d < mfs[t].destinations.length; d++) {
+					
+					}
+				}
+			}
+			
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

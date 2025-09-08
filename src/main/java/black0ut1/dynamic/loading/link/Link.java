@@ -1,5 +1,6 @@
 package black0ut1.dynamic.loading.link;
 
+import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.node.Intersection;
 
@@ -8,6 +9,12 @@ import java.util.Arrays;
 /**
  * Base class for dynamic link models. Link models mainly differ by
  * their computation of receiving and sending flow.
+ * <p>
+ * Let the final number of steps = X (returned by {@link DynamicNetworkLoading#loadNetwork()}),
+ * then arrays of flows on links are defined up to index X - 1 (higher values are null)
+ * and arrays of cumulative flows are defined up to index X (higher values are zero).
+ * Flows for indices >= X should be treated as 0 and cumulative flows for indices > X
+ * should be treated as the value on index X.
  */
 public abstract class Link {
 	

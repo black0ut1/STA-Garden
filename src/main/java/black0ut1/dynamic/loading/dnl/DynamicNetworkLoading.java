@@ -41,6 +41,12 @@ public abstract class DynamicNetworkLoading {
 		this.steps = steps;
 	}
 	
+	/**
+	 * Launches the network loading. Can end before taking {@link #steps} steps if there
+	 * is no flow on the network.
+	 * @return The final number of steps taken which can be lower than {@link #steps}
+	 * (but not higher).
+	 */
 	public int loadNetwork() {
 		int t;
 		for (t = 0; t < steps; t++) {
