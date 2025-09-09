@@ -3,3 +3,5 @@ build
 .idea
 log.txt
 *_flow.tntp
+data/training/cumulative
+data/training/turning
