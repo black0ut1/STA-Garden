@@ -141,6 +141,7 @@ public class CSV extends InputOutput {
 			
 			bfw.write("node_id,time,destination,from_node_id,to_node_id,fraction\n");
 			for (RoutedIntersection intersection : network.routedIntersections) {
+				int node = intersection.index + 1;
 				
 				var mfs = intersection.getTurningFractions();
 				for (int t = 0; t < mfs.length; t++) {
@@ -157,39 +158,12 @@ public class CSV extends InputOutput {
 								int toNode = intersection.outgoingLinks[j].head.index + 1;
 								double fraction = fractions.get(i, j);
 								
-								bfw.write(intersection.index + "," + t + "," + destination + ","
+								if (fraction == 0)
+									continue;
+								
+								bfw.write(node + "," + t + "," + destination + ","
 										+ fromNode + "," + toNode + "," + fraction + "\n");
 							}
-						}
-					}
-				}
-			}
-			
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public void writeTotalTurningFractions(String outputFile, DynamicNetwork network, int stepsTaken) {
-		try (BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFile))) {
-			
-			bfw.write("node_id,time,from_node_id,to_node_id,fraction\n");
-			for (RoutedIntersection intersection : network.routedIntersections) {
-				
-				var tfs = intersection.getTotalTurningFractions();
-				for (int t = 0; t < tfs.length; t++) {
-					var fractions = (t < stepsTaken)
-							? tfs[t]
-							: new DoubleMatrix(tfs[0].m, tfs[0].n);
-					
-					for (int i = 0; i < fractions.m; i++) {
-						int fromNode = intersection.incomingLinks[i].tail.index + 1;
-						
-						for (int j = 0; j < fractions.n; j++) {
-							int toNode = intersection.outgoingLinks[j].head.index + 1;
-							double fraction = fractions.get(i, j);
-							
-							bfw.write(intersection.index + "," + t + "," + fromNode + "," + toNode + "," + fraction + "\n");
 						}
 					}
 				}
