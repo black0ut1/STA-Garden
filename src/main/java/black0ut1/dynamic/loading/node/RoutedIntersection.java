@@ -14,6 +14,7 @@ import black0ut1.dynamic.loading.link.Link;
 public abstract class RoutedIntersection extends Intersection {
 	
 	protected MixtureFractions[] turningFractions;
+	protected DoubleMatrix[] totalTurningFractions;
 	public double potential;
 	
 	public RoutedIntersection(int index, Link[] incomingLinks, Link[] outgoingLinks) {
@@ -22,6 +23,7 @@ public abstract class RoutedIntersection extends Intersection {
 	
 	public void setTurningFractions(MixtureFractions[] turningFractions) {
 		this.turningFractions = turningFractions;
+		this.totalTurningFractions =  new DoubleMatrix[turningFractions.length];
 	}
 	
 	@Override
@@ -29,7 +31,7 @@ public abstract class RoutedIntersection extends Intersection {
 		MixtureFractions fractions = turningFractions[time];
 		
 		// 1. Compute total turning fractions
-		DoubleMatrix totalTurningFractions = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
+		totalTurningFractions[time] = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
 		for (int i = 0; i < incomingLinks.length; i++) {
 			
 			// TODO cache this vv and switch loops
@@ -41,14 +43,14 @@ public abstract class RoutedIntersection extends Intersection {
 					double portion = mixture.portions[d];
 					
 					DoubleMatrix destinationFractions = fractions.getDestinationFractions(destination);
-					totalTurningFractions.set(i, j,
-							totalTurningFractions.get(i, j) + portion * destinationFractions.get(i, j));
+					totalTurningFractions[time].set(i, j,
+							totalTurningFractions[time].get(i, j) + portion * destinationFractions.get(i, j));
 				}
 			}
 		}
 		
 		// 2. Execute the specific node model
-		DoubleMatrix orientedFlows = computeOrientedFlows(totalTurningFractions);
+		DoubleMatrix orientedFlows = computeOrientedFlows(totalTurningFractions[time]);
 		
 		
 		// 3. Compute total incoming and outgoing flows
@@ -109,5 +111,9 @@ public abstract class RoutedIntersection extends Intersection {
 	
 	public MixtureFractions[] getTurningFractions() {
 		return turningFractions;
+	}
+	
+	public DoubleMatrix[] getTotalTurningFractions() {
+		return totalTurningFractions;
 	}
 }

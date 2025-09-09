@@ -139,14 +139,58 @@ public class CSV extends InputOutput {
 	public void writeTurningFractions(String outputFile, DynamicNetwork network) {
 		try (BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFile))) {
 			
-			bfw.write("node_id,time,destination,from_node_id,to_node_id,fraction");
+			bfw.write("node_id,time,destination,from_node_id,to_node_id,fraction\n");
 			for (RoutedIntersection intersection : network.routedIntersections) {
 				
 				var mfs = intersection.getTurningFractions();
 				for (int t = 0; t < mfs.length; t++) {
+					var mf = mfs[t];
 					
-					for (int d = 0; d < mfs[t].destinations.length; d++) {
+					for (int d = 0; d < mf.destinations.length; d++) {
+						int destination = mf.destinations[d];
+						DoubleMatrix fractions = mf.destinationTurningFractions[d];
+						
+						for (int i = 0; i < fractions.m; i++) {
+							int fromNode = intersection.incomingLinks[i].tail.index + 1;
+							
+							for (int j = 0; j < fractions.n; j++) {
+								int toNode = intersection.outgoingLinks[j].head.index + 1;
+								double fraction = fractions.get(i, j);
+								
+								bfw.write(intersection.index + "," + t + "," + destination + ","
+										+ fromNode + "," + toNode + "," + fraction + "\n");
+							}
+						}
+					}
+				}
+			}
+			
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void writeTotalTurningFractions(String outputFile, DynamicNetwork network, int stepsTaken) {
+		try (BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFile))) {
+			
+			bfw.write("node_id,time,from_node_id,to_node_id,fraction\n");
+			for (RoutedIntersection intersection : network.routedIntersections) {
+				
+				var tfs = intersection.getTotalTurningFractions();
+				for (int t = 0; t < tfs.length; t++) {
+					var fractions = (t < stepsTaken)
+							? tfs[t]
+							: new DoubleMatrix(tfs[0].m, tfs[0].n);
 					
+					for (int i = 0; i < fractions.m; i++) {
+						int fromNode = intersection.incomingLinks[i].tail.index + 1;
+						
+						for (int j = 0; j < fractions.n; j++) {
+							int toNode = intersection.outgoingLinks[j].head.index + 1;
+							double fraction = fractions.get(i, j);
+							
+							bfw.write(intersection.index + "," + t + "," + fromNode + "," + toNode + "," + fraction + "\n");
+						}
 					}
 				}
 			}
