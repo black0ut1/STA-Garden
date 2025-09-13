@@ -38,7 +38,7 @@ public class CSV extends InputOutput {
 								Integer.parseInt(arr[2]) - 1,
 								Integer.parseInt(arr[3]) - 1,
 								Double.parseDouble(arr[8]),
-								Double.parseDouble(arr[5]),
+								Double.parseDouble(arr[6]),
 								freeFlow,
 								Double.parseDouble(arr[12]),
 								Double.parseDouble(arr[13]));
