@@ -51,6 +51,38 @@ public class DynamicUtils {
 	}
 	
 	/**
+	 * Computes travel time for arbitrary time t.
+	 */
+	public static double computeTravelTime(double t, double[] cumulativeInflow, double[] cumulativeOutflow,
+										   double stepSize, double freeFlowTime) {
+		// compute the number n of vehicle that entered at time t
+		int t0 = (int) t;
+		double p = t - t0; // decimal part of t
+		double A = cumulativeInflow[t0];
+		double B = cumulativeInflow[t0 + 1];
+		double n = (1 - p) * A + p * B;
+		
+		// compute the time of departure of n-th vehicle
+		double T = Double.NaN;
+		for (int t2 = t0; t2 < cumulativeOutflow.length; t2++) {
+			double outflow2 = cumulativeOutflow[t2];
+			
+			if (Math.abs(n - outflow2) < 1e-8) {
+				T = t2;
+				break;
+			} else if (n < outflow2) {
+				int t1 = t2 - 1;
+				double outflow1 = cumulativeOutflow[t2 - 1];
+				
+				T = t1 + (n - outflow1) / (outflow2 - outflow1);
+				break;
+			}
+		}
+		
+		return Math.max(stepSize * (T - t), freeFlowTime);
+	}
+	
+	/**
 	 * Computes the number of vehicles on link for each time t.
 	 * @param cumulativeInflow Cumulative inflow of said link.
 	 * @param cumulativeOutflow Cumulative outflow of said link.
