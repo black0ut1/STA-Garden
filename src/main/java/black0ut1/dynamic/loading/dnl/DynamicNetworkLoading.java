@@ -175,6 +175,7 @@ public abstract class DynamicNetworkLoading {
 		double avgDifference = 0;
 		for (int i = 0; i < network.destinations.length; i++)
 			avgDifference += Math.abs(odmDestinationInflow[i] - networkDestinationInflow[i]);
-		System.out.println("Average difference: " + avgDifference / network.destinations.length);
+		System.out.println("Difference between actual inflow to a destination and\n" +
+				"inflow according to ODM (averaged over destinations): " + avgDifference / network.destinations.length);
 	}
 }
