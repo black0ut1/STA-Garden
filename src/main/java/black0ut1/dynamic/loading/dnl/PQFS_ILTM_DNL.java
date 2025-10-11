@@ -17,10 +17,10 @@ import black0ut1.dynamic.loading.node.Origin;
  * it. This should be more powerful in reducing the amount of node
  * updates than the ordinary {@code FastSweepingILTM_DNL}.
  */
-public class PQFastSweepingILTM_DNL extends ILTM_DNL {
+public class PQFS_ILTM_DNL extends ILTM_DNL {
 	
-	public PQFastSweepingILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
-								  double stepSize, int steps, double precision) {
+	public PQFS_ILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
+						 double stepSize, int steps, double precision) {
 		super(network, odm, stepSize, steps, precision);
 	}
 	

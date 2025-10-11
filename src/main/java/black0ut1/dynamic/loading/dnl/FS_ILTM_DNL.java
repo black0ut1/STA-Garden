@@ -27,10 +27,10 @@ import java.util.Comparator;
  * model															  <br>
  * - (Zhao, Hongkai, 2005) A fast sweeping method for eikonal equations
  */
-public class FastSweepingILTM_DNL extends ILTM_DNL {
+public class FS_ILTM_DNL extends ILTM_DNL {
 	
-	public FastSweepingILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
-								double stepSize, int steps, double precision) {
+	public FS_ILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
+					   double stepSize, int steps, double precision) {
 		super(network, odm, stepSize, steps, precision);
 	}
 	

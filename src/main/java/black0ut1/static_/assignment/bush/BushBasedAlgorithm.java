@@ -50,7 +50,8 @@ public abstract class BushBasedAlgorithm extends Algorithm {
 		} else {
 			
 			for (Network.Edge edge : minimalTree)
-				bush.addEdge(edge.index);
+				if (edge != null)
+					bush.addEdge(edge.index);
 		}
 		
 		// assign flows to shortest paths (AON)
