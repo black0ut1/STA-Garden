@@ -114,11 +114,11 @@ public class CSV extends InputOutput {
 	public void writeCumulativeFlows(String outputFile, DynamicNetwork network, int stepsTaken) {
 		try (BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFile))) {
 			
-			bfw.write("from_node_id,to_node_id,time,cumulative_inflow,cumulative_outflow\n");
 			for (Link link : network.links) {
 				int fromNodeId = link.tail.index + 1;
 				int toNodeId = link.head.index + 1;
 				
+				bfw.write("Link " + fromNodeId + " " + toNodeId + "\n");
 				for (int t = 0; t < link.cumulativeInflow.length; t++) {
 					double cinflow = (t <= stepsTaken)
 							? link.cumulativeInflow[t]
@@ -127,7 +127,7 @@ public class CSV extends InputOutput {
 							? link.cumulativeOutflow[t]
 							: link.cumulativeOutflow[stepsTaken]; // last defined value
 					
-					bfw.write(fromNodeId + "," + toNodeId + "," + t + "," + cinflow + "," + coutflow + "\n");
+					bfw.write(t + " " +  cinflow + " " + coutflow + "\n");
 				}
 			}
 			
@@ -139,17 +139,22 @@ public class CSV extends InputOutput {
 	public void writeTurningFractions(String outputFile, DynamicNetwork network) {
 		try (BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFile))) {
 			
-			bfw.write("node_id,time,destination,from_node_id,to_node_id,fraction\n");
 			for (RoutedIntersection intersection : network.routedIntersections) {
 				int node = intersection.index + 1;
+				
+				bfw.write("N " + node + "\n");
 				
 				var mfs = intersection.getTurningFractions();
 				for (int t = 0; t < mfs.length; t++) {
 					var mf = mfs[t];
 					
+					bfw.write("T " + t + "\n");
+					
 					for (int d = 0; d < mf.destinations.length; d++) {
 						int destination = mf.destinations[d];
 						DoubleMatrix fractions = mf.destinationTurningFractions[d];
+						
+						bfw.write("D " + destination + "\n");
 						
 						for (int i = 0; i < fractions.m; i++) {
 							int fromNode = intersection.incomingLinks[i].tail.index + 1;
@@ -161,8 +166,10 @@ public class CSV extends InputOutput {
 								if (fraction == 0)
 									continue;
 								
-								bfw.write(node + "," + t + "," + destination + ","
-										+ fromNode + "," + toNode + "," + fraction + "\n");
+								if (fraction == 1)
+									bfw.write(fromNode + " " + toNode + " 1\n");
+								else
+									bfw.write(fromNode + " " + toNode + " " + fraction + "\n");
 							}
 						}
 					}

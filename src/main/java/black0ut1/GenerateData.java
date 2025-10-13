@@ -50,8 +50,8 @@ public class GenerateData {
 			
 			String n = odmFile.split("_")[0];
 			System.out.println("================== " + n + " ==================");
-			new CSV().writeCumulativeFlows("./data/training/cumulative/" + n + "_cumulative.csv", dNetwork, finalAmountOfSteps);
-			new CSV().writeTurningFractions("./data/training/turning/" + n + "_turning.csv", dNetwork);
+			new CSV().writeCumulativeFlows("./data/training/cumulative/" + n + "_cumulative.txt", dNetwork, finalAmountOfSteps);
+			new CSV().writeTurningFractions("./data/training/turning/" + n + "_turning.txt", dNetwork);
 		}
 	}
 	
