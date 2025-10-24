@@ -12,46 +12,69 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
+import java.util.Vector;
 
 public class CSV extends InputOutput {
 	
-	private final static String DELIMITER = ",";
+	protected final static String DELIMITER = ",";
+	
+	protected final static String TAIL_COLUMN = "from_node_id";
+	protected final static String HEAD_COLUMN = "to_node_id";
+	protected final static String CAPACITY_COLUMN = "capacity";
+	protected final static String LENGTH_COLUMN = "vdf_length_mi";
+	protected final static String ALPHA_COLUMN = "vdf_alpha";
+	protected final static String BETA_COLUMN = "vdf_beta";
+	protected final static String FREE_FLOW_TIME_COLUMN = "vdf_fftt";
 	
 	@Override
 	protected List<Network.Edge> readEdges(String networkFile) {
 		try (BufferedReader reader = Files.newBufferedReader(Paths.get(networkFile))) {
-			AtomicInteger zeroFreeFlowEdges = new AtomicInteger();
+			var header = parseCsvHeader(reader);
 			
-			List<Network.Edge> edges = reader.lines()
-					.skip(1)
-					.map(line -> line.split(DELIMITER))
-					.map(arr -> {
-						double freeFlow = Double.parseDouble(arr[16]);
-						if (freeFlow == 0) {
-							zeroFreeFlowEdges.getAndIncrement();
-							freeFlow = 0.0001;
-						}
-						
-						return new Network.Edge(
-								Integer.parseInt(arr[2]) - 1,
-								Integer.parseInt(arr[3]) - 1,
-								Double.parseDouble(arr[8]),
-								Double.parseDouble(arr[6]),
-								freeFlow,
-								Double.parseDouble(arr[12]),
-								Double.parseDouble(arr[13]));
-					})
-					.toList();
+			int zeroFreeFlowEdges = 0;
 			
-			if (zeroFreeFlowEdges.get() > 0)
-				System.out.println("Warning! Found " + zeroFreeFlowEdges.get() + " edges with zero free flow.");
+			Vector<Network.Edge> edges = new Vector<>();
+			
+			String line;
+			while ((line = reader.readLine()) != null) {
+				String[] split = line.split(DELIMITER);
+				
+				double freeFlow = Double.parseDouble(split[header.get(FREE_FLOW_TIME_COLUMN)]);
+				if (freeFlow == 0) {
+					zeroFreeFlowEdges++;
+					freeFlow = 0.0001;
+				}
+				
+				int tail = Integer.parseInt(split[header.get(TAIL_COLUMN)]) - 1;
+				int head = Integer.parseInt(split[header.get(HEAD_COLUMN)]) - 1;
+				double capacity = Double.parseDouble(split[header.get(CAPACITY_COLUMN)]);
+				double length = Double.parseDouble(split[header.get(LENGTH_COLUMN)]);
+				double alpha = Double.parseDouble(split[header.get(ALPHA_COLUMN)]);
+				double beta = Double.parseDouble(split[header.get(BETA_COLUMN)]);
+				edges.add(new Network.Edge(tail, head, capacity, length, freeFlow, alpha, beta));
+			}
+			
+			if (zeroFreeFlowEdges > 0)
+				System.out.println("Warning! Found " + zeroFreeFlowEdges + " edges with zero free flow.");
 			
 			return edges;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	protected Map<String, Integer> parseCsvHeader(BufferedReader reader) throws IOException {
+		String header = reader.readLine();
+		String[] split = header.split(DELIMITER);
+		
+		HashMap<String, Integer> result = new HashMap<>();
+		for (int i = 0; i < split.length; i++)
+			result.put(split[i], i);
+		
+		return result;
 	}
 	
 	@Override

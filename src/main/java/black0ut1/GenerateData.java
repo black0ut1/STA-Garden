@@ -21,18 +21,25 @@ import java.util.Objects;
 public class GenerateData {
 	
 	public static final String odms = "./data/training/odms/";
-	public static final String odmFile = "./data/17_Sioux_Falls/demand.csv";
-	public static final String networkFile = "./data/17_Sioux_Falls/link.csv";
+	public static final String odmFile = "./data/training/demand.csv";
+	public static final String networkFile = "./data/training/link.csv";
 	
-	public static final double timeStep = 1;
+	public static final double timeStep = 0.5;
 	public static final int odmSteps = 1;
-	public static final int totalSteps = 50;
+	public static final int totalSteps = 400;
 	
 	public static void main(String[] args) {
 		DoubleMatrix odm = new CSV().parseODMatrix(odmFile);
 		Network network = new CSV().parseNetwork(networkFile, null, odm.n);
 		
-		for (String odmFile : Objects.requireNonNull(new File(odms).list())) {
+		String[] files = Objects.requireNonNull(new File(odms).list());
+		for (String odmFile : files) {
+			
+			String n = odmFile.split("_")[0];
+			System.out.print(n + "/" + files.length);
+			long tick = System.currentTimeMillis();
+			
+			////////////////////////////
 			odm = new CSV().parseODMatrix(odms + odmFile);
 			Bush[] bushes = destinationBushes(network, odm);
 			
@@ -47,17 +54,19 @@ public class GenerateData {
 			int finalAmountOfSteps = DNL.loadNetwork();
 			
 			DNL.checkDestinationInflows(finalAmountOfSteps, false);
+			////////////////////////////
 			
-			String n = odmFile.split("_")[0];
-			System.out.println("================== " + n + " ==================");
+			long tock = System.currentTimeMillis();
+			System.out.println("(" + (tock - tick) + "ms, " + finalAmountOfSteps + " steps)");
+			
 			new CSV().writeCumulativeFlows("./data/training/cumulative/" + n + "_cumulative.txt", dNetwork, finalAmountOfSteps);
 			new CSV().writeTurningFractions("./data/training/turning/" + n + "_turning.txt", dNetwork);
 		}
 	}
 	
 	private static Bush[] destinationBushes(Network network, DoubleMatrix odm) {
-		Settings settings = new Settings(network, odm, 20, new Convergence.Builder()
-				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1));
+		Settings settings = new Settings(network, odm, 100, new Convergence.Builder()
+				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1, 1e-10));
 		ProjectedGradient pg = new ProjectedGradient(settings);
 		pg.assignFlows();
 		NetworkUtils.checkPathFlows(network, odm, pg.getPaths(), pg.getFlows());
