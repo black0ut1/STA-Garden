@@ -7,6 +7,11 @@ import black0ut1.data.tuple.Pair;
 import java.io.*;
 import java.util.*;
 
+/**
+ * This subclass os {@link InputOutput} loads traffic data from TNTP format as it is
+ * defined in the
+ * <a href="https://github.com/bstabler/TransportationNetworks">Transportation Networks Dataset</a>.
+ */
 public class TNTP extends InputOutput {
 	
 	private final static String COMMENT_SIGN = "~";

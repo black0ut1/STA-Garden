@@ -5,6 +5,10 @@ import black0ut1.data.network.Network;
 
 import java.util.List;
 
+/**
+ * This abstract class defines the common interface for classes that load traffic data
+ * (like OD matrices and networks) from different formats (e.g. the TNTP or CSV format).
+ */
 public abstract class InputOutput {
 	
 	//////////////////// Reading ////////////////////

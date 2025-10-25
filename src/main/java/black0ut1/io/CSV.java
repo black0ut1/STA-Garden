@@ -12,6 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+/**
+ * This subclass os {@link InputOutput} loads traffic data from CSV format as it is
+ * defined in the
+ * <a href="https://github.com/HanZhengIntelliTransport/GMNS_Plus_Dataset/">GMNS Plus Dataset</a>.
+ */
 public class CSV extends InputOutput {
 	
 	protected final static String DELIMITER = ",";
