@@ -24,11 +24,11 @@ public class DynamicTrafficAssignment {
 		this.maxIterations = maxIterations;
 	}
 	
-	public int run() {
+	public void run() {
 		// 1. Initialize turning fractions using STA
 		MixtureFractions[][] mfs = initialRouteChoice.computeTurningFractions();
 		dnl.setTurningFractions(mfs);
-		int timeStepsTaken = dnl.loadNetwork();
+		dnl.loadNetwork();
 		
 		// 2. Run the dynamic assignment
 		for (int i = 0; i < maxIterations; i++) {
@@ -37,7 +37,5 @@ public class DynamicTrafficAssignment {
 			// 2.2. Compute turning fractions from TDSPs using DUE
 			// 2.3. Load the network using turning fractions and DNL
 		}
-		
-		return timeStepsTaken;
 	}
 }

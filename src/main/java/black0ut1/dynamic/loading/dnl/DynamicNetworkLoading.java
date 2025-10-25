@@ -17,7 +17,7 @@ import black0ut1.dynamic.loading.node.RoutedIntersection;
  * 2. dnl.setTurningFractions(turningFractions)						  <br>
  * 3. dnl.loadNetwork()												  <br>
  * 4. Determine time-dependent travel times							  <br>
- * 5. dnl.resetNetwork()											  <br>
+ * 5. dnl.resetNetwork() (optional)									  <br>
  * 6. Go to 1.														  <br>
  */
 public abstract class DynamicNetworkLoading {
@@ -41,26 +41,16 @@ public abstract class DynamicNetworkLoading {
 		this.steps = steps;
 	}
 	
-	/**
-	 * Launches the network loading. Can end before taking {@link #steps} steps if there
-	 * is no flow on the network.
-	 * @return The final number of steps taken which can be lower than {@link #steps}
-	 * (but not higher).
-	 */
-	public int loadNetwork() {
-		int t;
-		for (t = 0; t < steps; t++) {
+	/** Launches the network loading. Takes {@link #steps} time steps. */
+	public void loadNetwork() {
+		for (int t = 0; t < steps; t++) {
 			System.out.println("========= Time " + t + " =========");
 			
 			loadForTime(t);
 			
 			double totalFlow = getTotalFlowOnNetwork(t);
 			System.out.println("Total flow on network: " + totalFlow);
-			if (totalFlow < 1e-5)
-				break;
 		}
-		
-		return t + 1;
 	}
 	
 	protected abstract void loadForTime(int t);
@@ -122,11 +112,9 @@ public abstract class DynamicNetworkLoading {
 	 * destination is different from what ODM tells should arrive. It
 	 * also checks if the MixtureFlow contains only the one
 	 * destination.
-	 * @param steps The total number of steps the DNL took to finish,
-	 * as returned by {@code loadNetwork()}.
 	 * @param verbose More information.
 	 */
-	public void checkDestinationInflows(int steps, boolean verbose) {
+	public void checkDestinationInflows(boolean verbose) {
 		System.out.println("============ Checking arrived flows ============");
 		double[] odmDestinationInflow = new double[network.destinations.length];
 		

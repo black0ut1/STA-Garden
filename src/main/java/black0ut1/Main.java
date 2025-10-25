@@ -56,11 +56,11 @@ public class Main {
 		DNL.setTurningFractions(mfs);
 		
 		startTime = System.currentTimeMillis();
-		int finalAmountOfSteps = DNL.loadNetwork();
+		DNL.loadNetwork();
 		endTime = System.currentTimeMillis();
 		System.out.println("DNL took " + (endTime - startTime) + "ms");
 		
-		DNL.checkDestinationInflows(finalAmountOfSteps, false);
+		DNL.checkDestinationInflows(false);
 	}
 	
 	private static Bush[] destinationBushes(Network network, DoubleMatrix odm) {
