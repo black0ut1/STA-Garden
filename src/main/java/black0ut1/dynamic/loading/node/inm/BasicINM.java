@@ -85,7 +85,7 @@ public class BasicINM extends RoutedIntersection {
 	
 	/** Creates the set D(q) as defined in (18). */
 	protected BitSet32 determineUnconstrainedLinks(DoubleMatrix totalTurningFractions, double[] inflows, double[] outflows) {
-		BitSet32 D = new BitSet32(incomingLinks.length);
+		BitSet32 D = new BitSet32(incomingLinks.length + outgoingLinks.length);
 		
 		for (int i = 0; i < incomingLinks.length; i++) {
 			boolean sendingFlowConstrained = inflows[i] >= incomingLinks[i].getSendingFlow();
