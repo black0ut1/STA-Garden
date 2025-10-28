@@ -6,75 +6,49 @@ import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.node.RoutedIntersection;
 
 /**
- * The basic Incremental Node Model as described in (Flotterod and Rohde, 2011),
- * Algorithm 1. Here, basic means that priorities of incoming links are constants
- * independent of the flows.
+ * A generalization of {@link BasicINM} for arbitrary priority functions. It uses Euler's
+ * method to solve the problem (14)-(15).
  * <p>
  * Bibliography:																		  <br>
  * - (Flotterod and Rohde, 2011) Operational macroscopic modeling of complex urban road
  * intersections
  */
-public class BasicINM extends RoutedIntersection {
+public class GeneralINM extends RoutedIntersection {
 	
-	protected final double[] priorities;
+	protected static final double H = 10;
+	protected final PriorityFunction[] priorities;
 	
-	public BasicINM(int index, Link[] incomingLinks, Link[] outgoingLinks, double[] priorities) {
+	public GeneralINM(int index, Link[] incomingLinks, Link[] outgoingLinks, PriorityFunction[] priorities) {
 		super(index, incomingLinks, outgoingLinks);
 		this.priorities = priorities;
 	}
 	
-	/**
-	 * This constructor uses link capacities as priorities making the instance equivalent
-	 * to {@link black0ut1.dynamic.loading.node.TampereUnsignalized}.
-	 */
-	public BasicINM(int index, Link[] incomingLinks, Link[] outgoingLinks) {
-		this(index, incomingLinks, outgoingLinks, new double[incomingLinks.length]);
-		for (int i = 0; i < incomingLinks.length; i++)
-			this.priorities[i] = incomingLinks[i].capacity;
-	}
-	
 	@Override
 	protected DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions) {
-		// 2. Compute initial flows according to (15)
 		double[] inflows = new double[incomingLinks.length];
 		double[] outflows = new double[outgoingLinks.length];
 		
-		// 3. Compute initial set D according to (18)
 		BitSet32 D = determineUnconstrainedLinks(totalTurningFractions, inflows, outflows);
 		
-		// 4. While D != {}
 		while (!D.isClear()) {
 			
-			// (a) Compute psi(q) according to (19)
+			// psi_in is the derivative of inflows, psi_out is the derivative of outflows
 			double[] psi_in = new double[incomingLinks.length];
 			for (int i = 0; i < incomingLinks.length; i++)
-				psi_in[i] = (D.get(i) ? 1 : 0) * priorities[i];
+				psi_in[i] = (D.get(i) ? 1 : 0) * priorities[i].priority(inflows, outflows);
 			
 			double[] psi_out = new double[outgoingLinks.length];
 			for (int i = 0; i < incomingLinks.length; i++)
 				for (int j = 0; j < outgoingLinks.length; j++)
 					psi_out[j] += totalTurningFractions.get(i, j) * psi_in[i];
 			
-			// (b) Compute theta according to (24)
-			double theta = Double.POSITIVE_INFINITY;
+			// update inflows and outflows using Euler's method
 			for (int i = 0; i < incomingLinks.length; i++)
-				if (D.get(i)) {
-					double factor = (incomingLinks[i].getSendingFlow() - inflows[i]) / psi_in[i];
-					theta = Math.min(theta, factor);
-				}
+				inflows[i] += H * psi_in[i];
 			for (int j = 0; j < outgoingLinks.length; j++)
-				if (D.get(incomingLinks.length + j)) {
-					double factor = (outgoingLinks[j].getReceivingFlow() - outflows[j]) / psi_out[j];
-					theta = Math.min(theta, factor);
-				}
+				outflows[j] += H * psi_out[j];
 			
-			// (c) q = q + theta * psi(q) according to (23)
-			for (int i = 0; i < incomingLinks.length; i++)
-				inflows[i] += theta * psi_in[i];
-			for (int j = 0; j < outgoingLinks.length; j++)
-				outflows[j] += theta * psi_out[j];
-			
-			// (d) D = D(q) according to (18)
+			// TODO optimize to check only active links
 			D = determineUnconstrainedLinks(totalTurningFractions, inflows, outflows);
 		}
 		
@@ -86,7 +60,6 @@ public class BasicINM extends RoutedIntersection {
 		return orientedFlows;
 	}
 	
-	/** Creates the set D(q) as defined in (18). */
 	protected BitSet32 determineUnconstrainedLinks(DoubleMatrix totalTurningFractions, double[] inflows, double[] outflows) {
 		BitSet32 D = new BitSet32(incomingLinks.length + outgoingLinks.length);
 		
