@@ -3,17 +3,16 @@ package black0ut1.dynamic.loading.node.inm;
 import black0ut1.data.BitSet32;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.node.RoutedIntersection;
 
 /**
- * A generalization of {@link BasicINM} for arbitrary priority functions. It uses Euler's
- * method to solve the problem (14)-(15).
+ * A generalization of the {@link BasicINM} solver for arbitrary priority functions. It
+ * uses Euler's method to solve the problem (14)-(16) in (Flotterod and Rohde, 2011).
  * <p>
  * Bibliography:																		  <br>
  * - (Flotterod and Rohde, 2011) Operational macroscopic modeling of complex urban road
  * intersections
  */
-public class GeneralINM extends RoutedIntersection {
+public class GeneralINM extends INM {
 	
 	protected static final double H = 10;
 	protected final PriorityFunction[] priorities;
@@ -24,11 +23,12 @@ public class GeneralINM extends RoutedIntersection {
 	}
 	
 	@Override
-	protected DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions) {
+	DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
 		double[] inflows = new double[incomingLinks.length];
 		double[] outflows = new double[outgoingLinks.length];
 		
-		BitSet32 D = determineUnconstrainedLinks(totalTurningFractions, inflows, outflows);
+		BitSet32 D = determineUnconstrainedLinks(
+				totalTurningFractions, inflows, outflows, sendingFlows, receivingFlows);
 		
 		while (!D.isClear()) {
 			
@@ -49,7 +49,8 @@ public class GeneralINM extends RoutedIntersection {
 				outflows[j] += H * psi_out[j];
 			
 			// TODO optimize to check only active links
-			D = determineUnconstrainedLinks(totalTurningFractions, inflows, outflows);
+			D = determineUnconstrainedLinks(
+					totalTurningFractions, inflows, outflows, sendingFlows, receivingFlows);
 		}
 		
 		DoubleMatrix orientedFlows = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
@@ -58,41 +59,5 @@ public class GeneralINM extends RoutedIntersection {
 				orientedFlows.set(i, j, inflows[i] * totalTurningFractions.get(i, j));
 		
 		return orientedFlows;
-	}
-	
-	protected BitSet32 determineUnconstrainedLinks(DoubleMatrix totalTurningFractions, double[] inflows, double[] outflows) {
-		BitSet32 D = new BitSet32(incomingLinks.length + outgoingLinks.length);
-		
-		for (int i = 0; i < incomingLinks.length; i++) {
-			boolean sendingFlowConstrained = inflows[i] >= incomingLinks[i].getSendingFlow();
-			
-			boolean receivingFlowConstrained = false;
-			for (int j = 0; j < outgoingLinks.length; j++)
-				if (totalTurningFractions.get(i, j) > 0)
-					if (outflows[j] >= outgoingLinks[j].getReceivingFlow()) {
-						receivingFlowConstrained = true;
-						break;
-					}
-			
-			if (!sendingFlowConstrained && !receivingFlowConstrained)
-				D.set(i);
-		}
-		
-		for (int j = 0; j < outgoingLinks.length; j++) {
-			boolean receivingFlowConstrained = outflows[j] >= outgoingLinks[j].getReceivingFlow();
-			
-			boolean sendingFlowConstrained = true;
-			for (int i = 0; i < incomingLinks.length; i++)
-				if (D.get(i))
-					if (totalTurningFractions.get(i, j) > 0) {
-						sendingFlowConstrained = false;
-						break;
-					}
-			
-			if (!receivingFlowConstrained && !sendingFlowConstrained)
-				D.set(incomingLinks.length + j);
-		}
-		
-		return D;
 	}
 }

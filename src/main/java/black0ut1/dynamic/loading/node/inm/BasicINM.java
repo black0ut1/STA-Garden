@@ -3,18 +3,16 @@ package black0ut1.dynamic.loading.node.inm;
 import black0ut1.data.BitSet32;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.node.RoutedIntersection;
 
 /**
- * The basic Incremental Node Model as described in (Flotterod and Rohde, 2011),
- * Algorithm 1. Here, basic means that priorities of incoming links are constants
- * independent of the flows.
+ * The basic INM solver as described in (Flotterod and Rohde, 2011), Algorithm 1. Here,
+ * basic means that priorities of incoming links are constants independent of the flows.
  * <p>
  * Bibliography:																		  <br>
  * - (Flotterod and Rohde, 2011) Operational macroscopic modeling of complex urban road
  * intersections
  */
-public class BasicINM extends RoutedIntersection {
+public class BasicINM extends INM {
 	
 	protected final double[] priorities;
 	
@@ -34,13 +32,14 @@ public class BasicINM extends RoutedIntersection {
 	}
 	
 	@Override
-	protected DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions) {
+	DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
 		// 2. Compute initial flows according to (15)
 		double[] inflows = new double[incomingLinks.length];
 		double[] outflows = new double[outgoingLinks.length];
 		
 		// 3. Compute initial set D according to (18)
-		BitSet32 D = determineUnconstrainedLinks(totalTurningFractions, inflows, outflows);
+		BitSet32 D = determineUnconstrainedLinks(
+				totalTurningFractions, inflows, outflows, sendingFlows, receivingFlows);
 		
 		// 4. While D != {}
 		while (!D.isClear()) {
@@ -59,12 +58,12 @@ public class BasicINM extends RoutedIntersection {
 			double theta = Double.POSITIVE_INFINITY;
 			for (int i = 0; i < incomingLinks.length; i++)
 				if (D.get(i)) {
-					double factor = (incomingLinks[i].getSendingFlow() - inflows[i]) / psi_in[i];
+					double factor = (sendingFlows[i] - inflows[i]) / psi_in[i];
 					theta = Math.min(theta, factor);
 				}
 			for (int j = 0; j < outgoingLinks.length; j++)
 				if (D.get(incomingLinks.length + j)) {
-					double factor = (outgoingLinks[j].getReceivingFlow() - outflows[j]) / psi_out[j];
+					double factor = (receivingFlows[j] - outflows[j]) / psi_out[j];
 					theta = Math.min(theta, factor);
 				}
 			
@@ -75,7 +74,8 @@ public class BasicINM extends RoutedIntersection {
 				outflows[j] += theta * psi_out[j];
 			
 			// (d) D = D(q) according to (18)
-			D = determineUnconstrainedLinks(totalTurningFractions, inflows, outflows);
+			D = determineUnconstrainedLinks(
+					totalTurningFractions, inflows, outflows, sendingFlows, receivingFlows);
 		}
 		
 		DoubleMatrix orientedFlows = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
@@ -84,42 +84,5 @@ public class BasicINM extends RoutedIntersection {
 				orientedFlows.set(i, j, inflows[i] * totalTurningFractions.get(i, j));
 		
 		return orientedFlows;
-	}
-	
-	/** Creates the set D(q) as defined in (18). */
-	protected BitSet32 determineUnconstrainedLinks(DoubleMatrix totalTurningFractions, double[] inflows, double[] outflows) {
-		BitSet32 D = new BitSet32(incomingLinks.length + outgoingLinks.length);
-		
-		for (int i = 0; i < incomingLinks.length; i++) {
-			boolean sendingFlowConstrained = inflows[i] >= incomingLinks[i].getSendingFlow();
-			
-			boolean receivingFlowConstrained = false;
-			for (int j = 0; j < outgoingLinks.length; j++)
-				if (totalTurningFractions.get(i, j) > 0)
-					if (outflows[j] >= outgoingLinks[j].getReceivingFlow()) {
-						receivingFlowConstrained = true;
-						break;
-					}
-			
-			if (!sendingFlowConstrained && !receivingFlowConstrained)
-				D.set(i);
-		}
-		
-		for (int j = 0; j < outgoingLinks.length; j++) {
-			boolean receivingFlowConstrained = outflows[j] >= outgoingLinks[j].getReceivingFlow();
-			
-			boolean sendingFlowConstrained = true;
-			for (int i = 0; i < incomingLinks.length; i++)
-				if (D.get(i))
-					if (totalTurningFractions.get(i, j) > 0) {
-						sendingFlowConstrained = false;
-						break;
-					}
-			
-			if (!receivingFlowConstrained && !sendingFlowConstrained)
-				D.set(incomingLinks.length + j);
-		}
-		
-		return D;
 	}
 }
