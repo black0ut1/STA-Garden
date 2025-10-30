@@ -2,6 +2,7 @@ package black0ut1.dynamic.loading.node.inm;
 
 import black0ut1.data.BitSet32;
 import black0ut1.data.DoubleMatrix;
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.node.RoutedIntersection;
 
@@ -21,7 +22,7 @@ public abstract class INM extends RoutedIntersection {
 	}
 	
 	/** The INM without node supply constraints. Uses default sending and receiving flows. */
-	protected DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions) {
+	protected Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix totalTurningFractions) {
 		double[] sendingFlows = new double[incomingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++)
 			sendingFlows[i] = incomingLinks[i].getSendingFlow();
@@ -37,7 +38,8 @@ public abstract class INM extends RoutedIntersection {
 	 * This method represents the INM parametrized with sending flows and receiving
 	 * flows (equation (25) in (Flotterod and Rohde, 2011)).
 	 */
-	abstract DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows);
+	abstract Pair<double[], double[]> computeOrientedFlows(DoubleMatrix totalTurningFractions,
+														   double[] sendingFlows, double[] receivingFlows);
 	
 	/** Creates the set D(q) as defined in (18). */
 	protected BitSet32 determineUnconstrainedLinks(DoubleMatrix totalTurningFractions,

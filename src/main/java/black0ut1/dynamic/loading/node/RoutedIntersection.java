@@ -48,32 +48,22 @@ public abstract class RoutedIntersection extends Intersection {
 		}
 		
 		// 2. Execute the specific node model
-		DoubleMatrix orientedFlows = computeOrientedFlows(totalTurningFractions);
+		var pair = computeInflowsOutflows(totalTurningFractions);
+		double[] inflows = pair.first();
+		double[] outflows = pair.second();
 		
-		
-		// 3. Compute total incoming and outgoing flows
-		// flows coming out of incoming link i (< sending flow)
-		double[] incomingFlows = new double[incomingLinks.length];
-		// flows going into outgoing link j (< receiving flow)
-		double[] outgoingFlows = new double[outgoingLinks.length];
-		for (int i = 0; i < incomingLinks.length; i++)
-			for (int j = 0; j < outgoingLinks.length; j++) {
-				incomingFlows[i] += orientedFlows.get(i, j);
-				outgoingFlows[j] += orientedFlows.get(i, j);
-			}
-		
-		// 4. Compute the mixture flows
-		// 4.1. Compute the flow exiting from incoming links
+		// 3. Compute the mixture flows
+		// 3.1. Compute the flow exiting from incoming links
 		MixtureFlow[] incomingMixtureFlows = new MixtureFlow[incomingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++) {
 			MixtureFlow of = incomingLinks[i].getOutgoingMixtureFlow(time);
-			incomingMixtureFlows[i] = of.copyWithFlow(incomingFlows[i]);
+			incomingMixtureFlows[i] = of.copyWithFlow(inflows[i]);
 		}
 		
-		// 4.2. Enter flows to outgoing links
+		// 3.2. Enter flows to outgoing links
 		MixtureFlow[] outgoingMixtureFlows = new MixtureFlow[outgoingLinks.length];
 		for (int j = 0; j < outgoingLinks.length; j++) {
-			if (outgoingFlows[j] <= 0) {
+			if (outflows[j] <= 0) {
 				outgoingMixtureFlows[j] = MixtureFlow.ZERO;
 				continue;
 			}
@@ -92,12 +82,12 @@ public abstract class RoutedIntersection extends Intersection {
 				
 				if (sum > 0) {
 					destinations[len] = destination;
-					portions[len] = sum / outgoingFlows[j];
+					portions[len] = sum / outflows[j];
 					len++;
 				}
 			}
 			
-			MixtureFlow a = new MixtureFlow(outgoingFlows[j], destinations, portions, len);
+			MixtureFlow a = new MixtureFlow(outflows[j], destinations, portions, len);
 			a.checkPortions(1e-4); // TODO remove
 			outgoingMixtureFlows[j] = a;
 		}
@@ -105,7 +95,7 @@ public abstract class RoutedIntersection extends Intersection {
 		return new Pair<>(incomingMixtureFlows, outgoingMixtureFlows);
 	}
 	
-	protected abstract DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions);
+	protected abstract Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix totalTurningFractions);
 	
 	public MixtureFractions[] getTurningFractions() {
 		return turningFractions;

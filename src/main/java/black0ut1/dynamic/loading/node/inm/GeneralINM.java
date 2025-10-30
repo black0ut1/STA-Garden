@@ -2,6 +2,7 @@ package black0ut1.dynamic.loading.node.inm;
 
 import black0ut1.data.BitSet32;
 import black0ut1.data.DoubleMatrix;
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.link.Link;
 
 /**
@@ -23,7 +24,7 @@ public class GeneralINM extends INM {
 	}
 	
 	@Override
-	DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
+	Pair<double[], double[]> computeOrientedFlows(DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
 		double[] inflows = new double[incomingLinks.length];
 		double[] outflows = new double[outgoingLinks.length];
 		
@@ -35,7 +36,8 @@ public class GeneralINM extends INM {
 			// psi_in is the derivative of inflows, psi_out is the derivative of outflows
 			double[] psi_in = new double[incomingLinks.length];
 			for (int i = 0; i < incomingLinks.length; i++)
-				psi_in[i] = (D.get(i) ? 1 : 0) * priorities[i].priority(inflows, outflows);
+				if (D.get(i)) // if i not in D => psi_in[i] = 0
+					psi_in[i] = priorities[i].priority(inflows, outflows);
 			
 			double[] psi_out = new double[outgoingLinks.length];
 			for (int i = 0; i < incomingLinks.length; i++)
@@ -53,11 +55,6 @@ public class GeneralINM extends INM {
 					totalTurningFractions, inflows, outflows, sendingFlows, receivingFlows);
 		}
 		
-		DoubleMatrix orientedFlows = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
-		for (int i = 0; i < incomingLinks.length; i++)
-			for (int j = 0; j < outgoingLinks.length; j++)
-				orientedFlows.set(i, j, inflows[i] * totalTurningFractions.get(i, j));
-		
-		return orientedFlows;
+		return new Pair<>(inflows, outflows);
 	}
 }

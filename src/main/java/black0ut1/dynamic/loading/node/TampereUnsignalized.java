@@ -2,6 +2,7 @@ package black0ut1.dynamic.loading.node;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.BitSet32;
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.link.Link;
 
 /**
@@ -18,7 +19,7 @@ public class TampereUnsignalized extends RoutedIntersection {
 	}
 	
 	@Override
-	protected DoubleMatrix computeOrientedFlows(DoubleMatrix turningFractions) {
+	protected Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix turningFractions) {
 		DoubleMatrix orientedFlows = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
 		
 		
@@ -145,6 +146,14 @@ public class TampereUnsignalized extends RoutedIntersection {
 					}
 		}
 		
-		return orientedFlows;
+		double[] inflows = new double[incomingLinks.length];
+		double[] outflows = new double[outgoingLinks.length];
+		for (int i = 0; i < incomingLinks.length; i++)
+			for (int j = 0; j < outgoingLinks.length; j++) {
+				inflows[i] += orientedFlows.get(i, j);
+				outflows[j] += orientedFlows.get(i, j);
+			}
+		
+		return new Pair<>(inflows, outflows);
 	}
 }

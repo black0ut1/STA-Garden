@@ -2,6 +2,7 @@ package black0ut1.dynamic.loading.node.inm;
 
 import black0ut1.data.BitSet32;
 import black0ut1.data.DoubleMatrix;
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.link.Link;
 
 /**
@@ -32,7 +33,7 @@ public class BasicINM extends INM {
 	}
 	
 	@Override
-	DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
+	Pair<double[], double[]> computeOrientedFlows(DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
 		// 2. Compute initial flows according to (15)
 		double[] inflows = new double[incomingLinks.length];
 		double[] outflows = new double[outgoingLinks.length];
@@ -78,11 +79,6 @@ public class BasicINM extends INM {
 					totalTurningFractions, inflows, outflows, sendingFlows, receivingFlows);
 		}
 		
-		DoubleMatrix orientedFlows = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
-		for (int i = 0; i < incomingLinks.length; i++)
-			for (int j = 0; j < outgoingLinks.length; j++)
-				orientedFlows.set(i, j, inflows[i] * totalTurningFractions.get(i, j));
-		
-		return orientedFlows;
+		return new Pair<>(inflows, outflows);
 	}
 }
