@@ -134,7 +134,7 @@ public class CSV extends InputOutput {
 	@Override
 	public void writeODmatrix(String outputFile, DoubleMatrix ODMatrix) {}
 	
-	public void writeCumulativeFlows(String outputFile, DynamicNetwork network, int stepsTaken) {
+	public void writeFlows(String outputFile, DynamicNetwork network) {
 		try (BufferedWriter bfw = new BufferedWriter(new FileWriter(outputFile))) {
 			
 			for (Link link : network.links) {
@@ -142,15 +142,18 @@ public class CSV extends InputOutput {
 				int toNodeId = link.head.index + 1;
 				
 				bfw.write("Link " + fromNodeId + " " + toNodeId + "\n");
-				for (int t = 0; t < link.cumulativeInflow.length; t++) {
-					double cinflow = (t <= stepsTaken)
-							? link.cumulativeInflow[t]
-							: link.cumulativeInflow[stepsTaken]; // last defined value
-					double coutflow = (t <= stepsTaken)
-							? link.cumulativeOutflow[t]
-							: link.cumulativeOutflow[stepsTaken]; // last defined value
+				for (int t = 0; t < link.inflow.length; t++) {
+					double inflow = (link.inflow[t] == null) ? 0 : link.inflow[t].totalFlow;
+					double outflow = (link.outflow[t] == null) ? 0 : link.outflow[t].totalFlow;
 					
-					bfw.write(t + " " +  cinflow + " " + coutflow + "\n");
+					if (inflow == 0 && outflow == 0)
+						bfw.write(t + " 0 0\n");
+					else if (inflow == 0)
+						bfw.write(t + " 0 " + outflow + "\n");
+					else if (outflow == 0)
+						bfw.write(t + " " +  inflow + " 0\n");
+					else
+						bfw.write(t + " " +  inflow + " " + outflow + "\n");
 				}
 			}
 			
@@ -167,33 +170,27 @@ public class CSV extends InputOutput {
 				
 				bfw.write("N " + node + "\n");
 				
-				var mfs = intersection.getTurningFractions();
-				for (int t = 0; t < mfs.length; t++) {
-					var mf = mfs[t];
+				var mfs = intersection.getTurningFractions()[0];
+				for (int d = 0; d < mfs.destinations.length; d++) {
+					int destination = mfs.destinations[d] + 1;
+					DoubleMatrix fractions = mfs.destinationTurningFractions[d];
 					
-					bfw.write("T " + t + "\n");
+					bfw.write("D " + destination + "\n");
 					
-					for (int d = 0; d < mf.destinations.length; d++) {
-						int destination = mf.destinations[d];
-						DoubleMatrix fractions = mf.destinationTurningFractions[d];
+					for (int i = 0; i < fractions.m; i++) {
+						int fromNode = intersection.incomingLinks[i].tail.index + 1;
 						
-						bfw.write("D " + destination + "\n");
-						
-						for (int i = 0; i < fractions.m; i++) {
-							int fromNode = intersection.incomingLinks[i].tail.index + 1;
+						for (int j = 0; j < fractions.n; j++) {
+							int toNode = intersection.outgoingLinks[j].head.index + 1;
+							double fraction = fractions.get(i, j);
 							
-							for (int j = 0; j < fractions.n; j++) {
-								int toNode = intersection.outgoingLinks[j].head.index + 1;
-								double fraction = fractions.get(i, j);
-								
-								if (fraction == 0)
-									continue;
-								
-								if (fraction == 1)
-									bfw.write(fromNode + " " + toNode + " 1\n");
-								else
-									bfw.write(fromNode + " " + toNode + " " + fraction + "\n");
-							}
+							if (fraction == 0)
+								continue;
+							
+							if (fraction == 1)
+								bfw.write(fromNode + " " + toNode + " 1\n");
+							else
+								bfw.write(fromNode + " " + toNode + " " + fraction + "\n");
 						}
 					}
 				}

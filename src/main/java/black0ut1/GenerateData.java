@@ -24,9 +24,14 @@ public class GenerateData {
 	public static final String odmFile = "./data/training/demand.csv";
 	public static final String networkFile = "./data/training/link.csv";
 	
-	public static final double timeStep = 0.5;
+	// SiouxFalls
+//	public static final double timeStep = 1;
+//	public static final int odmSteps = 1;
+//	public static final int totalSteps = 50;
+	
+	public static final double timeStep = 1;
 	public static final int odmSteps = 1;
-	public static final int totalSteps = 400;
+	public static final int totalSteps = 50;
 	
 	public static void main(String[] args) {
 		DoubleMatrix odm = new CSV().parseODMatrix(odmFile);
@@ -59,8 +64,8 @@ public class GenerateData {
 			long tock = System.currentTimeMillis();
 			System.out.println("(" + (tock - tick) + "ms, " + finalAmountOfSteps + " steps)");
 			
-			new CSV().writeCumulativeFlows("./data/training/cumulative/" + n + "_cumulative.txt", dNetwork, finalAmountOfSteps);
-			new CSV().writeTurningFractions("./data/training/turning/" + n + "_turning.txt", dNetwork);
+			new CSV().writeFlows("./data/training/flows/" + n + "_flows.txt", dNetwork);
+			new CSV().writeTurningFractions("./data/training/fractions/" + n + "_fractions.txt", dNetwork);
 		}
 	}
 	
