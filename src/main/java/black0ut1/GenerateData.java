@@ -28,10 +28,13 @@ public class GenerateData {
 //	public static final double timeStep = 1;
 //	public static final int odmSteps = 1;
 //	public static final int totalSteps = 50;
+//	public static final double relativeGap = 1e-10;
 	
-	public static final double timeStep = 1;
+	// ChicagoSketch
+	public static final double timeStep = 0.5;
 	public static final int odmSteps = 1;
-	public static final int totalSteps = 50;
+	public static final int totalSteps = 400;
+	public static final double relativeGap = 1e-6;
 	
 	public static void main(String[] args) {
 		DoubleMatrix odm = new CSV().parseODMatrix(odmFile);
@@ -57,8 +60,6 @@ public class GenerateData {
 			DNL.setTurningFractions(mfs);
 			
 			int finalAmountOfSteps = DNL.loadNetwork();
-			
-			DNL.checkDestinationInflows(finalAmountOfSteps, false);
 			////////////////////////////
 			
 			long tock = System.currentTimeMillis();
@@ -71,7 +72,7 @@ public class GenerateData {
 	
 	private static Bush[] destinationBushes(Network network, DoubleMatrix odm) {
 		Settings settings = new Settings(network, odm, 100, new Convergence.Builder()
-				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1, 1e-10));
+				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1, relativeGap));
 		ProjectedGradient pg = new ProjectedGradient(settings);
 		pg.assignFlows();
 		NetworkUtils.checkPathFlows(network, odm, pg.getPaths(), pg.getFlows());
