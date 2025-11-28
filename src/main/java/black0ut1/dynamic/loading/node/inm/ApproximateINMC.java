@@ -13,7 +13,7 @@ import black0ut1.data.tuple.Pair;
  */
 public class ApproximateINMC extends INMC {
 	
-	public ApproximateINMC(INM inm, DemandConstraintFunction[] demandConstraints) {
+	public ApproximateINMC(INM inm, DemandConstraintFunction demandConstraints) {
 		super(inm, demandConstraints);
 	}
 	
@@ -29,25 +29,27 @@ public class ApproximateINMC extends INMC {
 			receivingFlows[i] = outgoingLinks[i].getReceivingFlow();
 		
 		// 1. (a) q_A = INM(Delta, Sigma)
-		var pairA = inm.computeOrientedFlows(totalTurningFractions, sendingFlows, receivingFlows);
+		var pairA = inm.computeInflowsOutflows(totalTurningFractions, sendingFlows, receivingFlows);
 		double[] inflowsA = pairA.first();
 		double[] outflowsA = pairA.second();
 		
 		// 1. (b) Delta_A = min{Delta, Delta-hat(q_A)}
 		double[] sendingFlowsA = new double[incomingLinks.length];
+		double[] sendingFlowsConstraints = demandConstraints.demand(inflowsA,  outflowsA);
 		for (int i = 0; i < incomingLinks.length; i++)
-			sendingFlowsA[i] = Math.min(sendingFlows[i], demandConstraints[i].demand(pairA.first(),  pairA.second()));
+			sendingFlowsA[i] = Math.min(sendingFlows[i], sendingFlowsConstraints[i]);
 		
 		// 2. Calculate working point B
 		// 2. (a) q_B = INM(Delta_A, Sigma)
-		var pairB = inm.computeOrientedFlows(totalTurningFractions, sendingFlowsA, receivingFlows);
+		var pairB = inm.computeInflowsOutflows(totalTurningFractions, sendingFlowsA, receivingFlows);
 		double[] inflowsB = pairB.first();
 		double[] outflowsB = pairB.second();
 		
 		// 2. (b) Delta_B = min{Delta, Delta-hat(q_B)}
 		double[] sendingFlowsB = new double[outgoingLinks.length];
+		sendingFlowsConstraints = demandConstraints.demand(inflowsB,  outflowsB);
 		for (int i = 0; i < incomingLinks.length; i++)
-			sendingFlowsB[i] = Math.min(sendingFlows[i], demandConstraints[i].demand(pairB.first(),  pairB.second()));
+			sendingFlowsB[i] = Math.min(sendingFlows[i], sendingFlowsConstraints[i]);
 		
 		// 3. Solve linearized model
 		double lambda = 1;

@@ -24,7 +24,7 @@ public class GeneralINM extends INM {
 	}
 	
 	@Override
-	Pair<double[], double[]> computeOrientedFlows(DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
+	Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
 		double[] inflows = new double[incomingLinks.length];
 		double[] outflows = new double[outgoingLinks.length];
 		

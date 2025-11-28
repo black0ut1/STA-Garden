@@ -13,10 +13,13 @@ import black0ut1.dynamic.loading.node.RoutedIntersection;
  */
 public abstract class INMC extends RoutedIntersection {
 	
+	/** The backing INM solver whose {@link INM#computeInflowsOutflows} method is used. */
 	protected final INM inm;
-	protected final DemandConstraintFunction[] demandConstraints;
 	
-	public INMC(INM inm, DemandConstraintFunction[] demandConstraints) {
+	/** See {@link DemandConstraintFunction}. */
+	protected final DemandConstraintFunction demandConstraints;
+	
+	public INMC(INM inm, DemandConstraintFunction demandConstraints) {
 		super(inm.index, inm.incomingLinks, inm.outgoingLinks);
 		this.inm = inm;
 		this.demandConstraints = demandConstraints;

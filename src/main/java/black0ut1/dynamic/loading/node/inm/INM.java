@@ -31,15 +31,15 @@ public abstract class INM extends RoutedIntersection {
 		for (int i = 0; i < outgoingLinks.length; i++)
 			receivingFlows[i] = outgoingLinks[i].getReceivingFlow();
 		
-		return computeOrientedFlows(totalTurningFractions, sendingFlows, receivingFlows);
+		return computeInflowsOutflows(totalTurningFractions, sendingFlows, receivingFlows);
 	}
 	
 	/**
-	 * This method represents the INM parametrized with sending flows and receiving
-	 * flows (equation (25) in (Flotterod and Rohde, 2011)).
+	 * This method represents the INM parametrized with sending flows and receiving flows
+	 * (equation (25) in (Flotterod and Rohde, 2011)).
 	 */
-	abstract Pair<double[], double[]> computeOrientedFlows(DoubleMatrix totalTurningFractions,
-														   double[] sendingFlows, double[] receivingFlows);
+	abstract Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix totalTurningFractions,
+															 double[] sendingFlows, double[] receivingFlows);
 	
 	/** Creates the set D(q) as defined in (18). */
 	protected BitSet32 determineUnconstrainedLinks(DoubleMatrix totalTurningFractions,

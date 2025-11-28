@@ -11,5 +11,11 @@ package black0ut1.dynamic.loading.node.inm;
  */
 public interface DemandConstraintFunction {
 	
-	double demand(double[] inflows, double[] outflows);
+	/**
+	 * Returns the constraints (ceilings) on each sending flow based in current flows.
+	 * @param inflows Current inflows computed by the INMC model.
+	 * @param outflows Current outflows computed by the INMC model.
+	 * @return An array with length same as {@code inflows}.
+	 */
+	double[] demand(double[] inflows, double[] outflows);
 }
