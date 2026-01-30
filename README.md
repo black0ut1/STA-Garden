@@ -9,7 +9,7 @@ But right now, there are also implemented some parts of dynamic traffic assignme
 is also some visualisation (see branch `gui`).
 
 This project uses the [TNTP](https://github.com/bstabler/TransportationNetworks) format as
-input and output (there are already some networks in `data` folder). 
+input and output (there are already some networks in `data` folder).
 [GMNS datasets](https://github.com/HanZhengIntelliTransport/GMNS_Plus_Dataset/) are also
 viable.
 
@@ -91,6 +91,13 @@ implemented.
 - Basic signals
 - Tampere's unsignalized general intersection
 - Virtual origin and destination
+- Incremental node models (INM):
+    - Basic INM with constant priorities (model equivalent to Tampere's unsignalized,
+      different approach)
+    - General INM with priorities dependent on flows (just a basic sketch that uses
+      Euler's method > inaccurate, it also does not check for violations of sending or
+      receiving flow that may appear with flow incrementation)
+    - Approximate INM with constraints (INMC)
 
 ### Visualization
 
