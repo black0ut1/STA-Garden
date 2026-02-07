@@ -72,7 +72,7 @@ public abstract class DynamicNetworkLoading {
 	/**
 	 * Sets mixture fractions for each intersection and for each time
 	 * step.
-	 * @param turningFractions 2D array of mixture flows, where first
+	 * @param turningFractions 2D array of mixture fractions, where first
 	 * index represents intersection and the second represents the
 	 * time step - {@code turningFractions[i][t]} are MixtureFractions
 	 * used by intersection i during time step t.

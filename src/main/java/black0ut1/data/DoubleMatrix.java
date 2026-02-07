@@ -25,6 +25,20 @@ public class DoubleMatrix {
 		arr[i * n + j] = value;
 	}
 	
+	public DoubleMatrix scale(double factor) {
+		for (int i = 0; i < arr.length; i++)
+			arr[i] *= factor;
+		
+		return this;
+	}
+	
+	public DoubleMatrix plus(DoubleMatrix matrix) {
+		for (int i = 0; i < arr.length; i++)
+			arr[i] += matrix.arr[i];
+		
+		return this;
+	}
+	
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
