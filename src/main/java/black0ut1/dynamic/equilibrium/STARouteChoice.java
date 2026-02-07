@@ -9,13 +9,13 @@ import black0ut1.dynamic.loading.node.RoutedIntersection;
 
 import java.util.Arrays;
 
-public class StaticRouteChoice {
+public class STARouteChoice {
 	
 	protected final DynamicNetwork network;
 	protected final int maxSteps;
 	protected final Bush[] destinationBushes;
 	
-	public StaticRouteChoice(DynamicNetwork network, int maxSteps, Bush[] destinationBushes) {
+	public STARouteChoice(DynamicNetwork network, int maxSteps, Bush[] destinationBushes) {
 		this.network = network;
 		this.maxSteps = maxSteps;
 		this.destinationBushes = destinationBushes;
@@ -65,20 +65,26 @@ public class StaticRouteChoice {
 					outgoingFlow += bush.getEdgeFlow(outgoingLink.index);
 				}
 				
-				// Destination flow do not use this intersection -> the destination will
-				// be excluded from the mixture fractions
-				if (outgoingFlow == 0)
-					continue;
-				
-				for (int j = 0; j < intersection.outgoingLinks.length; j++) {
+				// Destination flow do not use this intersection -> fractions will be
+				// uniformly distributed
+				if (outgoingFlow == 0) {
+					double fraction = 1.0 / intersection.outgoingLinks.length;
 					
-					int outgoingLinkIndex = intersection.outgoingLinks[j].index;
-					double fraction = (outgoingLinkIndex == -1)
-							? 0 // outgoing link is connector to some other destination
-							: bush.getEdgeFlow(outgoingLinkIndex) / outgoingFlow;
-					
-					for (int i = 0; i < intersection.incomingLinks.length; i++)
-						destinationTurningFractions.set(i, j, fraction);
+					for (int j = 0; j < intersection.outgoingLinks.length; j++)
+						for (int i = 0; i < intersection.incomingLinks.length; i++)
+							destinationTurningFractions.set(i, j, fraction);
+				}
+				else {
+					for (int j = 0; j < intersection.outgoingLinks.length; j++) {
+						
+						int outgoingLinkIndex = intersection.outgoingLinks[j].index;
+						double fraction = (outgoingLinkIndex == -1)
+								? 0 // outgoing link is connector to some other destination
+								: bush.getEdgeFlow(outgoingLinkIndex) / outgoingFlow;
+						
+						for (int i = 0; i < intersection.incomingLinks.length; i++)
+							destinationTurningFractions.set(i, j, fraction);
+					}
 				}
 			}
 			

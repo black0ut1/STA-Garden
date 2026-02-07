@@ -6,7 +6,7 @@ import black0ut1.data.network.Network;
 import black0ut1.data.network.Path;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
-import black0ut1.dynamic.equilibrium.StaticRouteChoice;
+import black0ut1.dynamic.equilibrium.STARouteChoice;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.dnl.ILTM_DNL;
 import black0ut1.dynamic.loading.link.Link;
@@ -45,7 +45,7 @@ public class Main {
 		var destinationBushes = destinationBushes(pair.first(), pair.second());
 		
 		// The route choice model
-		StaticRouteChoice routeChoice = new StaticRouteChoice(network, totalSteps, destinationBushes);
+		STARouteChoice routeChoice = new STARouteChoice(network, totalSteps, destinationBushes);
 		long startTime = System.currentTimeMillis();
 		var mfs = routeChoice.computeTurningFractions();
 		long endTime = System.currentTimeMillis();

@@ -9,13 +9,13 @@ import black0ut1.util.SSSP;
 
 import java.util.Arrays;
 
-public class DestinationAON {
+public class StaticAONRouteChoice {
 	
 	protected final Network network;
 	protected final DynamicNetwork dNetwork;
 	protected final DoubleMatrix odMatrix;
 	
-	public DestinationAON(Network network, DynamicNetwork dNetwork, DoubleMatrix odMatrix) {
+	public StaticAONRouteChoice(Network network, DynamicNetwork dNetwork, DoubleMatrix odMatrix) {
 		this.network = network;
 		this.odMatrix = odMatrix;
 		this.dNetwork = dNetwork;
@@ -46,6 +46,7 @@ public class DestinationAON {
 		
 		// compute fractions for a destination
 		for (int destination = 0; destination < network.zones; destination++) {
+			DoubleMatrix destinationFractions = new DoubleMatrix(node.incomingLinks.length, node.outgoingLinks.length);
 			
 			// the amount of flow going through the node
 			double nodeFlow = 0;
@@ -78,14 +79,19 @@ public class DestinationAON {
 				}
 			}
 			
-			if (nodeFlow == 0)
-				continue;
-			
-			
-			DoubleMatrix destinationFractions = new DoubleMatrix(node.incomingLinks.length, node.outgoingLinks.length);
-			// all flow from each incoming link is going into J
-			for (int i = 0; i < node.incomingLinks.length; i++)
-				destinationFractions.set(i, J, 1);
+			// Destination flow do not use this intersection -> fractions will be
+			// uniformly distributed
+			if (nodeFlow == 0) {
+				
+				for (int i = 0; i < node.incomingLinks.length; i++)
+					for (int j = 0; j < node.outgoingLinks.length; j++)
+						destinationFractions.set(i, j, 1.0 / node.outgoingLinks.length);
+				
+			} // all flow from each incoming link is going into J
+			else {
+				for (int i = 0; i < node.incomingLinks.length; i++)
+					destinationFractions.set(i, J, 1);
+			}
 			
 			destinations[len] = destination;
 			destinationTurningFractions[len] = destinationFractions;
