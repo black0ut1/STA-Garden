@@ -69,19 +69,18 @@ public abstract class RoutedIntersection extends Intersection {
 			}
 			
 			int len = 0;
-			int[] destinations = new int[fractions.destinations.length];
-			double[] portions = new double[fractions.destinations.length];
+			int[] destinations = new int[fractions.destinationTurningFractions.length];
+			double[] portions = new double[fractions.destinationTurningFractions.length];
 			
-			for (int d = 0; d < fractions.destinations.length; d++) {
-				int destination = fractions.destinations[d];
+			for (int d = 0; d < fractions.destinationTurningFractions.length; d++) {
 				DoubleMatrix destinationFractions = fractions.destinationTurningFractions[d];
 				
 				double sum = 0;
 				for (int i = 0; i < incomingLinks.length; i++)
-					sum += incomingMixtureFlows[i].getDestinationFlow(destination) * destinationFractions.get(i, j);
+					sum += incomingMixtureFlows[i].getDestinationFlow(d) * destinationFractions.get(i, j);
 				
 				if (sum > 0) {
-					destinations[len] = destination;
+					destinations[len] = d;
 					portions[len] = sum / outflows[j];
 					len++;
 				}

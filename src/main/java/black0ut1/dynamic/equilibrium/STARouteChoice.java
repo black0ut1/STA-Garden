@@ -37,9 +37,7 @@ public class STARouteChoice {
 	protected MixtureFractions createMixtureFractionsForIntersection(RoutedIntersection intersection) {
 		// Creates turning fractions for each destination
 		
-		int len = 0;
-		int[] destinations = new int[network.routedIntersections.length];
-		DoubleMatrix[] turningFractions = new DoubleMatrix[network.routedIntersections.length];
+		DoubleMatrix[] turningFractions = new DoubleMatrix[network.destinations.length];
 		
 		for (int destination = 0; destination < destinationBushes.length; destination++) {
 			DoubleMatrix destinationTurningFractions = new DoubleMatrix(intersection.incomingLinks.length, intersection.outgoingLinks.length);
@@ -88,11 +86,9 @@ public class STARouteChoice {
 				}
 			}
 			
-			turningFractions[len] = destinationTurningFractions;
-			destinations[len] = destination;
-			len++;
+			turningFractions[destination] = destinationTurningFractions;
 		}
 		
-		return new MixtureFractions(destinations, turningFractions, len);
+		return new MixtureFractions(turningFractions);
 	}
 }

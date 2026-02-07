@@ -38,9 +38,7 @@ public class StaticAONRouteChoice {
 	}
 	
 	protected MixtureFractions createNodeFractions(double[][] destinationFlows, int node1) {
-		int len = 0;
-		int[] destinations = new int[network.nodes];
-		DoubleMatrix[] destinationTurningFractions = new DoubleMatrix[network.nodes];
+		DoubleMatrix[] turningFractions = new DoubleMatrix[dNetwork.destinations.length];
 		
 		Intersection node = dNetwork.routedIntersections[node1];
 		
@@ -93,12 +91,10 @@ public class StaticAONRouteChoice {
 					destinationFractions.set(i, J, 1);
 			}
 			
-			destinations[len] = destination;
-			destinationTurningFractions[len] = destinationFractions;
-			len++;
+			turningFractions[destination] = destinationFractions;
 		}
 		
-		return new MixtureFractions(destinations, destinationTurningFractions, len);
+		return new MixtureFractions(turningFractions);
 	}
 	
 	protected double[][] assignFlows() {
