@@ -44,13 +44,14 @@ public abstract class DynamicNetworkLoading {
 	/** Launches the network loading. Takes {@link #steps} time steps. */
 	public void loadNetwork() {
 		for (int t = 0; t < steps; t++) {
-			System.out.println("========= Time " + t + " =========");
+			System.out.print("\r[DNL] Time " + t);
 			
 			loadForTime(t);
 			
 			double totalFlow = getTotalFlowOnNetwork(t);
-			System.out.println("Total flow on network: " + totalFlow);
+			System.out.print(", total flow on network: " + totalFlow);
 		}
+		System.out.println();
 	}
 	
 	protected abstract void loadForTime(int t);
@@ -132,9 +133,11 @@ public abstract class DynamicNetworkLoading {
 				for (int d = 0; d < destiantionInflow[t].destinations.length; d++) {
 					int destination1 = destiantionInflow[t].destinations[d];
 					
-					if (destination1 != destination)
+					if (destination1 != destination) {
 						System.out.println("Mixture flow arrived to destination " + destination +
-								" contains a portion belonging to other destination " + destination1);
+								" contains a portion belonging to other destination " + destination1 +
+								" (time: " + t + ", portion: " + destiantionInflow[t].portions[d] + ")");
+					}
 				}
 				
 				networkDestinationInflow[destination] += destiantionInflow[t].totalFlow;

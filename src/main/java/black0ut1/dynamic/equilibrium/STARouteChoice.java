@@ -9,7 +9,7 @@ import black0ut1.dynamic.loading.node.RoutedIntersection;
 
 import java.util.Arrays;
 
-public class STARouteChoice {
+public class STARouteChoice implements StaticRouteChoice {
 	
 	protected final DynamicNetwork network;
 	protected final int maxSteps;
@@ -21,7 +21,7 @@ public class STARouteChoice {
 		this.destinationBushes = destinationBushes;
 	}
 	
-	public MixtureFractions[][] computeTurningFractions() {
+	public MixtureFractions[][] computeInitialMixtureFractions() {
 		MixtureFractions[][] result = new MixtureFractions[network.routedIntersections.length][maxSteps];
 		
 		for (RoutedIntersection intersection : network.routedIntersections)

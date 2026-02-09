@@ -9,19 +9,21 @@ import black0ut1.util.SSSP;
 
 import java.util.Arrays;
 
-public class StaticAONRouteChoice {
+public class StaticAONRouteChoice implements StaticRouteChoice {
 	
 	protected final Network network;
 	protected final DynamicNetwork dNetwork;
 	protected final DoubleMatrix odMatrix;
+	protected final int timeSteps;
 	
-	public StaticAONRouteChoice(Network network, DynamicNetwork dNetwork, DoubleMatrix odMatrix) {
+	public StaticAONRouteChoice(Network network, DynamicNetwork dNetwork, DoubleMatrix odMatrix, int timeSteps) {
 		this.network = network;
 		this.odMatrix = odMatrix;
 		this.dNetwork = dNetwork;
+		this.timeSteps = timeSteps;
 	}
 	
-	public MixtureFractions[][] computeTurningFractions(int timeSteps) {
+	public MixtureFractions[][] computeInitialMixtureFractions() {
 		MixtureFractions[][] result = new MixtureFractions[network.nodes][timeSteps];
 		
 		double[][] destinationFlows = assignFlows();

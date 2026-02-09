@@ -26,17 +26,21 @@ public class DoubleMatrix {
 	}
 	
 	public DoubleMatrix scale(double factor) {
-		for (int i = 0; i < arr.length; i++)
-			arr[i] *= factor;
+		DoubleMatrix result = new DoubleMatrix(m, n);
 		
-		return this;
+		for (int i = 0; i < arr.length; i++)
+			result.arr[i] = this.arr[i] * factor;
+		
+		return result;
 	}
 	
 	public DoubleMatrix plus(DoubleMatrix matrix) {
-		for (int i = 0; i < arr.length; i++)
-			arr[i] += matrix.arr[i];
+		DoubleMatrix result = new DoubleMatrix(m, n);
 		
-		return this;
+		for (int i = 0; i < arr.length; i++)
+			result.arr[i] = this.arr[i] + matrix.arr[i];
+		
+		return result;
 	}
 	
 	@Override
