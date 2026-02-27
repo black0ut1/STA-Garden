@@ -33,6 +33,8 @@ public abstract class DynamicNetworkLoading {
 	protected final double stepSize;
 	/** The number of time steps the DNL will take. */
 	protected final int steps;
+	/** The number of updates of non-virtual nodes during the whole loading. */
+	protected int nodeUpdates = 0;
 	
 	public DynamicNetworkLoading(DynamicNetwork network, TimeDependentODM odm, double stepSize, int steps) {
 		this.network = network;
@@ -168,5 +170,9 @@ public abstract class DynamicNetworkLoading {
 			avgDifference += Math.abs(odmDestinationInflow[i] - networkDestinationInflow[i]);
 		System.out.println("Difference between actual inflow to a destination and\n" +
 				"inflow according to ODM (averaged over destinations): " + avgDifference / network.destinations.length);
+	}
+	
+	public int getNodeUpdates() {
+		return nodeUpdates;
 	}
 }

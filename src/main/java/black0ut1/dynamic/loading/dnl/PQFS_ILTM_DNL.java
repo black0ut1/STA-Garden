@@ -27,6 +27,11 @@ public class PQFS_ILTM_DNL extends ILTM_DNL {
 	@Override
 	protected void loadForTime(int t) {
 		
+		for (Link link : network.allLinks) {
+			link.cumulativeInflow[t + 1] = Math.max(link.cumulativeInflow[t + 1], link.cumulativeInflow[t]);
+			link.cumulativeOutflow[t + 1] = Math.max(link.cumulativeOutflow[t + 1], link.cumulativeOutflow[t]);
+		}
+		
 		// 1. Load traffic from each origin onto the connector
 		for (Origin origin : network.origins) {
 			Link outgoingLink = origin.outgoingLinks[0];
@@ -47,7 +52,6 @@ public class PQFS_ILTM_DNL extends ILTM_DNL {
 		// 2. Iterate until update potential of every intersection of
 		// is under precision
 		while (-pq.getMinPriority() > precision) {
-			
 			nodeUpdates++;
 			
 			int index = pq.popMin();

@@ -29,7 +29,6 @@ import black0ut1.dynamic.loading.node.Origin;
 public class ILTM_DNL extends DynamicNetworkLoading {
 	
 	protected final double precision;
-	public int nodeUpdates = 0;
 	
 	public ILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
 					double stepSize, int steps, double precision) {
@@ -39,6 +38,11 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 	
 	@Override
 	protected void loadForTime(int t) {
+	
+		for (Link link : network.allLinks) {
+			link.cumulativeInflow[t + 1] = Math.max(link.cumulativeInflow[t + 1], link.cumulativeInflow[t]);
+			link.cumulativeOutflow[t + 1] = Math.max(link.cumulativeOutflow[t + 1], link.cumulativeOutflow[t]);
+		}
 		
 		// 1. Load traffic from each origin onto the connector
 		for (Origin origin : network.origins) {

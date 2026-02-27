@@ -47,6 +47,7 @@ public class BasicDNL extends DynamicNetworkLoading {
 		
 		// 2. For each intersection
 		for (Intersection node : network.routedIntersections) {
+			nodeUpdates++;
 			
 			// 2.1 Update sending flow of each incoming link
 			for (Link incomingLink : node.incomingLinks)
