@@ -147,8 +147,9 @@ public class CSV extends InputOutput {
 					double outflow = (link.outflow[t] == null) ? 0 : link.outflow[t].totalFlow;
 					
 					if (inflow == 0 && outflow == 0)
-						bfw.write(t + " 0 0\n");
-					else if (inflow == 0)
+						continue;
+						
+					if (inflow == 0)
 						bfw.write(t + " 0 " + outflow + "\n");
 					else if (outflow == 0)
 						bfw.write(t + " " +  inflow + " 0\n");

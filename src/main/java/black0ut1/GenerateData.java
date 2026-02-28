@@ -31,9 +31,9 @@ public class GenerateData {
 //	public static final double relativeGap = 1e-10;
 	
 	// ChicagoSketch
-	public static final double timeStep = 0.5;
+	public static final double timeStep = 1;
 	public static final int odmSteps = 1;
-	public static final int totalSteps = 400;
+	public static final int totalSteps = 200;
 	public static final double relativeGap = 1e-6;
 	
 	public static void main(String[] args) {
