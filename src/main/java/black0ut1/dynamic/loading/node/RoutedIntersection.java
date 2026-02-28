@@ -30,16 +30,15 @@ public abstract class RoutedIntersection extends Intersection {
 		
 		// 1. Compute total turning fractions
 		DoubleMatrix totalTurningFractions = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
+		MixtureFlow[] mixtureFlows = new MixtureFlow[incomingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++) {
+			mixtureFlows[i] = incomingLinks[i].getOutgoingMixtureFlow(time);
 			
-			// TODO cache this vv and switch loops
-			var mixture = incomingLinks[i].getOutgoingMixtureFlow(time);
-			for (int j = 0; j < outgoingLinks.length; j++) {
+			for (int d = 0; d < mixtureFlows[i].destinations.length; d++) {
+				int destination = mixtureFlows[i].destinations[d];
+				double portion = mixtureFlows[i].portions[d];
 				
-				for (int d = 0; d < mixture.destinations.length; d++) {
-					int destination = mixture.destinations[d];
-					double portion = mixture.portions[d];
-					
+				for (int j = 0; j < outgoingLinks.length; j++) {
 					DoubleMatrix destinationFractions = fractions.getDestinationFractions(destination);
 					totalTurningFractions.set(i, j,
 							totalTurningFractions.get(i, j) + portion * destinationFractions.get(i, j));
@@ -55,10 +54,8 @@ public abstract class RoutedIntersection extends Intersection {
 		// 3. Compute the mixture flows
 		// 3.1. Compute the flow exiting from incoming links
 		MixtureFlow[] incomingMixtureFlows = new MixtureFlow[incomingLinks.length];
-		for (int i = 0; i < incomingLinks.length; i++) {
-			MixtureFlow of = incomingLinks[i].getOutgoingMixtureFlow(time);
-			incomingMixtureFlows[i] = of.copyWithFlow(inflows[i]);
-		}
+		for (int i = 0; i < incomingLinks.length; i++)
+			incomingMixtureFlows[i] = mixtureFlows[i].copyWithFlow(inflows[i]);
 		
 		// 3.2. Enter flows to outgoing links
 		MixtureFlow[] outgoingMixtureFlows = new MixtureFlow[outgoingLinks.length];
@@ -87,7 +84,6 @@ public abstract class RoutedIntersection extends Intersection {
 			}
 			
 			MixtureFlow a = new MixtureFlow(outflows[j], destinations, portions, len);
-			a.checkPortions(1e-4); // TODO remove
 			outgoingMixtureFlows[j] = a;
 		}
 		
