@@ -27,7 +27,7 @@ public class PQFS_ILTM_DNL extends ILTM_DNL {
 	@Override
 	protected void loadForTime(int t) {
 		
-		for (Link link : network.allLinks) {
+		for (Link link : network.links) {
 			link.cumulativeInflow[t + 1] = Math.max(link.cumulativeInflow[t + 1], link.cumulativeInflow[t]);
 			link.cumulativeOutflow[t + 1] = Math.max(link.cumulativeOutflow[t + 1], link.cumulativeOutflow[t]);
 		}
