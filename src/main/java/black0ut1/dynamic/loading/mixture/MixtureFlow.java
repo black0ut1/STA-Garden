@@ -56,6 +56,11 @@ public class MixtureFlow {
 	}
 	
 	public MixtureFlow plus(MixtureFlow other) {
+		if (this == MixtureFlow.ZERO)
+			return other;
+		if (other == MixtureFlow.ZERO)
+			return this;
+		
 		double resultFlow = totalFlow + other.totalFlow;
 		
 		int[] destinationUnion = new int[this.destinations.length + other.destinations.length];
