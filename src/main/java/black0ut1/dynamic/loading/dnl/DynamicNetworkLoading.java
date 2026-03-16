@@ -45,15 +45,11 @@ public abstract class DynamicNetworkLoading {
 	
 	/** Launches the network loading. Takes {@link #steps} time steps. */
 	public void loadNetwork() {
-		for (int t = 0; t < steps; t++) {
-			System.out.print("\r[DNL] Time " + t);
-			
+		for (int t = 0; t < steps; t++)
 			loadForTime(t);
-			
-			double totalFlow = getTotalFlowOnNetwork(t);
-			System.out.print(", total flow on network: " + totalFlow);
-		}
-		System.out.println();
+		
+		double totalFlow = getTotalFlowOnNetwork(steps - 1);
+		System.out.println("Total flow on network: " + totalFlow);
 	}
 	
 	protected abstract void loadForTime(int t);
