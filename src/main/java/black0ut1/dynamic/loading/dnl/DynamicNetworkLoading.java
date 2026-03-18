@@ -44,12 +44,17 @@ public abstract class DynamicNetworkLoading {
 	}
 	
 	/** Launches the network loading. Takes {@link #steps} time steps. */
-	public void loadNetwork() {
-		for (int t = 0; t < steps; t++)
+	public int loadNetwork() {
+		int t;
+		for (t = 0; t < steps; t++) {
+			System.out.println(t);
 			loadForTime(t);
+			
+			if (getTotalFlowOnNetwork(t) < 1e-4)
+				break;
+		}
 		
-		double totalFlow = getTotalFlowOnNetwork(steps - 1);
-		System.out.println("Total flow on network: " + totalFlow);
+		return t + 1;
 	}
 	
 	protected abstract void loadForTime(int t);
@@ -113,8 +118,8 @@ public abstract class DynamicNetworkLoading {
 	 * destination.
 	 * @param verbose More information.
 	 */
-	public void checkDestinationInflows(boolean verbose) {
-		System.out.println("============ Checking arrived flows ============");
+	public void checkDestinationInflows(boolean verbose, int stepsTaken) {
+		System.out.println();
 		double[] odmDestinationInflow = new double[network.destinations.length];
 		
 		for (int destination = 0; destination < odm.zones; destination++)
@@ -126,7 +131,7 @@ public abstract class DynamicNetworkLoading {
 		for (int destination = 0; destination < network.destinations.length; destination++) {
 			
 			var destiantionInflow = network.destinations[destination].inflow;
-			for (int t = 0; t < steps; t++) {
+			for (int t = 0; t < stepsTaken; t++) {
 				
 				for (int d = 0; d < destiantionInflow[t].destinations.length; d++) {
 					int destination1 = destiantionInflow[t].destinations[d];
