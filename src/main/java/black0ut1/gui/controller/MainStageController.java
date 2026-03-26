@@ -1,7 +1,7 @@
 package black0ut1.gui.controller;
 
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.node.Node;
+import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.gui.MainGUI;
 import black0ut1.gui.view.LinkPane;
 import black0ut1.gui.view.MainStage;
@@ -20,7 +20,7 @@ public class MainStageController {
 		mainStage.horizontalRootSplitPane.getItems().removeLast();
 		
 		if (isNode) {
-			Node node = MainGUI.network.intersections[index];
+			Intersection node = MainGUI.network.intersections[index];
 			mainStage.horizontalRootSplitPane.getItems().add(new NodePane(node));
 		} else {
 			Link link = MainGUI.network.links[index];

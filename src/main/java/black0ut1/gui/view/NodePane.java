@@ -1,6 +1,6 @@
 package black0ut1.gui.view;
 
-import black0ut1.dynamic.loading.node.Node;
+import black0ut1.dynamic.loading.node.Intersection;
 import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 public class NodePane extends VBox {
 	
-	public NodePane(Node node) {
+	public NodePane(Intersection node) {
 		super();
 		setPadding(new Insets(10));
 		setMinWidth(0);

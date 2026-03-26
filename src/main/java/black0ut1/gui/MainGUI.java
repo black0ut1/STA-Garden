@@ -1,13 +1,14 @@
 package black0ut1.gui;
 
-import black0ut1.Main;
 import black0ut1.data.network.Network;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
-import black0ut1.dynamic.equilibrium.DestinationAON;
+import black0ut1.dynamic.equilibrium.StaticAONRouteChoice;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.dnl.ILTM_DNL;
 import black0ut1.gui.view.MainStage;
+import black0ut1.io.TNTP;
+import black0ut1.util.Util;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -29,20 +30,21 @@ public class MainGUI extends Application {
 		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
 		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
 		
-		var pair = Main.loadData(networkFile, odmFile, nodeFile);
+		var pair = Util.loadData(new TNTP(), networkFile, odmFile, nodeFile);
 		
-		double timeStep = 0.4;
+		double timeStep = 1;
 		int odmSteps = 10;
-		int totalSteps = 2000;
+		int totalSteps = 200;
 		
 		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), odmSteps);
 		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, timeStep, totalSteps);
 		
-		DestinationAON aon = new DestinationAON(pair.first(), network, pair.second());
-		var mfs = aon.computeTurningFractions(totalSteps);
-		DynamicNetworkLoading DNL = new ILTM_DNL(network, odm, timeStep, totalSteps, 1e-8);
-		DNL.setTurningFractions(mfs);
-		DNL.loadNetwork();
+		StaticAONRouteChoice rc = new StaticAONRouteChoice(pair.first(), network, pair.second(), totalSteps);
+		var mfs = rc.computeInitialMixtureFractions();
+		
+		DynamicNetworkLoading dnl = new ILTM_DNL(network, odm, timeStep, totalSteps, 1e-8);
+		dnl.setTurningFractions(mfs);
+		dnl.loadNetwork();
 		
 		MainGUI.network = network;
 		MainGUI.nodes = pair.first().getNodes();
