@@ -32,7 +32,7 @@ public class LTM extends Link {
 		double psi = t1 - (int) t1;
 		double interpolatedOutflow = (1 - psi) * cumulativeOutflow[(int) t1] + psi * cumulativeOutflow[(int) t1 + 1];
 		this.receivingFlow = Math.min(capacity * stepSize,
-				interpolatedOutflow - cumulativeInflow[time] + jamDensity * length);
+				Math.max(0, interpolatedOutflow - cumulativeInflow[time] + jamDensity * length));
 		
 		this.psi = (t1 > time) ? psi : 0;
 	}
@@ -46,7 +46,7 @@ public class LTM extends Link {
 		double phi = t2 - (int) t2;
 		double interpolatedInflow = (1 - phi) * cumulativeInflow[(int) t2] + phi * cumulativeInflow[(int) t2 + 1];
 		this.sendingFlow = Math.min(capacity * stepSize,
-				interpolatedInflow - cumulativeOutflow[time]);
+				Math.max(0, interpolatedInflow - cumulativeOutflow[time]));
 		
 		this.phi = (t2 > time) ? phi : 0;
 	}

@@ -7,7 +7,7 @@ import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.node.Destination;
-import black0ut1.dynamic.loading.node.Intersection;
+import black0ut1.dynamic.loading.node.RoutedIntersection;
 import black0ut1.dynamic.loading.node.Origin;
 
 /**
@@ -17,15 +17,20 @@ import black0ut1.dynamic.loading.node.Origin;
  * it. This should be more powerful in reducing the amount of node
  * updates than the ordinary {@code FastSweepingILTM_DNL}.
  */
-public class PQFastSweepingILTM_DNL extends ILTM_DNL {
+public class PQFS_ILTM_DNL extends ILTM_DNL {
 	
-	public PQFastSweepingILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
-								  double stepSize, int steps, double precision) {
+	public PQFS_ILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
+						 double stepSize, int steps, double precision) {
 		super(network, odm, stepSize, steps, precision);
 	}
 	
 	@Override
 	protected void loadForTime(int t) {
+		
+		for (Link link : network.links) {
+			link.cumulativeInflow[t + 1] = Math.max(link.cumulativeInflow[t + 1], link.cumulativeInflow[t]);
+			link.cumulativeOutflow[t + 1] = Math.max(link.cumulativeOutflow[t + 1], link.cumulativeOutflow[t]);
+		}
 		
 		// 1. Load traffic from each origin onto the connector
 		for (Origin origin : network.origins) {
@@ -40,18 +45,17 @@ public class PQFastSweepingILTM_DNL extends ILTM_DNL {
 		}
 		
 		
-		PriorityQueue pq = new PriorityQueue(network.intersections.length, 0);
-		for (int i = 0; i < network.intersections.length; i++)
+		PriorityQueue pq = new PriorityQueue(network.routedIntersections.length, 0);
+		for (int i = 0; i < network.routedIntersections.length; i++)
 			pq.add(i, -Double.POSITIVE_INFINITY);
 		
 		// 2. Iterate until update potential of every intersection of
 		// is under precision
 		while (-pq.getMinPriority() > precision) {
-			
 			nodeUpdates++;
 			
 			int index = pq.popMin();
-			Intersection node = network.intersections[index];
+			RoutedIntersection node = network.routedIntersections[index];
 			
 			// 2.1.1 Update sending flow of each incoming link
 			for (Link incomingLink : node.incomingLinks)
@@ -71,7 +75,7 @@ public class PQFastSweepingILTM_DNL extends ILTM_DNL {
 				
 				double Xad = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 				
-				// increase update potential of the link tail
+				// increase update potential of the incoming link tail
 				if (incomingLink instanceof LTM) {
 					double Vi = incomingLink.cumulativeOutflow[t + 1];
 					double potentialIncrease = ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
@@ -91,7 +95,7 @@ public class PQFastSweepingILTM_DNL extends ILTM_DNL {
 				
 				double Xbd = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
 				
-				// increase update potential of the link head
+				// increase update potential of the outgoing link head
 				if (outgoingLink instanceof LTM) {
 					double Ui = outgoingLink.cumulativeInflow[t + 1];
 					double potentialIncrease = ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);

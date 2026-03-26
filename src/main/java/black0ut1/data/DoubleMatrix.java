@@ -4,13 +4,13 @@ public class DoubleMatrix {
 	
 	private final double[] arr;
 	
-	public final int n;
 	public final int m;
+	public final int n;
 	
-	public DoubleMatrix(int n, int m) {
-		this.arr = new double[n * m];
-		this.n = n;
+	public DoubleMatrix(int m, int n) {
+		this.arr = new double[m * n];
 		this.m = m;
+		this.n = n;
 	}
 	
 	public DoubleMatrix(int n) {
@@ -23,6 +23,24 @@ public class DoubleMatrix {
 
 	public void set(int i, int j, double value) {
 		arr[i * n + j] = value;
+	}
+	
+	public DoubleMatrix scale(double factor) {
+		DoubleMatrix result = new DoubleMatrix(m, n);
+		
+		for (int i = 0; i < arr.length; i++)
+			result.arr[i] = this.arr[i] * factor;
+		
+		return result;
+	}
+	
+	public DoubleMatrix plus(DoubleMatrix matrix) {
+		DoubleMatrix result = new DoubleMatrix(m, n);
+		
+		for (int i = 0; i < arr.length; i++)
+			result.arr[i] = this.arr[i] + matrix.arr[i];
+		
+		return result;
 	}
 	
 	@Override

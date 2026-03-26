@@ -1,33 +1,32 @@
 package black0ut1.static_.assignment.link;
 
-import black0ut1.static_.assignment.STAAlgorithm;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.AON;
 
 public class FukushimaFrankWolfe extends FrankWolfe {
 	
-	protected final int L;
 	protected int currL = 0;
 	protected int queueEnd = 0;
 	
 	protected final double[][] queue;
 	
-	public FukushimaFrankWolfe(STAAlgorithm.Parameters parameters, int L) {
-		super(parameters);
-		this.L = L;
-		this.queue = new double[L][];
+	public FukushimaFrankWolfe(Settings settings) {
+		super(settings);
+		this.queue = new double[s.FUKUSHIMA_FW_L][];
 	}
+	
 	
 	@Override
 	protected double[] calculateTarget() {
 		double[] aonFlows = new double[network.edges];
-		AON.assign(network, odMatrix, costs, aonFlows);
+		AON.assign(network, odm, costs, aonFlows);
 		
 		// add the AON flow to queue
-		if (currL < L) { // the queue is filling up
+		if (currL < s.FUKUSHIMA_FW_L) { // the queue is filling up
 			queue[currL++] = aonFlows;
 		} else { // the queue if filled up, we replace last element
 			queue[queueEnd] = aonFlows;
-			queueEnd = (queueEnd + 1) % L;
+			queueEnd = (queueEnd + 1) % s.FUKUSHIMA_FW_L;
 		}
 		
 		// compute arithmetic mean of flows in queue

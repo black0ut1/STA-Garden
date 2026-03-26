@@ -4,24 +4,26 @@ import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
-import black0ut1.dynamic.loading.node.Node;
+import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.util.SSSP;
 
 import java.util.Arrays;
 
-public class DestinationAON {
+public class StaticAONRouteChoice implements StaticRouteChoice {
 	
 	protected final Network network;
 	protected final DynamicNetwork dNetwork;
 	protected final DoubleMatrix odMatrix;
+	protected final int timeSteps;
 	
-	public DestinationAON(Network network, DynamicNetwork dNetwork, DoubleMatrix odMatrix) {
+	public StaticAONRouteChoice(Network network, DynamicNetwork dNetwork, DoubleMatrix odMatrix, int timeSteps) {
 		this.network = network;
 		this.odMatrix = odMatrix;
 		this.dNetwork = dNetwork;
+		this.timeSteps = timeSteps;
 	}
 	
-	public MixtureFractions[][] computeTurningFractions(int timeSteps) {
+	public MixtureFractions[][] computeInitialMixtureFractions() {
 		MixtureFractions[][] result = new MixtureFractions[network.nodes][timeSteps];
 		
 		double[][] destinationFlows = assignFlows();
@@ -38,14 +40,13 @@ public class DestinationAON {
 	}
 	
 	protected MixtureFractions createNodeFractions(double[][] destinationFlows, int node1) {
-		int len = 0;
-		int[] destinations = new int[network.nodes];
-		DoubleMatrix[] destinationTurningFractions = new DoubleMatrix[network.nodes];
+		DoubleMatrix[] turningFractions = new DoubleMatrix[dNetwork.destinations.length];
 		
-		Node node = dNetwork.intersections[node1];
+		Intersection node = dNetwork.routedIntersections[node1];
 		
 		// compute fractions for a destination
 		for (int destination = 0; destination < network.zones; destination++) {
+			DoubleMatrix destinationFractions = new DoubleMatrix(node.incomingLinks.length, node.outgoingLinks.length);
 			
 			// the amount of flow going through the node
 			double nodeFlow = 0;
@@ -78,21 +79,24 @@ public class DestinationAON {
 				}
 			}
 			
-			if (nodeFlow == 0)
-				continue;
+			// Destination flow do not use this intersection -> fractions will be
+			// uniformly distributed
+			if (nodeFlow == 0) {
+				
+				for (int i = 0; i < node.incomingLinks.length; i++)
+					for (int j = 0; j < node.outgoingLinks.length; j++)
+						destinationFractions.set(i, j, 1.0 / node.outgoingLinks.length);
+				
+			} // all flow from each incoming link is going into J
+			else {
+				for (int i = 0; i < node.incomingLinks.length; i++)
+					destinationFractions.set(i, J, 1);
+			}
 			
-			
-			DoubleMatrix destinationFractions = new DoubleMatrix(node.incomingLinks.length, node.outgoingLinks.length);
-			// all flow from each incoming link is going into J
-			for (int i = 0; i < node.incomingLinks.length; i++)
-				destinationFractions.set(i, J, 1);
-			
-			destinations[len] = destination;
-			destinationTurningFractions[len] = destinationFractions;
-			len++;
+			turningFractions[destination] = destinationFractions;
 		}
 		
-		return new MixtureFractions(destinations, destinationTurningFractions, len);
+		return new MixtureFractions(turningFractions);
 	}
 	
 	protected double[][] assignFlows() {
@@ -103,7 +107,7 @@ public class DestinationAON {
 			costs[i] = network.getEdges()[i].freeFlow;
 		
 		for (int destination = 0; destination < network.zones; destination++) {
-			Network.Edge[] next = SSSP.dijkstraDest(network, destination, costs);
+			Network.Edge[] next = SSSP.dijkstraDest(network, destination, costs).first();
 			
 			for (int origin = 0; origin < network.zones; origin++) {
 				double demand = odMatrix.get(origin, destination);
@@ -112,7 +116,7 @@ public class DestinationAON {
 				
 				for (Network.Edge link = next[origin];
 					 link != null;
-					 link = next[link.endNode]) {
+					 link = next[link.head]) {
 					destinationFlows[destination][link.index] += demand;
 				}
 			}

@@ -56,6 +56,11 @@ public class MixtureFlow {
 	}
 	
 	public MixtureFlow plus(MixtureFlow other) {
+		if (this == ZERO)
+			return other;
+		if (other == ZERO)
+			return this;
+		
 		double resultFlow = totalFlow + other.totalFlow;
 		
 		int[] destinationUnion = new int[this.destinations.length + other.destinations.length];
@@ -119,5 +124,21 @@ public class MixtureFlow {
 		
 		if (sum != 0 && Math.abs(sum - 1) > tolerance)
 			System.out.println("Portions do not sum to 1. Sum: " + sum);
+	}
+	
+	public void rectify() {
+		
+		double sum = 0;
+		int nonZero = 0;
+		for (double portion : portions) {
+			sum += portion;
+			
+			if (portion != 0)
+				nonZero++;
+		}
+		
+		double rectificationValue = (sum - 1) / nonZero;
+		for (int i = 0; i < portions.length; i++)
+			portions[i] -= rectificationValue;
 	}
 }

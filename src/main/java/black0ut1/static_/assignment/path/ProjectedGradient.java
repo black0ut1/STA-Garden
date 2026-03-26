@@ -1,130 +1,114 @@
 package black0ut1.static_.assignment.path;
 
-import black0ut1.data.Matrix;
 import black0ut1.data.network.Network;
-import black0ut1.static_.assignment.STAAlgorithm;
-import black0ut1.util.SSSP;
+import black0ut1.data.network.Path;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.util.Util;
+import com.carrotsearch.hppc.IntDoubleHashMap;
+import com.carrotsearch.hppc.cursors.IntDoubleCursor;
 
 import java.util.Vector;
 
-// TODO under construction
-public class ProjectedGradient extends STAAlgorithm {
+public class ProjectedGradient extends PathBasedAlgorithm {
 	
-	protected final Matrix<Vector<Path>> odPairs;
+	protected final IntDoubleHashMap edgeIndicesToCoeff = new IntDoubleHashMap();
 	
-	public ProjectedGradient(STAAlgorithm.Parameters parameters) {
-		super(parameters);
-		this.odPairs = new Matrix<>(network.zones);
+	public ProjectedGradient(Settings settings) {
+		super(settings);
 	}
 	
 	@Override
-	protected void init() {
-		updateCosts();
-		for (int origin = 0; origin < network.zones; origin++) {
-			
-			var a = SSSP.dijkstraLen(network, origin, costs);
-			Network.Edge[] minTree = a.first();
-			int[] pathLengths = a.second();
-			
-			for (int destination = 0; destination < network.zones; destination++) {
-				if (odMatrix.get(origin, destination) == 0)
-					continue;
-				
-				odPairs.set(origin, destination, new Vector<>());
-				
-				int[] edgeIndices = new int[pathLengths[destination]];
-				int i = 0;
-				for (Network.Edge edge = minTree[destination]; edge != null; edge = minTree[edge.startNode])
-					edgeIndices[i++] = edge.index;
-				
-				Path minPath = new Path(edgeIndices);
-				minPath.updateCost();
-				minPath.addFlow(odMatrix.get(origin, destination));
-				
-				odPairs.get(origin, destination).add(minPath);
-			}
-		}
+	protected void equilibratePaths(int origin, int destination, Path basicPath) {
+		double[] stepDirection = calculateStepDirection(origin, destination, basicPath);
+		if (stepDirection == null)
+			return;
 		
-		updateCosts();
+		double stepSize = calculateStepSize(origin, destination, stepDirection);
+		if (stepSize == 0)
+			return;
+		
+		shiftFlows(origin, destination, stepDirection, stepSize);
 	}
 	
-	@Override
-	protected void mainLoopIteration() {
-		for (int origin = 0; origin < network.zones; origin++) {
+	protected double[] calculateStepDirection(int origin, int destination, Path basicPath) {
+		Vector<Path> paths = this.paths.get(origin, destination);
+		
+		double averageTravelTime = 0;
+		double min = Double.POSITIVE_INFINITY,  max = Double.NEGATIVE_INFINITY;
+		double[] stepDirection = new double[paths.size()];
+		
+		for (int i = 0; i < stepDirection.length; i++) {
+			double pathCost = paths.get(i).getCost(costs);
 			
-			var a = SSSP.dijkstraLen(network, origin, costs);
-			Network.Edge[] minTree = a.first();
-			int[] pathLengths = a.second();
+			if (pathCost < min)
+				min = pathCost;
+			if (pathCost > max)
+				max = pathCost;
 			
-			for (int destination = 0; destination < network.zones; destination++) {
-				var paths = odPairs.get(origin, destination);
-				if (paths == null)
-					continue;
-				
-				for (Path path : paths)
-					path.updateCost();
-				
-				double avgCost = getAveragePathCost(paths);
-				double stepSize = getStepSize(paths, avgCost);
-				
-				for (Path path : paths) {
-					double deltaX = path.cost - avgCost;
-					
-					path.addFlow(stepSize * deltaX);
-				}
-			}
-			
-			updateCosts();
+			stepDirection[i] = pathCost;
+			averageTravelTime += pathCost;
 		}
+		
+		averageTravelTime /= paths.size();
+		double rectification = 0;
+		for (int i = 0; i < stepDirection.length; i++) {
+			stepDirection[i] = averageTravelTime - stepDirection[i];
+			rectification += stepDirection[i];
+		}
+		
+		// Rectify step direction such that the sum is 0 - without it, the errors of
+		// double precision will induce infeasible flows
+		stepDirection[stepDirection.length - 1] -= rectification;
+		
+		return stepDirection;
 	}
 	
-	protected double getStepSize(Vector<Path> paths, double avgCost) {
+	protected double calculateStepSize(int origin, int destination, double[] stepDirection) {
+		Vector<Path> paths = this.paths.get(origin, destination);
 		
-		
-		double maxStepSize = 0;
-		for (Path path : paths) {
-			double a = path.flow / (path.cost - avgCost);
-			if (a > maxStepSize)
-				maxStepSize = a;
+		double maxStepSize = Double.POSITIVE_INFINITY;
+		for (int i = 0; i < paths.size(); i++) {
+			if (stepDirection[i] < 0)
+				maxStepSize = Math.min(maxStepSize, -paths.get(i).flow / stepDirection[i]);
 		}
 		
-		double stepSize = maxStepSize / 2;
+		if (maxStepSize <= 0)
+			return 0;
 		
-		
-		return Util.projectToInterval(stepSize, 0, maxStepSize);
+		edgeIndicesToCoeff.clear();
+		for (int i = 0; i < paths.size(); i++)
+			for (int edgeIndex : paths.get(i).edges)
+				edgeIndicesToCoeff.addTo(edgeIndex, stepDirection[i]);
+
+		double numerator = 0;
+		double denominator = 0;
+		for (IntDoubleCursor intDoubleCursor : edgeIndicesToCoeff) {
+			int edgeIndex = intDoubleCursor.key;
+			double coeff = intDoubleCursor.value;
+			
+			Network.Edge edge = network.getEdges()[edgeIndex];
+			numerator += s.costFunction.function(edge, flows[edgeIndex]) * coeff;
+			denominator += s.costFunction.derivative(edge, flows[edgeIndex]) * coeff * coeff;
+		}
+
+		if (numerator == 0)
+			return 0;
+		return Util.projectToInterval(-numerator / denominator, 0, maxStepSize);
 	}
 	
-	protected double getAveragePathCost(Vector<Path> paths) {
-		int numPaths = paths.size();
+	protected void shiftFlows(int origin, int destination, double[] stepDirection, double stepSize) {
+		Vector<Path> paths = this.paths.get(origin, destination);
 		
-		double totalTT = 0;
-		for (Path path : paths)
-			totalTT += path.cost;
-		
-		return totalTT / numPaths;
-	}
-	
-	protected class Path {
-		
-		public final int[] edgeIndices;
-		private double flow = 0;
-		private double cost;
-		
-		public Path(int[] edgeIndices) {
-			this.edgeIndices = edgeIndices;
-		}
-		
-		public void addFlow(double flow) {
-			this.flow += flow;
-			for (int edgeIndex : edgeIndices)
-				flows[edgeIndex] += flow;
-		}
-		
-		private void updateCost() {
-			cost = 0;
-			for (int index : edgeIndices)
-				cost += costFunction.function(network.getEdges()[index], flows[index]);
+		for (int i = 0; i < paths.size(); i++) {
+			Path path = paths.get(i);
+			
+			double flowShift = stepSize * stepDirection[i];
+			path.flow += flowShift;
+			
+			for (int edgeIndex : path.edges)
+				flows[edgeIndex] += flowShift;
+			
+			updateCosts(path);
 		}
 	}
 }

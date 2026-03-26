@@ -1,8 +1,8 @@
 package black0ut1.static_.assignment.bush;
 
 import black0ut1.data.network.*;
-import black0ut1.data.tuple.Pair;
-import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.assignment.Settings;
+import black0ut1.static_.assignment.Convergence;
 import black0ut1.util.SSSP;
 
 import java.util.*;
@@ -23,10 +23,11 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected final Random rng = new Random(42);
 	protected final PASManager manager;
 	
-	public iTAPAS(Parameters parameters) {
-		super(parameters);
-		this.manager = new PASManager(parameters.network);
+	public iTAPAS(Settings settings) {
+		super(settings);
+		this.manager = new PASManager(network);
 	}
+	
 	
 	@Override
 	protected void mainLoopIteration() {
@@ -36,7 +37,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 			case 1:
 				yield 0.001;
 			default:
-				double convIndicator = convergence.getData().getLast()[STAConvergence.Criterion.RELATIVE_GAP_1.ordinal()];
+				double convIndicator = convergence.getData().getLast()[Convergence.Criterion.RELATIVE_GAP_1.ordinal()];
 				yield convIndicator / 100;
 		};
 		
@@ -55,7 +56,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 				if (bush.getEdgeFlow(edge.index) <= FLOW_EPSILON)
 					continue;
 				
-				double reducedCost = minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode];
+				double reducedCost = minDistance[edge.tail] + costs[edge.index] - minDistance[edge.head];
 				if (reducedCost < minReducedCost) // TODO check performance impact of this condition
 					continue;
 				
@@ -78,6 +79,9 @@ public class iTAPAS extends BushBasedAlgorithm {
 		
 		eliminatePASes();
 	}
+	
+	@Override
+	protected void equilibrateBush(Bush bush) {}
 	
 	/* Potential link is every link in the network, which:
 	 * 1) is not part of mintree from currently processed origin,
@@ -138,8 +142,8 @@ public class iTAPAS extends BushBasedAlgorithm {
 	 */
 	protected PAS matchPAS(Network.Edge potentialLink, double reducedCost) {
 		
-		for (int i = 0; i < manager.getCountPj(potentialLink.endNode); i++) {
-			PAS pas = manager.getPASes(potentialLink.endNode)[i];
+		for (int i = 0; i < manager.getCountPj(potentialLink.head); i++) {
+			PAS pas = manager.getPASes(potentialLink.head)[i];
 			
 			pas.updateSegments(costs);
 			if (pas.maxSegmentLastEdge() == potentialLink.index
@@ -210,28 +214,28 @@ public class iTAPAS extends BushBasedAlgorithm {
 			// the number indicates distance in links from ij.endNode - this
 			// is useful for creating array for minSegment (it is its length)
 			int count = 1;
-			int start = ij.endNode;
+			int start = ij.head;
 			
 			// in postprocessing, the backing up along min tree starts with start node of postEdge
 			if (postEdge != null) {
-				scanStatus[postEdge.startNode] = -count;
+				scanStatus[postEdge.tail] = -count;
 				count++;
-				start = postEdge.startNode;
+				start = postEdge.tail;
 			}
 			
 			for (Network.Edge edge = minTree[start];
 				 edge != null;
-				 edge = minTree[edge.startNode]) {
-				scanStatus[edge.startNode] = -count;
+				 edge = minTree[edge.tail]) {
+				scanStatus[edge.tail] = -count;
 				count++;
 			}
 			
 			
 			count = 1;
-			scanStatus[ij.endNode] = count++;
+			scanStatus[ij.head] = count++;
 			
 			// now we back up along incoming links with max flow until we encounter node from mintree
-			int node = ij.startNode;
+			int node = ij.tail;
 			Network.Edge maxIncomingLink = ij;
 			while (true) {
 				
@@ -249,7 +253,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 				} else if (scanStatus[node] < 0) { // encountered node from mintree, PAS can now be constructed
 					
 					int minSegmentLen = -scanStatus[node];
-					int maxSegmentLen = scanStatus[maxIncomingLink.endNode];
+					int maxSegmentLen = scanStatus[maxIncomingLink.head];
 					
 					PAS newPas = createPAS(ij, node, minSegmentLen, maxSegmentLen,
 							minTree, bush.root, higherCostSegment, postEdge);
@@ -270,7 +274,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 				// find the incoming link with max flow
 				maxIncomingLink = mostFlowIncomingEdge(node, bush);
 				
-				node = maxIncomingLink.startNode;
+				node = maxIncomingLink.tail;
 			}
 		}
 	}
@@ -294,7 +298,7 @@ public class iTAPAS extends BushBasedAlgorithm {
 	protected PAS createPAS(Network.Edge ij, int tail, int minSegmentLen, int maxSegmentLen,
 							Network.Edge[] minTree, int origin, Network.Edge[] higherCostSegment,
 							Network.Edge postEdge) {
-		int head = ij.endNode;
+		int head = ij.head;
 		
 		
 		int[] minSegment = new int[minSegmentLen];
@@ -303,14 +307,14 @@ public class iTAPAS extends BushBasedAlgorithm {
 		int start = head;
 		if (postEdge != null) {
 			minSegment[i--] = postEdge.index;
-			start = postEdge.startNode;
+			start = postEdge.tail;
 		}
 		if (i != -1) {
 			for (Network.Edge edge = minTree[start]; ;
-				 edge = minTree[edge.startNode]) {
+				 edge = minTree[edge.tail]) {
 				
 				minSegment[i--] = edge.index;
-				if (edge.startNode == tail)
+				if (edge.tail == tail)
 					break;
 			}
 		}
@@ -319,10 +323,10 @@ public class iTAPAS extends BushBasedAlgorithm {
 		int[] maxSegment = new int[maxSegmentLen];
 		i = 0;
 		for (Network.Edge edge = higherCostSegment[tail]; ;
-			 edge = higherCostSegment[edge.endNode]) {
+			 edge = higherCostSegment[edge.head]) {
 			
 			maxSegment[i++] = edge.index;
-			if (edge.endNode == head)
+			if (edge.head == head)
 				break;
 		}
 		maxSegment[maxSegmentLen - 1] = ij.index;
@@ -338,22 +342,22 @@ public class iTAPAS extends BushBasedAlgorithm {
 		while (true) {
 			minCycleFlow = Math.min(minCycleFlow, bush.getEdgeFlow(cycleEdge.index));
 			
-			if (cycleEdge.endNode == cycleNode)
+			if (cycleEdge.head == cycleNode)
 				break;
 			
-			cycleEdge = higherCostSegment[cycleEdge.endNode];
+			cycleEdge = higherCostSegment[cycleEdge.head];
 		}
 		
 		cycleEdge = higherCostSegment[cycleNode];
 		while (true) {
 			bush.addFlow(cycleEdge.index, -minCycleFlow);
 			flows[cycleEdge.index] -= minCycleFlow;
-			costs[cycleEdge.index] = costFunction.function(cycleEdge, flows[cycleEdge.index]);
+			costs[cycleEdge.index] = s.costFunction.function(cycleEdge, flows[cycleEdge.index]);
 			
-			if (cycleEdge.endNode == cycleNode)
+			if (cycleEdge.head == cycleNode)
 				break;
 			
-			cycleEdge = higherCostSegment[cycleEdge.endNode];
+			cycleEdge = higherCostSegment[cycleEdge.head];
 		}
 	}
 	
@@ -375,13 +379,13 @@ public class iTAPAS extends BushBasedAlgorithm {
 		for (int edgeIndex : pas.minSegment()) {
 			bush.addFlow(edgeIndex, flowShift);
 			flows[edgeIndex] += flowShift;
-			costs[edgeIndex] = costFunction.function(edges[edgeIndex], flows[edgeIndex]);
+			costs[edgeIndex] = s.costFunction.function(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		for (int edgeIndex : pas.maxSegment()) {
 			bush.addFlow(edgeIndex, -flowShift);
 			flows[edgeIndex] -= flowShift;
-			costs[edgeIndex] = costFunction.function(edges[edgeIndex], flows[edgeIndex]);
+			costs[edgeIndex] = s.costFunction.function(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		return true;
@@ -393,12 +397,12 @@ public class iTAPAS extends BushBasedAlgorithm {
 		
 		double minSegmentCostDerivative = 0;
 		for (int edgeIndex : pas.minSegment()) {
-			minSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
+			minSegmentCostDerivative += s.costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		double maxSegmentCostDerivative = 0;
 		for (int edgeIndex : pas.maxSegment()) {
-			maxSegmentCostDerivative += costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
+			maxSegmentCostDerivative += s.costFunction.derivative(edges[edgeIndex], flows[edgeIndex]);
 		}
 		
 		return pas.segmentsCostDifference() / (maxSegmentCostDerivative + minSegmentCostDerivative);

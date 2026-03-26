@@ -8,7 +8,7 @@ import black0ut1.dynamic.loading.link.Link;
  * Basic node model representing links in series:
  *   -->O-->
  */
-public class LinearNode extends Node {
+public class LinearNode extends Intersection {
 	
 	public LinearNode(int index, Link incomingLink, Link outgoingLink) {
 		super(index, new Link[] {incomingLink}, new Link[] {outgoingLink});

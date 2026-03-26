@@ -6,7 +6,7 @@ import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.node.Destination;
-import black0ut1.dynamic.loading.node.Intersection;
+import black0ut1.dynamic.loading.node.RoutedIntersection;
 import black0ut1.dynamic.loading.node.Origin;
 
 import java.util.Arrays;
@@ -27,15 +27,20 @@ import java.util.Comparator;
  * model															  <br>
  * - (Zhao, Hongkai, 2005) A fast sweeping method for eikonal equations
  */
-public class FastSweepingILTM_DNL extends ILTM_DNL {
+public class FS_ILTM_DNL extends ILTM_DNL {
 	
-	public FastSweepingILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
-								double stepSize, int steps, double precision) {
+	public FS_ILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
+					   double stepSize, int steps, double precision) {
 		super(network, odm, stepSize, steps, precision);
 	}
 	
 	@Override
 	protected void loadForTime(int t) {
+		
+		for (Link link : network.links) {
+			link.cumulativeInflow[t + 1] = Math.max(link.cumulativeInflow[t + 1], link.cumulativeInflow[t]);
+			link.cumulativeOutflow[t + 1] = Math.max(link.cumulativeOutflow[t + 1], link.cumulativeOutflow[t]);
+		}
 		
 		// 1. Load traffic from each origin onto the connector
 		for (Origin origin : network.origins) {
@@ -51,15 +56,15 @@ public class FastSweepingILTM_DNL extends ILTM_DNL {
 		
 		// Initialize update potential of every intersection to inf
 		// and clone intersection array for sorting
-		Intersection[] intersections = network.intersections.clone();
-		for (Intersection intersection : intersections)
+		RoutedIntersection[] intersections = network.routedIntersections.clone();
+		for (RoutedIntersection intersection : intersections)
 			intersection.potential = Double.POSITIVE_INFINITY;
 		
 		// 2. Iterate until update potential of every intersection of
 		// is under precision
 		do {
 			// 2.1 For each intersection
-			for (Intersection node : intersections) {
+			for (RoutedIntersection node : intersections) {
 				
 				// Update potential of this node is sufficiently small
 				// so we do not need to update it.
@@ -89,7 +94,7 @@ public class FastSweepingILTM_DNL extends ILTM_DNL {
 					// increase update potential of the link tail
 					if (incomingLink instanceof LTM) {
 						double Vi = incomingLink.cumulativeOutflow[t + 1];
-						((Intersection) incomingLink.tail).potential += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
+						((RoutedIntersection) incomingLink.tail).potential += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
 					}
 					
 					incomingLink.outflow[t] = incomingFlow;
@@ -106,7 +111,7 @@ public class FastSweepingILTM_DNL extends ILTM_DNL {
 					// increase update potential of the link head
 					if (outgoingLink instanceof LTM) {
 						double Ui = outgoingLink.cumulativeInflow[t + 1];
-						((Intersection) outgoingLink.head).potential += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
+						((RoutedIntersection) outgoingLink.head).potential += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
 					}
 					
 					outgoingLink.inflow[t] = outgoingFlow;

@@ -4,32 +4,46 @@ import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.static_.cost.CostFunction;
 
-public abstract class STAAlgorithm {
+/**
+ * Base class for all static traffic assignment algorithms. The common parts of such
+ * algorithms are: the traffic network, origin-destination matrix, cost function, maximum
+ * number of iterations and convergence criteria.
+ * <p>
+ * The common process of STA algorithms is:
+ * 1. Initialize (flows, paths, bushes etc.)
+ * 2. While convergence criteria are not met, iterate
+ * 3. Post-process
+ */
+public abstract class Algorithm {
 	
 	protected final Network network;
-	protected final DoubleMatrix odMatrix;
-	protected final CostFunction costFunction;
+	protected final DoubleMatrix odm;
 	protected final int maxIterations;
-	protected final STAConvergence convergence;
+	protected final Convergence convergence;
+	
+	protected final Settings s;
 	
 	protected int iteration = 0;
 	
 	protected final double[] flows;
 	protected final double[] costs;
 	
-	public STAAlgorithm(Parameters algorithmParameters) {
-		this.network = algorithmParameters.network;
-		this.odMatrix = algorithmParameters.odMatrix;
-		this.costFunction = algorithmParameters.costFunction;
-		this.maxIterations = algorithmParameters.maxIterations;
-		this.convergence = algorithmParameters.convergence;
+	public Algorithm(Settings settings) {
+		this.network = settings.network;
+		this.odm = settings.odm;
+		this.maxIterations = settings.maxIterations;
+		this.convergence = settings.convergenceBuilder
+				.build(network, odm, settings.costFunction);
+		
+		this.s = settings;
+		
 		this.flows = new double[network.edges];
 		this.costs = new double[network.edges];
+		updateCosts();
 	}
 	
 	public void assignFlows() {
-		updateCosts();
-		init();
+		initialize();
 		
 		System.out.println("===================================");
 		System.out.println("STA Algorithm: " + this.getClass().getSimpleName());
@@ -45,7 +59,6 @@ public abstract class STAAlgorithm {
 			
 			convergence.computeCriteria(flows, costs);
 			convergence.printCriteriaValues();
-			
 			System.out.println("-----------------------------------");
 			iteration++;
 		}
@@ -53,7 +66,7 @@ public abstract class STAAlgorithm {
 		postProcess();
 	}
 	
-	protected abstract void init();
+	protected abstract void initialize();
 	
 	protected abstract void mainLoopIteration();
 	
@@ -71,24 +84,6 @@ public abstract class STAAlgorithm {
 	
 	protected void updateCosts() {
 		for (int i = 0; i < network.edges; i++)
-			costs[i] = costFunction.function(network.getEdges()[i], flows[i]);
-	}
-	
-	public static class Parameters {
-		
-		public final Network network;
-		public final DoubleMatrix odMatrix;
-		public final CostFunction costFunction;
-		public final int maxIterations;
-		public final STAConvergence convergence;
-		
-		public Parameters(Network network, DoubleMatrix odMatrix, CostFunction costFunction,
-			int maxIterations, STAConvergence.Builder convergenceBuilder) {
-			this.network = network;
-			this.odMatrix = odMatrix;
-			this.costFunction = costFunction;
-			this.maxIterations = maxIterations;
-			this.convergence = convergenceBuilder.build(this);
-		}
+			costs[i] = s.costFunction.function(network.getEdges()[i], flows[i]);
 	}
 }

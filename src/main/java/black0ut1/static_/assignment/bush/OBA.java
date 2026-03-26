@@ -5,7 +5,7 @@ import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Pair;
 import black0ut1.data.tuple.Triplet;
-import black0ut1.static_.assignment.STAAlgorithm;
+import black0ut1.static_.assignment.Settings;
 
 import java.util.Arrays;
 import java.util.Vector;
@@ -15,9 +15,10 @@ public class OBA extends BushBasedAlgorithm {
 	protected static final int NEWTON_MAX_ITERATIONS = 100;
 	protected static final double NEWTON_EPSILON = 1e-10;
 	
-	public OBA(STAAlgorithm.Parameters parameters) {
-		super(parameters);
+	public OBA(Settings settings) {
+		super(settings);
 	}
+	
 	
 	@Override
 	protected void mainLoopIteration() {
@@ -70,11 +71,14 @@ public class OBA extends BushBasedAlgorithm {
 		}
 	}
 	
+	@Override
+	protected void equilibrateBush(Bush bush) {}
+	
 	protected void updateNodes(int[] topOrd2, double[] nFlows, double[] alpha, Bush bush) {
 		for (int i = network.nodes - 1; i >= 0; i--) {
 			int n = topOrd2[i];
 			
-			nFlows[n] = odMatrix.get(bush.root, n);
+			nFlows[n] = odm.get(bush.root, n);
 			for (Network.Edge edge : network.forwardStar(n)) {
 				if (!bush.edgeExists(edge.index))
 					continue;
@@ -97,7 +101,7 @@ public class OBA extends BushBasedAlgorithm {
 			if (!bush.edgeExists(edge.index))
 				continue;
 			
-			alpha[edge.index] = bush.getEdgeFlow(edge.index) / nFlows[edge.endNode];
+			alpha[edge.index] = bush.getEdgeFlow(edge.index) / nFlows[edge.head];
 		}
 	}
 	
@@ -149,13 +153,13 @@ public class OBA extends BushBasedAlgorithm {
 			
 			Network.Edge next = null;
 			int minOrder = Integer.MAX_VALUE;
-			for (Network.Edge edge1 : network.backwardStar(edge.startNode)) {
+			for (Network.Edge edge1 : network.backwardStar(edge.tail)) {
 				if (!bush.edgeExists(edge1.index))
 					continue;
 				
-				if (topologicalOrder[edge1.startNode] < minOrder) {
+				if (topologicalOrder[edge1.tail] < minOrder) {
 					next = edge1;
-					minOrder = topologicalOrder[edge1.startNode];
+					minOrder = topologicalOrder[edge1.tail];
 				}
 			}
 			
@@ -178,13 +182,13 @@ public class OBA extends BushBasedAlgorithm {
 				
 				Network.Edge next = null;
 				int minOrder = Integer.MAX_VALUE;
-				for (Network.Edge edge1 : network.backwardStar(edge.startNode)) {
+				for (Network.Edge edge1 : network.backwardStar(edge.tail)) {
 					if (!bush.edgeExists(edge1.index))
 						continue;
 					
-					if (topologicalOrder[edge1.startNode] < minOrder) {
+					if (topologicalOrder[edge1.tail] < minOrder) {
 						next = edge1;
-						minOrder = topologicalOrder[edge1.startNode];
+						minOrder = topologicalOrder[edge1.tail];
 					}
 				}
 				
@@ -203,15 +207,15 @@ public class OBA extends BushBasedAlgorithm {
 		
 		double deltaX = 0;
 		for (int i = 0; i < NEWTON_MAX_ITERATIONS; i++) {
-			double M_Basic = meanDistance[basic.startNode] +
-					costFunction.function(nonbasic, flows[nonbasic.index] + deltaX);
-			double M_Nonbasic = meanDistance[nonbasic.startNode] +
-					costFunction.function(nonbasic, flows[nonbasic.index] - deltaX);
+			double M_Basic = meanDistance[basic.tail] +
+					s.costFunction.function(nonbasic, flows[nonbasic.index] + deltaX);
+			double M_Nonbasic = meanDistance[nonbasic.tail] +
+					s.costFunction.function(nonbasic, flows[nonbasic.index] - deltaX);
 			
-			double D_Basic = derivativeDistance[basic.startNode] +
-					costFunction.derivative(nonbasic, flows[nonbasic.index] + deltaX);
-			double D_Nonbasic = derivativeDistance[nonbasic.startNode] +
-					costFunction.derivative(nonbasic, flows[nonbasic.index] - deltaX);
+			double D_Basic = derivativeDistance[basic.tail] +
+					s.costFunction.derivative(nonbasic, flows[nonbasic.index] + deltaX);
+			double D_Nonbasic = derivativeDistance[nonbasic.tail] +
+					s.costFunction.derivative(nonbasic, flows[nonbasic.index] - deltaX);
 			
 			double newDeltaX = deltaX - (M_Nonbasic - M_Basic) / (D_Nonbasic + D_Basic);
 			
@@ -231,7 +235,7 @@ public class OBA extends BushBasedAlgorithm {
 			if (!bush.edgeExists(edge.index))
 				continue;
 			
-			nFlows[edge.endNode] += bush.getEdgeFlow(edge.index);
+			nFlows[edge.head] += bush.getEdgeFlow(edge.index);
 		}
 		
 		double[] alpha = new double[network.edges];
@@ -239,9 +243,9 @@ public class OBA extends BushBasedAlgorithm {
 			if (!bush.edgeExists(edge.index))
 				continue;
 			
-			alpha[edge.index] = (nFlows[edge.endNode] != 0)
-					? bush.getEdgeFlow(edge.index) / nFlows[edge.endNode]
-					: 1.0 / indegree[edge.endNode];
+			alpha[edge.index] = (nFlows[edge.head] != 0)
+					? bush.getEdgeFlow(edge.index) / nFlows[edge.head]
+					: 1.0 / indegree[edge.head];
 		}
 		
 		return new Pair<>(nFlows, alpha);
@@ -269,15 +273,15 @@ public class OBA extends BushBasedAlgorithm {
 					continue;
 				
 				double edgeDistance = meanDistance[startNode] + costs[edge.index];
-				meanDistance[edge.endNode] += alpha[edge.index] * edgeDistance;
+				meanDistance[edge.head] += alpha[edge.index] * edgeDistance;
 				
 				double edgeDerivativeDistance = derivativeDistance[startNode] +
-						costFunction.derivative(edge, flows[edge.index]);
-				derivativeDistance[edge.endNode] += alpha[edge.index] * alpha[edge.index] * edgeDerivativeDistance;
+						s.costFunction.derivative(edge, flows[edge.index]);
+				derivativeDistance[edge.head] += alpha[edge.index] * alpha[edge.index] * edgeDerivativeDistance;
 				
-				indegree[edge.endNode]--;
-				if (indegree[edge.endNode] == 0)
-					queue.enqueue(edge.endNode);
+				indegree[edge.head]--;
+				if (indegree[edge.head] == 0)
+					queue.enqueue(edge.head);
 			}
 		}
 		
@@ -288,10 +292,10 @@ public class OBA extends BushBasedAlgorithm {
 		double[] maxDistance = getMaxDistance(bush);
 		
 		for (Network.Edge edge : network.getEdges()) {
-			if (maxDistance[edge.startNode] == Double.NEGATIVE_INFINITY || maxDistance[edge.endNode] == Double.NEGATIVE_INFINITY)
+			if (maxDistance[edge.tail] == Double.NEGATIVE_INFINITY || maxDistance[edge.head] == Double.NEGATIVE_INFINITY)
 				continue;
 			
-			if (maxDistance[edge.startNode] < maxDistance[edge.endNode]) {
+			if (maxDistance[edge.tail] < maxDistance[edge.head]) {
 				bush.addEdge(edge.index);
 			}
 		}
@@ -316,13 +320,13 @@ public class OBA extends BushBasedAlgorithm {
 					continue;
 				
 				double newDistance = maxTreeDistance[startNode] + costs[edge.index];
-				if (maxTreeDistance[edge.endNode] < newDistance) {
-					maxTreeDistance[edge.endNode] = newDistance;
+				if (maxTreeDistance[edge.head] < newDistance) {
+					maxTreeDistance[edge.head] = newDistance;
 				}
 				
-				indegree[edge.endNode]--;
-				if (indegree[edge.endNode] == 0)
-					queue.enqueue(edge.endNode);
+				indegree[edge.head]--;
+				if (indegree[edge.head] == 0)
+					queue.enqueue(edge.head);
 			}
 		}
 		
@@ -335,7 +339,7 @@ public class OBA extends BushBasedAlgorithm {
 		for (Network.Edge edge : network.getEdges()) {
 			if (!bush.edgeExists(edge.index))
 				continue;
-			indegree[edge.endNode]++;
+			indegree[edge.head]++;
 		}
 		
 		return indegree;

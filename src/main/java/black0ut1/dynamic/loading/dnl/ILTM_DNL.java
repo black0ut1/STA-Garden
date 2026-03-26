@@ -6,7 +6,7 @@ import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.node.Destination;
-import black0ut1.dynamic.loading.node.Intersection;
+import black0ut1.dynamic.loading.node.RoutedIntersection;
 import black0ut1.dynamic.loading.node.Origin;
 
 /**
@@ -29,7 +29,6 @@ import black0ut1.dynamic.loading.node.Origin;
 public class ILTM_DNL extends DynamicNetworkLoading {
 	
 	protected final double precision;
-	public int nodeUpdates = 0;
 	
 	public ILTM_DNL(DynamicNetwork network, TimeDependentODM odm,
 					double stepSize, int steps, double precision) {
@@ -39,6 +38,11 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 	
 	@Override
 	protected void loadForTime(int t) {
+	
+		for (Link link : network.links) {
+			link.cumulativeInflow[t + 1] = Math.max(link.cumulativeInflow[t + 1], link.cumulativeInflow[t]);
+			link.cumulativeOutflow[t + 1] = Math.max(link.cumulativeOutflow[t + 1], link.cumulativeOutflow[t]);
+		}
 		
 		// 1. Load traffic from each origin onto the connector
 		for (Origin origin : network.origins) {
@@ -53,14 +57,14 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 		}
 		
 		// Initialize update potential of every intersection to inf
-		for (Intersection intersection : network.intersections)
+		for (RoutedIntersection intersection : network.routedIntersections)
 			intersection.potential = Double.POSITIVE_INFINITY;
 		
 		// 2. Iterate until update potential of every intersection of
 		// is under precision
 		do {
 			// 2.1 For each intersection
-			for (Intersection node : network.intersections) {
+			for (RoutedIntersection node : network.routedIntersections) {
 				
 				// Update potential of this node is sufficiently small
 				// so we do not need to update it.
@@ -90,7 +94,7 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 					// increase update potential of the link tail
 					if (incomingLink instanceof LTM) {
 						double Vi = incomingLink.cumulativeOutflow[t + 1];
-						((Intersection) incomingLink.tail).potential += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
+						((RoutedIntersection) incomingLink.tail).potential += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
 					}
 					
 					incomingLink.outflow[t] = incomingFlow;
@@ -107,7 +111,7 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 					// increase update potential of the link head
 					if (outgoingLink instanceof LTM) {
 						double Ui = outgoingLink.cumulativeInflow[t + 1];
-						((Intersection) outgoingLink.head).potential += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
+						((RoutedIntersection) outgoingLink.head).potential += ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
 					}
 					
 					outgoingLink.inflow[t] = outgoingFlow;
@@ -135,7 +139,7 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 	}
 	
 	protected boolean abovePrecision() {
-		for (Intersection intersection : network.intersections) {
+		for (RoutedIntersection intersection : network.routedIntersections) {
 			if (intersection.potential > precision)
 				return true;
 		}

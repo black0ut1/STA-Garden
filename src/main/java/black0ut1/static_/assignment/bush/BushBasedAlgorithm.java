@@ -1,29 +1,29 @@
 package black0ut1.static_.assignment.bush;
 
+import black0ut1.data.IntQueue;
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
-import black0ut1.data.network.Path;
-import black0ut1.data.tuple.Pair;
-import black0ut1.data.tuple.Triplet;
-import black0ut1.static_.assignment.STAAlgorithm;
+import black0ut1.data.tuple.Quadruplet;
+import black0ut1.static_.assignment.Settings;
+import black0ut1.static_.assignment.Algorithm;
 import black0ut1.util.SSSP;
 
-import java.util.Stack;
-import java.util.Vector;
+import java.util.Arrays;
 
-public abstract class BushBasedAlgorithm extends STAAlgorithm {
+
+public abstract class BushBasedAlgorithm extends Algorithm {
 	
-	protected static final double FLOW_CHECK_ERROR = 1e-9;
+	protected static final double FLOW_EPSILON = 1e-10;
 	
 	protected final Bush[] bushes;
 	
-	public BushBasedAlgorithm(STAAlgorithm.Parameters parameters) {
-		super(parameters);
+	public BushBasedAlgorithm(Settings settings) {
+		super(settings);
 		this.bushes = new Bush[network.zones];
 	}
 	
 	@Override
-	protected void init() {
+	protected void initialize() {
 		for (int zone = 0; zone < bushes.length; zone++)
 			bushes[zone] = createBush(zone);
 		
@@ -34,25 +34,35 @@ public abstract class BushBasedAlgorithm extends STAAlgorithm {
 		updateCosts();
 	}
 	
-	protected Bush createBush(int zone) {
-		Bush bush = new Bush(network.edges, zone);
+	protected Bush createBush(int origin) {
+		Bush bush = new Bush(network.edges, origin);
 		
-		var pair = SSSP.dijkstra(network, zone, costs);
-		var minTree = pair.first();
-		var minDistance = pair.second();
+		var pair = SSSP.dijkstra(network, origin, costs);
+		Network.Edge[] minimalTree = pair.first();
+		double[] minimalDistance = pair.second();
 		
-		for (Network.Edge edge : network.getEdges())
-			if (minDistance[edge.startNode] < minDistance[edge.endNode])
-				bush.addEdge(edge.index);
+		// add edges to bush
+		if (s.bushUpdateStrategy == Settings.BushUpdateStrategy.DIAL) {
+			
+			for (Network.Edge edge : network.getEdges())
+				if (minimalDistance[edge.tail] < minimalDistance[edge.head])
+					bush.addEdge(edge.index);
+		} else {
+			
+			for (Network.Edge edge : minimalTree)
+				if (edge != null)
+					bush.addEdge(edge.index);
+		}
 		
-		for (int node = 0; node < network.zones; node++) {
-			double trips = odMatrix.get(zone, node);
+		// assign flows to shortest paths (AON)
+		for (int destination = 0; destination < network.zones; destination++) {
+			double trips = odm.get(origin, destination);
 			if (trips == 0)
 				continue;
 			
-			for (Network.Edge edge = minTree[node];
+			for (Network.Edge edge = minimalTree[destination];
 				 edge != null;
-				 edge = minTree[edge.startNode]) {
+				 edge = minimalTree[edge.tail]) {
 				bush.addFlow(edge.index, trips);
 			}
 		}
@@ -60,193 +70,188 @@ public abstract class BushBasedAlgorithm extends STAAlgorithm {
 		return bush;
 	}
 	
-	public void checkFlows() {
-		double[] flowCheck = new double[network.edges];
-		
-		for (int origin = 0; origin < network.zones; origin++) {
-			Bush bush = bushes[origin];
-			
-			for (int i = 0; i < network.edges; i++) {
-				Network.Edge edge = network.getEdges()[i];
-				
-				if (bush.getEdgeFlow(i) < 0) {
-					System.err.println("Negative flow: edge "
-							+ edge.startNode + "->" + edge.endNode
-							+ ", bush " + origin + ", flow " + bush.getEdgeFlow(i));
-				}
-				flowCheck[i] += bush.getEdgeFlow(i);
-			}
-			
-			for (int destination = 0; destination < network.nodes; destination++) {
-				if (destination == origin)
-					continue;
-				
-				double balance = 0;
-				
-				for (Network.Edge edge : network.backwardStar(destination)) {
-					balance += bush.getEdgeFlow(edge.index);
-				}
-				
-				for (Network.Edge edge : network.forwardStar(destination)) {
-					balance -= bush.getEdgeFlow(edge.index);
-				}
-				
-				if (destination < network.zones)
-					balance -= odMatrix.get(origin, destination);
-				
-				if (Math.abs(balance) > FLOW_CHECK_ERROR) {
-					System.err.println("Conservation violated: bush " + origin
-							+ ", node " + destination
-							+ ", balance " + balance);
-				}
-			}
-		}
-		
-		for (int i = 0; i < network.edges; i++) {
-			Network.Edge edge = network.getEdges()[i];
-			
-			if (Math.abs(flowCheck[i] - flows[i]) > FLOW_CHECK_ERROR) {
-				System.err.println("Bush flows not adding up: edge "
-						+ edge.startNode + "->" + edge.endNode
-						+ ", difference " + Math.abs(flowCheck[i] - flows[i]));
-			}
-		}
-	}
-	
-	public double removeCycleFlows() {
-		double flowRemoved = 0;
-		Stack<Pair<Network.Edge, Integer>> stack = new Stack<>();
-		
+	@Override
+	protected void mainLoopIteration() {
 		for (Bush bush : bushes) {
-			for (Network.Edge edge : network.forwardStar(bush.root)) {
-				if (bush.getEdgeFlow(edge.index) > 0)
-					stack.push(new Pair<>(edge, 1));
-			}
-			
-			boolean[] nodeFlags = new boolean[network.nodes];
-			Network.Edge[] currPath = new Network.Edge[network.edges];
-			
-			while (!stack.isEmpty()) {
-				
-				var pair = stack.pop();
-				Network.Edge edge = pair.first();
-				int pathLen = pair.second();
-				
-				currPath[pathLen - 1] = edge;
-				
-				int node = edge.startNode;
-				if (nodeFlags[node]) {
-					
-					boolean inPath = false;
-					for (int i = 0; i < pathLen; i++) {
-						Network.Edge edge1 = currPath[i];
-						if (edge1.startNode == node) {
-							inPath = true;
-							break;
-						}
-					}
-					
-					if (inPath) {
-						double cycleFlow = Double.POSITIVE_INFINITY;
-						int i = pathLen - 1;
-						for (Network.Edge cycleEdge = currPath[i]; ;
-							 cycleEdge = currPath[--i]) {
-							
-							cycleFlow = Math.min(cycleFlow, bush.getEdgeFlow(cycleEdge.index));
-							if (cycleEdge.startNode == node)
-								break;
-						}
-						
-						flowRemoved += cycleFlow;
-						
-						i = pathLen - 1;
-						for (Network.Edge cycleEdge = currPath[i]; ;
-							 cycleEdge = currPath[--i]) {
-							
-							bush.addFlow(cycleEdge.index, -cycleFlow);
-							flows[cycleEdge.index] -= cycleFlow;
-							if (cycleEdge.startNode == node)
-								break;
-						}
-					}
-				} else {
-					nodeFlags[node] = true;
-					
-					for (Network.Edge newEdge : network.forwardStar(edge.endNode)) {
-						if (bush.getEdgeFlow(newEdge.index) > 0)
-							stack.push(new Pair<>(newEdge, pathLen + 1));
-					}
-				}
-			}
+			updateBush(bush);
+			equilibrateBush(bush);
 		}
 		
-		return flowRemoved;
+		for (int i = 0; i < 10; i++) {
+			for (Bush bush : bushes) {
+				equilibrateBush(bush);
+			}
+		}
 	}
 	
-	public Vector<Path> calculatePathFlows() {
-		Vector<Path> paths = new Vector<>();
-		
-		for (int origin = 0; origin < network.zones; origin++) {
-			Bush bush = bushes[origin];
+	protected abstract void equilibrateBush(Bush bush);
+	
+	protected void updateBush(Bush bush) {
+		// Dial's strategy is different from Bargera's and Nie's
+		if (s.bushUpdateStrategy == Settings.BushUpdateStrategy.DIAL) {
+			double[] minimalDistance = getTrees(bush, true, false, false).third();
 			
-			double[] proportions = new double[network.edges];
-			for (int node = 0; node < network.nodes; node++) {
+			for (Network.Edge edge : network.getEdges()) {
+				if (!bush.edgeExists(edge.index))
+					continue;
 				
-				double nodeFlow = 0;
-				for (Network.Edge edge : network.backwardStar(node))
-					nodeFlow += bush.getEdgeFlow(edge.index);
-				
-				for (Network.Edge edge : network.backwardStar(node)) {
-					proportions[edge.index] = (nodeFlow == 0)
-							? 0
-							: bush.getEdgeFlow(edge.index) / nodeFlow;
+				Network.Edge mirror = network.mirrorEdgeOf(edge.index);
+				if (minimalDistance[edge.tail] + costs[edge.index] < minimalDistance[edge.head]) {
+					bush.removeEdge(edge.index);
+					bush.addEdge(mirror.index);
 				}
 			}
 			
-			for (int destination = 0; destination < network.zones; destination++) {
-				if (odMatrix.get(origin, destination) == 0)
+			return;
+		}
+		
+		var q = getTrees(bush, true, true, false);
+		Network.Edge[] minimalTree = q.first();
+		double[] minimalDistance = q.third();
+		double[] maximalDistance = q.fourth();
+		
+		// remove unused links but maintain connectedness
+		for (int i = 0; i < network.edges; i++)
+			if (bush.getEdgeFlow(i) <= FLOW_EPSILON)
+				bush.removeEdge(i);
+		for (Network.Edge edge : minimalTree)
+			if (edge != null)
+				bush.addEdge(edge.index);
+		
+		if (s.bushUpdateStrategy == Settings.BushUpdateStrategy.BARGERA) {
+			
+			for (Network.Edge edge : network.getEdges())
+				if (maximalDistance[edge.tail] < maximalDistance[edge.head])
+					bush.addEdge(edge.index);
+			return;
+		}
+		
+		if (s.bushUpdateStrategy == Settings.BushUpdateStrategy.NIE) {
+			
+			int linksAdded = 0;
+			for (Network.Edge edge : network.getEdges()) {
+				
+				if (minimalDistance[edge.tail] == Double.POSITIVE_INFINITY
+						|| minimalDistance[edge.head] == Double.POSITIVE_INFINITY) {
+					continue;
+				}
+				
+				if (maximalDistance[edge.tail] + costs[edge.index] < maximalDistance[edge.head]
+						&& minimalDistance[edge.tail] + costs[edge.index] < minimalDistance[edge.head]) {
+					bush.addEdge(edge.index);
+					linksAdded++;
+				}
+			}
+			
+			// fallback to Bargera's strategy
+			if (linksAdded == 0)
+				for (Network.Edge edge : network.getEdges()) {
+					
+					if (minimalDistance[edge.tail] == Double.POSITIVE_INFINITY
+							|| minimalDistance[edge.head] == Double.POSITIVE_INFINITY) {
+						continue;
+					}
+					
+					if (maximalDistance[edge.tail] + costs[edge.index] < maximalDistance[edge.head])
+						bush.addEdge(edge.index);
+				}
+		}
+	}
+	
+	protected Quadruplet<Network.Edge[], Network.Edge[], double[], double[]>
+	getTrees(Bush bush, boolean minimalPath, boolean maximalPath, boolean maximalUsed) {
+		Network.Edge[] minimalTree = null, maximalTree = null;
+		double[] minimalDistance = null, maximalDistance = null;
+		
+		if (minimalPath) {
+			minimalTree = new Network.Edge[network.nodes];
+			
+			minimalDistance = new double[network.nodes];
+			Arrays.fill(minimalDistance, Double.POSITIVE_INFINITY);
+			minimalDistance[bush.root] = 0;
+		}
+		
+		if (maximalPath) {
+			maximalTree = new Network.Edge[network.nodes];
+			
+			maximalDistance = new double[network.nodes];
+			Arrays.fill(maximalDistance, Double.NEGATIVE_INFINITY);
+			maximalDistance[bush.root] = 0;
+		}
+		
+		int[] indegree = new int[network.nodes];
+		for (Network.Edge edge : network.getEdges()) {
+			if (!bush.edgeExists(edge.index))
+				continue;
+			indegree[edge.head]++;
+		}
+		
+		IntQueue queue = new IntQueue(network.nodes);
+		queue.enqueue(bush.root);
+		while (!queue.isEmpty()) {
+			int node = queue.dequeue();
+			
+			for (Network.Edge edge : network.forwardStar(node)) {
+				if (!bush.edgeExists(edge.index))
 					continue;
 				
-				double demand = odMatrix.get(origin, destination);
-				int[] currPath = new int[network.nodes];
-				Stack<Triplet<Network.Edge, Integer, Double>> stack = new Stack<>();
-				
-				for (Network.Edge edge : network.backwardStar(destination)) {
-					if (proportions[edge.index] == 0)
-						continue;
-					
-					var data = new Triplet<>(edge, 1, demand * proportions[edge.index]);
-					stack.push(data);
-				}
-				
-				while (!stack.empty()) {
-					var data = stack.pop();
-					Network.Edge edge = data.first();
-					int pathLen = data.second();
-					double flow = data.third();
-					
-					currPath[pathLen - 1] = edge.index;
-					
-					if (edge.startNode == origin) {
-						int[] edges = new int[pathLen];
-						System.arraycopy(currPath, 0, edges, 0, pathLen);
-						
-						Path path = new Path(edges);
-						path.flow = flow;
-						paths.add(path);
-					}
-					
-					for (Network.Edge nextEdge : network.backwardStar(edge.startNode)) {
-						if (proportions[nextEdge.index] == 0)
-							continue;
-						
-						var newData = new Triplet<>(nextEdge, pathLen + 1, flow * proportions[nextEdge.index]);
-						stack.push(newData);
+				if (minimalPath) {
+					double newDistance = minimalDistance[node] + costs[edge.index];
+					if (minimalDistance[edge.head] > newDistance) {
+						minimalDistance[edge.head] = newDistance;
+						minimalTree[edge.head] = edge;
 					}
 				}
+				
+				if (maximalPath) {
+					double newDistance = maximalDistance[node] + costs[edge.index];
+					if (maximalDistance[edge.head] < newDistance && (!maximalUsed || bush.getEdgeFlow(edge.index) > 0)) {
+						maximalDistance[edge.head] = newDistance;
+						maximalTree[edge.head] = edge;
+					}
+				}
+				
+				indegree[edge.head]--;
+				if (indegree[edge.head] == 0)
+					queue.enqueue(edge.head);
 			}
 		}
 		
-		return paths;
+		return new Quadruplet<>(minimalTree, maximalTree, minimalDistance, maximalDistance);
+	}
+	
+	protected int[] topologicalOrder(Bush bush) {
+		int[] indegree = new int[network.nodes];
+		for (Network.Edge edge : network.getEdges()) {
+			if (!bush.edgeExists(edge.index))
+				continue;
+			indegree[edge.head]++;
+		}
+		
+		int[] result = new int[network.nodes];
+		Arrays.fill(result, -1);
+		
+		IntQueue queue = new IntQueue(network.nodes);
+		queue.enqueue(bush.root);
+		int i = 0;
+		while (!queue.isEmpty()) {
+			int node = queue.dequeue();
+			result[i++] = node;
+			
+			for (Network.Edge edge : network.forwardStar(node)) {
+				if (!bush.edgeExists(edge.index))
+					continue;
+				
+				indegree[edge.head]--;
+				if (indegree[edge.head] == 0)
+					queue.enqueue(edge.head);
+			}
+		}
+		
+		return result;
+	}
+	
+	public Bush[] getBushes() {
+		return bushes;
 	}
 }

@@ -1,18 +1,25 @@
 package black0ut1.static_.assignment.link;
 
-import black0ut1.static_.assignment.STAAlgorithm;
+import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.AON;
 import black0ut1.util.Util;
 
+/**
+ * Conjugate Frank-Wolfe algorithm differs from ordinary {@link FrankWolfe} by smarter
+ * computation of target, for which it uses the previous target.
+ * <p>
+ * Bibliography:																		  <br>
+ * - (Mitradjieva and Lindberg, 2013) The stiff is moving — conjugate direction
+ * Frank-Wolfe methods with application to traffic assignment							  <br>
+ * - (Boyles et al., 2025) Transportation Network Analysis, Section 6.2.3				  <br>
+ */
 public class ConjugateFrankWolfe extends FrankWolfe {
-	
-	protected static final double ALPHA_TOLERANCE = 0.1;
 	
 	protected double[] oldTarget;
 	protected double oldStepSize;
 	
-	public ConjugateFrankWolfe(STAAlgorithm.Parameters parameters) {
-		super(parameters);
+	public ConjugateFrankWolfe(Settings settings) {
+		super(settings);
 	}
 	
 	@Override
@@ -26,27 +33,27 @@ public class ConjugateFrankWolfe extends FrankWolfe {
 	protected double[] calculateTarget() {
 		if (iteration == 0 || oldStepSize == 1) {
 			double[] newTarget = new double[network.edges];
-			AON.assign(network, odMatrix, costs, newTarget);
+			AON.assign(network, odm, costs, newTarget);
 			
 			oldTarget = newTarget;
 			return newTarget;
 		}
 		
 		double[] newTarget = new double[network.edges];
-		AON.assign(network, odMatrix, costs, newTarget);
+		AON.assign(network, odm, costs, newTarget);
 		
 		double numerator = 0;
 		double denominator = 0;
 		var edges = network.getEdges();
 		for (int i = 0; i < network.edges; i++) {
-			double a = costFunction.derivative(edges[i], flows[i]) * (oldTarget[i] - flows[i]);
+			double a = s.costFunction.derivative(edges[i], flows[i]) * (oldTarget[i] - flows[i]);
 			numerator += a * (newTarget[i] - flows[i]);
 			denominator += a * (newTarget[i] - oldTarget[i]);
 		}
 		
 		double alpha = (denominator == 0)
 				? 0
-				: Util.projectToInterval(numerator / denominator, 0, 1 - ALPHA_TOLERANCE);
+				: Util.projectToInterval(numerator / denominator, 0, 1 - s.CONJUGATE_FW_ALPHA_TOLERANCE);
 		
 		for (int i = 0; i < network.edges; i++)
 			newTarget[i] = alpha * oldTarget[i] + (1 - alpha) * newTarget[i];

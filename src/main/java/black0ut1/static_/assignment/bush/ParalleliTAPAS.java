@@ -3,7 +3,8 @@ package black0ut1.static_.assignment.bush;
 import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
 import black0ut1.data.network.PAS;
-import black0ut1.static_.assignment.STAConvergence;
+import black0ut1.static_.assignment.Settings;
+import black0ut1.static_.assignment.Convergence;
 import black0ut1.util.SSSP;
 import black0ut1.util.Util;
 
@@ -14,14 +15,15 @@ public class ParalleliTAPAS extends iTAPAS {
 	protected final int threads;
 	protected final ExecutorService threadPool;
 	
-	public ParalleliTAPAS(Parameters parameters, int threads) {
-		super(parameters);
+	public ParalleliTAPAS(Settings settings, int threads) {
+		super(settings);
 		this.threads = threads;
 		this.threadPool = Executors.newFixedThreadPool(threads);
 	}
 	
+	
 	@Override
-	protected void init() {
+	protected void initialize() {
 		Util.parallelLoop(threadPool, network.zones, origin -> {
 			bushes[origin] = createBush(origin);
 		});
@@ -41,7 +43,7 @@ public class ParalleliTAPAS extends iTAPAS {
 			case 1:
 				yield 0.001;
 			default:
-				double convIndicator = convergence.getData().getLast()[STAConvergence.Criterion.RELATIVE_GAP_1.ordinal()];
+				double convIndicator = convergence.getData().getLast()[Convergence.Criterion.RELATIVE_GAP_1.ordinal()];
 				yield convIndicator / 100;
 		};
 		
@@ -79,7 +81,7 @@ public class ParalleliTAPAS extends iTAPAS {
 					if (bushes[origin].getEdgeFlow(edge.index) <= FLOW_EPSILON)
 						continue;
 					
-					double reducedCost = minDistance[edge.startNode] + costs[edge.index] - minDistance[edge.endNode];
+					double reducedCost = minDistance[edge.tail] + costs[edge.index] - minDistance[edge.head];
 					if (reducedCost < minReducedCost)
 						continue;
 					

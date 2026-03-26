@@ -1,6 +1,7 @@
 package black0ut1.dynamic.loading.node;
 
 import black0ut1.data.DoubleMatrix;
+import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.link.Link;
 
 /**
@@ -17,7 +18,7 @@ import black0ut1.dynamic.loading.link.Link;
  * clock. Of course, there are pitfalls when {@code stepSize} is a
  * multiple of {@code cycle time} (or vice versa).
  */
-public class BasicSignals extends Intersection {
+public class BasicSignals extends RoutedIntersection {
 	
 	/** stepSize of the DNL. */
 	protected final double stepSize;
@@ -55,7 +56,7 @@ public class BasicSignals extends Intersection {
 	}
 	
 	@Override
-	protected DoubleMatrix computeOrientedFlows(DoubleMatrix totalTurningFractions) {
+	protected Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix totalTurningFractions) {
 		DoubleMatrix orientedFlows = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
 		
 		// 1. Determine current phase
@@ -85,6 +86,15 @@ public class BasicSignals extends Intersection {
 		
 		
 		elapsedTime = (elapsedTime + stepSize) % cycleTime;
-		return orientedFlows;
+		
+		double[] inflows = new double[incomingLinks.length];
+		double[] outflows = new double[outgoingLinks.length];
+		for (i = 0; i < incomingLinks.length; i++)
+			for (int j = 0; j < outgoingLinks.length; j++) {
+				inflows[i] += orientedFlows.get(i, j);
+				outflows[j] += orientedFlows.get(i, j);
+			}
+		
+		return new Pair<>(inflows, outflows);
 	}
 }

@@ -6,6 +6,9 @@ public class BitSet32 {
 	public final int size;
 	
 	public BitSet32(int size) {
+		if (size > 32)
+			throw new IllegalArgumentException("BitSet32 supports only sizes up to 32. Size: " + size);
+		
 		this.size = size;
 	}
 	
