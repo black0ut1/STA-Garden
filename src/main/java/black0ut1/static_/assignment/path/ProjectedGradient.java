@@ -34,16 +34,10 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 		Vector<Path> paths = this.paths.get(origin, destination);
 		
 		double averageTravelTime = 0;
-		double min = Double.POSITIVE_INFINITY,  max = Double.NEGATIVE_INFINITY;
 		double[] stepDirection = new double[paths.size()];
 		
 		for (int i = 0; i < stepDirection.length; i++) {
 			double pathCost = paths.get(i).getCost(costs);
-			
-			if (pathCost < min)
-				min = pathCost;
-			if (pathCost > max)
-				max = pathCost;
 			
 			stepDirection[i] = pathCost;
 			averageTravelTime += pathCost;
