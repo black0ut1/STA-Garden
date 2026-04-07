@@ -2,6 +2,7 @@ package black0ut1.io;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
+import black0ut1.dynamic.DynamicNetwork;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -137,4 +138,45 @@ public class CSV extends InputOutput {
 	public void writeODmatrix(String outputFile, DoubleMatrix ODMatrix) {
 		// TODO
 	}
+	
+	public LinkData[] readLinkData(String linkDataFile, DynamicNetwork network, int totalSteps) {
+		try (BufferedReader reader = Files.newBufferedReader(Paths.get(linkDataFile))) {
+			LinkData[] data = new LinkData[network.links.length];
+			for (int i = 0; i < data.length; i++)
+				data[i] = new LinkData(new double[totalSteps], new double[totalSteps],
+						new double[totalSteps], new double[totalSteps], new double[totalSteps]);
+			
+			reader.lines()
+					.skip(1)
+					.map(line -> line.split(DELIMITER))
+					.forEach(arr -> {
+						int fromNode = Integer.parseInt(arr[0]) - 1;
+						int toNode = Integer.parseInt(arr[1]) - 1;
+						int time = Integer.parseInt(arr[2]);
+						double inflow = Double.parseDouble(arr[3]);
+						double outflow = Double.parseDouble(arr[4]);
+						double cinflow = Double.parseDouble(arr[5]);
+						double coutflow = Double.parseDouble(arr[6]);
+						double volume = Double.parseDouble(arr[7]);
+						
+						for (int i = 0; i < network.links.length; i++)
+							if (network.links[i].tail.index == fromNode &&
+									network.links[i].head.index == toNode) {
+								data[i].inflow[time] = inflow;
+								data[i].outflow[time] = outflow;
+								data[i].cinflow[time] = cinflow;
+								data[i].coutflow[time] = coutflow;
+								data[i].volume[time] = volume;
+							}
+					});
+			
+			return data;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public record LinkData(double[] inflow, double[] outflow,
+						   double[] cinflow, double[] coutflow,
+						   double[] volume) {}
 }

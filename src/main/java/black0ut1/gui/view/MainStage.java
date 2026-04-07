@@ -2,25 +2,29 @@ package black0ut1.gui.view;
 
 import black0ut1.gui.MainGUI;
 import black0ut1.gui.controller.MainStageController;
-import javafx.geometry.Orientation;
+import black0ut1.gui.controller.VisualizationMode;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.SplitPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
-import static black0ut1.gui.Constants.HORIZONTAL_DIVIDER_POSITION;
-import static black0ut1.gui.Constants.VERTICAL_DIVIDER_POSITION;
 
 public class MainStage extends Stage {
 	
 	public BorderPane rootBorderPane;
-	public SplitPane verticalRootSplitPane, horizontalRootSplitPane;
+	public VBox controlPane;
 	public DTANetworkPane networkPane;
+	
+	public Button playButton;
+	public Slider timeSlider;
+	public Label timeLabel;
+	
+	public ToggleGroup visualizationToggleGroup;
 	
 	public final MainStageController controller;
 	
@@ -29,23 +33,12 @@ public class MainStage extends Stage {
 		this.controller = new MainStageController(this);
 		
 		setScene(new Scene(getRoot()));
-		showingProperty().addListener((_, _, newValue) -> {
-			if (newValue) {
-				verticalRootSplitPane.setDividerPositions(VERTICAL_DIVIDER_POSITION);
-				horizontalRootSplitPane.setDividerPositions(HORIZONTAL_DIVIDER_POSITION);
-			}
-		});
 	}
 	
 	public Parent getRoot() {
-		horizontalRootSplitPane = new SplitPane(getNetworkPane(), new Pane());
-		
-		verticalRootSplitPane = new SplitPane(horizontalRootSplitPane, getBottomPane());
-		verticalRootSplitPane.setOrientation(Orientation.VERTICAL);
-		
 		rootBorderPane = new BorderPane();
-		rootBorderPane.setCenter(verticalRootSplitPane);
-		rootBorderPane.setTop(getTopPane());
+		rootBorderPane.setCenter(getNetworkPane());
+		rootBorderPane.setRight(getControlPane());
 		return rootBorderPane;
 	}
 	
@@ -56,19 +49,77 @@ public class MainStage extends Stage {
 		return networkPane;
 	}
 	
-	public Node getBottomPane() {
-		HBox bottomPane = new HBox();
+	public Node getControlPane() {
+		controlPane = new VBox(10);
+		controlPane.setPadding(new Insets(10));
 		
-		bottomPane.getChildren().add(new Button("bbb"));
+		Label sliderTitle = new Label("Time controls");
+		sliderTitle.setStyle("-fx-font-weight: bold; -fx-underline: true;");
 		
-		return bottomPane;
+		Label toggleTitle = new Label("Toggle visualization");
+		toggleTitle.setStyle("-fx-font-weight: bold; -fx-underline: true;");
+		
+		controlPane.getChildren().addAll(sliderTitle, getSliderPane(), toggleTitle,
+				getTogglePane());
+		return controlPane;
 	}
 	
-	public Node getTopPane() {
-		HBox topPane = new HBox();
+	public Node getSliderPane() {
+		HBox sliderPane = new HBox(10);
 		
-		topPane.getChildren().add(new Button("ccc"));
+		playButton = new Button("▶");
+		playButton.setPrefWidth(30);
+		playButton.setOnAction(controller::onPlayButtonClicked);
 		
-		return topPane;
+		timeSlider = new Slider(0, MainGUI.totalTimeSteps - 1, 0);
+		timeSlider.setShowTickMarks(true);
+		timeSlider.setShowTickLabels(true);
+		timeSlider.setSnapToTicks(true);
+		timeSlider.setMinorTickCount(100);
+		timeSlider.setMinWidth(400);
+		timeSlider.valueProperty().addListener(controller::onSliderChanged);
+		timeSlider.setOnMousePressed(controller::onSliderInteracted);
+		timeSlider.setOnMouseDragged(controller::onSliderInteracted);
+		
+		timeLabel = new Label(" 0");
+		timeLabel.setPrefWidth(25);
+		
+		sliderPane.getChildren().addAll(playButton, timeSlider, timeLabel);
+		return sliderPane;
+	}
+	
+	public Node getTogglePane() {
+		VBox togglePane = new VBox(5);
+		visualizationToggleGroup = new ToggleGroup();
+		
+		RadioButton flowButton = new RadioButton("Flow differences");
+		flowButton.setToggleGroup(visualizationToggleGroup);
+		flowButton.setUserData(VisualizationMode.FLOW);
+		flowButton.setSelected(true);
+		
+		Text flowDesc = new Text("Shows the differences in amount of vehicles. Red means the predicted " +
+				"amount is lower than the actual amount, blue means predicted amount is higher than the actual.");
+		flowDesc.setWrappingWidth(400);
+		
+		RadioButton cumulativeFlowButton = new RadioButton("Cumulative flow");
+		cumulativeFlowButton.setToggleGroup(visualizationToggleGroup);
+		cumulativeFlowButton.setUserData(VisualizationMode.CUMULATIVE_FLOW);
+		
+		Text cflowDesc = new Text("Shows the differences in amount of vehicles. Red means the predicted " +
+				"amount is lower than the actual amount, blue means predicted amount is higher than the actual.");
+		cflowDesc.setWrappingWidth(400);
+		
+		RadioButton volumeButton = new RadioButton("Volume differences");
+		volumeButton.setToggleGroup(visualizationToggleGroup);
+		volumeButton.setUserData(VisualizationMode.VOLUME);
+		
+		Text volumeDesc = new Text("Shows the differences in amount of vehicles. Red means the predicted " +
+				"amount is lower than the actual amount, blue means predicted amount is higher than the actual.");
+		volumeDesc.setWrappingWidth(400);
+		
+		visualizationToggleGroup.selectedToggleProperty().addListener(controller::onVisualizationModeChanged);
+		togglePane.getChildren().addAll(flowButton, flowDesc, cumulativeFlowButton, cflowDesc, volumeButton,
+				volumeDesc);
+		return togglePane;
 	}
 }

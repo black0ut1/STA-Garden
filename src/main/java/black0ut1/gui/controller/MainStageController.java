@@ -1,33 +1,73 @@
 package black0ut1.gui.controller;
 
-import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.node.Intersection;
-import black0ut1.gui.MainGUI;
-import black0ut1.gui.view.LinkPane;
 import black0ut1.gui.view.MainStage;
-import black0ut1.gui.view.NodePane;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.control.Toggle;
+import javafx.scene.input.MouseEvent;
+import javafx.util.Duration;
 
 public class MainStageController {
 	
 	public final MainStage mainStage;
+	private Timeline timeline;
+	private boolean isPlaying = false;
 	
 	public MainStageController(MainStage mainStage) {
 		this.mainStage = mainStage;
 	}
 	
 	public void onShapeClicked(boolean isNode, int index) {
-		double currDividerPosition = mainStage.horizontalRootSplitPane.getDividerPositions()[0];
-		mainStage.horizontalRootSplitPane.getItems().removeLast();
+	
+	}
+	
+	public void onSliderChanged(ObservableValue<? extends Number> observable,
+								Number oldVal, Number newVal) {
+		int newValue = (int) Math.round(newVal.doubleValue());
+		mainStage.timeSlider.setValue(newValue);
 		
-		if (isNode) {
-			Intersection node = MainGUI.network.intersections[index];
-			mainStage.horizontalRootSplitPane.getItems().add(new NodePane(node));
+		mainStage.timeLabel.setText(String.format("%d", newValue));
+		mainStage.networkPane.setTime(newValue);
+	}
+	
+	public void onPlayButtonClicked(ActionEvent value) {
+		if (isPlaying) {
+			timeline.stop();
+			mainStage.playButton.setText("▶");
+			isPlaying = false;
 		} else {
-			Link link = MainGUI.network.links[index];
-			mainStage.horizontalRootSplitPane.getItems().add(new LinkPane(link));
+			timeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> {
+				double current = mainStage.timeSlider.getValue();
+				double max = mainStage.timeSlider.getMax();
+				if (current >= max) {
+					timeline.stop();
+					mainStage.playButton.setText("▶");
+					isPlaying = false;
+				} else {
+					mainStage.timeSlider.setValue(current + 1);
+				}
+			}));
+			timeline.setCycleCount(Timeline.INDEFINITE);
+			timeline.play();
+			mainStage.playButton.setText("⏸");
+			isPlaying = true;
 		}
-		
-		mainStage.horizontalRootSplitPane.setDividerPositions(currDividerPosition);
-		mainStage.networkPane.setSelectedShape(isNode, index);
+	}
+	
+	public void onSliderInteracted(MouseEvent event) {
+		if (isPlaying) {
+			timeline.stop();
+			mainStage.playButton.setText("▶");
+			isPlaying = false;
+		}
+	}
+	
+	public void onVisualizationModeChanged(ObservableValue<? extends Toggle> observable,
+	                                       Toggle oldVal, Toggle newVal) {
+		VisualizationMode mode = (VisualizationMode) newVal.getUserData();
+		mainStage.networkPane.setVisuzalizationMode(mode);
 	}
 }

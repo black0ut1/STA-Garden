@@ -1,8 +1,11 @@
 package black0ut1.gui.view;
 
 import black0ut1.data.network.Network;
+import black0ut1.data.tuple.Quadruplet;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.gui.Constants;
+import black0ut1.gui.MainGUI;
+import black0ut1.gui.controller.VisualizationMode;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -11,6 +14,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static black0ut1.gui.Constants.*;
 
@@ -32,6 +36,9 @@ public class DTANetworkPane extends Pane {
 	
 	private Shape hoverShape = null;
 	private Shape selectedShape = null;
+	
+	private VisualizationMode mode = VisualizationMode.FLOW;
+	private int time = 0;
 	
 	public DTANetworkPane(DynamicNetwork network, Network.Node[] nodes) {
 		super();
@@ -120,6 +127,16 @@ public class DTANetworkPane extends Pane {
 		paint();
 	}
 	
+	public void setVisuzalizationMode(VisualizationMode mode) {
+		this.mode = mode;
+		paint();
+	}
+	
+	public void setTime(int t) {
+		time = t;
+		paint();
+	}
+	
 	private void paint() {
 		gc.setFill(Color.WHITE);
 		gc.fillRect(0, 0, getWidth(), getHeight());
@@ -131,14 +148,52 @@ public class DTANetworkPane extends Pane {
 		
 		gc.setLineWidth(LINK_WIDTH);
 		for (LinkShape linkShape : linkShapes) {
-			Paint color = linkShape == hoverShape
-					? HOVER_COLOR
-					: linkShape == selectedShape
-					? SELECT_COLOR
-					: LINK_COLOR;
-			gc.setStroke(color);
+			if (linkShape == hoverShape) {
+				gc.setStroke(HOVER_COLOR);
+				linkShape.draw();
+				continue;
+			}
+			if (linkShape == selectedShape) {
+				gc.setStroke(SELECT_COLOR);
+				linkShape.draw();
+				continue;
+			}
 			
-			linkShape.draw();
+			switch (mode) {
+				case FLOW:
+					linkShape.apply(quadruplet -> {
+						double x1 = quadruplet.first();
+						double y1 = quadruplet.second();
+						double x2 = quadruplet.third();
+						double y2 = quadruplet.fourth();
+						
+						double xMid = x1 + (x2 - x1) / 2;
+						double yMid = y1 + (y2 - y1) / 2;
+						
+						double inflowDiff = MainGUI.actual[linkShape.index].inflow()[time]
+								- MainGUI.predicted[linkShape.index].inflow()[time];
+						double outflowDiff = MainGUI.actual[linkShape.index].outflow()[time]
+								- MainGUI.predicted[linkShape.index].outflow()[time];
+						
+						gc.setStroke(getVolumeColor(inflowDiff));
+						gc.strokeLine(x1, y1, xMid, yMid);
+						
+						gc.setStroke(getVolumeColor(outflowDiff));
+						gc.strokeLine(xMid, yMid, x2, y2);
+					});
+					break;
+				case VOLUME:
+					double difference = MainGUI.actual[linkShape.index].volume()[time]
+							- MainGUI.predicted[linkShape.index].volume()[time];
+					gc.setStroke(getVolumeColor(difference));
+					linkShape.draw();
+					break;
+				default:
+					gc.setStroke(LINK_COLOR);
+					linkShape.draw();
+				
+			}
+			
 		}
 		
 		for (NodeShape nodeShape : nodeShapes) {
@@ -176,6 +231,17 @@ public class DTANetworkPane extends Pane {
 			normalizedNodesX[i] = (node.x() - midX) / lenX * NORMALIZED_SCALE;
 			normalizedNodesY[i] = (node.y() - midY) / lenY * NORMALIZED_SCALE;
 		}
+	}
+	
+	public Color getVolumeColor(double value) {
+		final double MAX_VOLUME = 500;
+		
+		if (value > 0)
+			return LINK_COLOR.interpolate(Color.BLUE, value / MAX_VOLUME);
+		else if (value < 0)
+			return LINK_COLOR.interpolate(Color.RED, -value / MAX_VOLUME);
+		else
+			return LINK_COLOR;
 	}
 	
 	@Override
@@ -228,6 +294,23 @@ public class DTANetworkPane extends Pane {
 			y2 += yOffset;
 			
 			gc.strokeLine(x1, y1, x2, y2);
+		}
+		
+		public void apply(Consumer<Quadruplet<Double, Double, Double, Double>> consumer) {
+			double x1 = normalizedNodesX[tailIndex];
+			double y1 = normalizedNodesY[tailIndex];
+			double x2 = normalizedNodesX[headIndex];
+			double y2 = normalizedNodesY[headIndex];
+			
+			double len = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+			double xOffset = LINK_OFFSET * (-y2 + y1) / len;
+			double yOffset = LINK_OFFSET * (x2 - x1) / len;
+			x1 += xOffset;
+			y1 += yOffset;
+			x2 += xOffset;
+			y2 += yOffset;
+			
+			consumer.accept(new Quadruplet<>(x1, y1, x2, y2));
 		}
 		
 		@Override

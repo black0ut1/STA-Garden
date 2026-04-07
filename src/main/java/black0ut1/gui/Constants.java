@@ -10,9 +10,9 @@ public final class Constants {
 	public static final double VERTICAL_DIVIDER_POSITION = 0.8;
 	
 	///////////////// DTANetworkPane /////////////////
-	public static final double NODE_RADIUS = 1.5;
-	public static final double LINK_WIDTH = 0.8;
-	public static final double LINK_OFFSET = 1;
+	public static final double NODE_RADIUS = 10;
+	public static final double LINK_WIDTH = 5;
+	public static final double LINK_OFFSET = 4;
 	
 	public static final Color NODE_COLOR = Color.BLACK;
 	public static final Color LINK_COLOR = Color.LIGHTGRAY;
