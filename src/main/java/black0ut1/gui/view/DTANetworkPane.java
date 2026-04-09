@@ -37,7 +37,7 @@ public class DTANetworkPane extends Pane {
 	private Shape hoverShape = null;
 	private Shape selectedShape = null;
 	
-	private VisualizationMode mode = VisualizationMode.FLOW;
+	private VisualizationMode mode = VisualizationMode.FLOW_ACTUAL;
 	private int time = 0;
 	
 	public DTANetworkPane(DynamicNetwork network, Network.Node[] nodes) {
@@ -160,32 +160,37 @@ public class DTANetworkPane extends Pane {
 			}
 			
 			switch (mode) {
-				case FLOW:
-					linkShape.apply(quadruplet -> {
-						double x1 = quadruplet.first();
-						double y1 = quadruplet.second();
-						double x2 = quadruplet.third();
-						double y2 = quadruplet.fourth();
-						
-						double xMid = x1 + (x2 - x1) / 2;
-						double yMid = y1 + (y2 - y1) / 2;
-						
-						double inflowDiff = MainGUI.actual[linkShape.index].inflow()[time]
-								- MainGUI.predicted[linkShape.index].inflow()[time];
-						double outflowDiff = MainGUI.actual[linkShape.index].outflow()[time]
-								- MainGUI.predicted[linkShape.index].outflow()[time];
-						
-						gc.setStroke(getVolumeColor(inflowDiff));
-						gc.strokeLine(x1, y1, xMid, yMid);
-						
-						gc.setStroke(getVolumeColor(outflowDiff));
-						gc.strokeLine(xMid, yMid, x2, y2);
-					});
+				case FLOW_ACTUAL:
+					double actualInflow = MainGUI.actual[linkShape.index].inflow()[time];
+					double actualOutflow = MainGUI.actual[linkShape.index].outflow()[time];
+					linkShape.drawHalf(getDifferenceColor(actualInflow), getDifferenceColor(actualOutflow));
 					break;
-				case VOLUME:
+				case FLOW_PREDICTED:
+					double predictedInflow = MainGUI.predicted[linkShape.index].inflow()[time];
+					double predictedOutflow = MainGUI.predicted[linkShape.index].outflow()[time];
+					linkShape.drawHalf(getDifferenceColor(-predictedInflow), getDifferenceColor(-predictedOutflow));
+					break;
+				case FLOW_DIFFERENCE:
+					double inflowDiff = MainGUI.actual[linkShape.index].inflow()[time]
+							- MainGUI.predicted[linkShape.index].inflow()[time];
+					double outflowDiff = MainGUI.actual[linkShape.index].outflow()[time]
+							- MainGUI.predicted[linkShape.index].outflow()[time];
+					linkShape.drawHalf(getDifferenceColor(inflowDiff), getDifferenceColor(outflowDiff));
+					break;
+				case VOLUME_ACTUAL:
+					double actualVolume = MainGUI.actual[linkShape.index].volume()[time];
+					gc.setStroke(getDifferenceColor(actualVolume));
+					linkShape.draw();
+					break;
+				case VOLUME_PREDICTED:
+					double predictedVolume = MainGUI.predicted[linkShape.index].volume()[time];
+					gc.setStroke(getDifferenceColor(-predictedVolume));
+					linkShape.draw();
+					break;
+				case VOLUME_DIFFERENCE:
 					double difference = MainGUI.actual[linkShape.index].volume()[time]
 							- MainGUI.predicted[linkShape.index].volume()[time];
-					gc.setStroke(getVolumeColor(difference));
+					gc.setStroke(getDifferenceColor(difference));
 					linkShape.draw();
 					break;
 				default:
@@ -233,7 +238,7 @@ public class DTANetworkPane extends Pane {
 		}
 	}
 	
-	public Color getVolumeColor(double value) {
+	public Color getDifferenceColor(double value) {
 		final double MAX_VOLUME = 500;
 		
 		if (value > 0)
@@ -296,7 +301,7 @@ public class DTANetworkPane extends Pane {
 			gc.strokeLine(x1, y1, x2, y2);
 		}
 		
-		public void apply(Consumer<Quadruplet<Double, Double, Double, Double>> consumer) {
+		public void drawHalf(Color color1, Color color2) {
 			double x1 = normalizedNodesX[tailIndex];
 			double y1 = normalizedNodesY[tailIndex];
 			double x2 = normalizedNodesX[headIndex];
@@ -310,7 +315,15 @@ public class DTANetworkPane extends Pane {
 			x2 += xOffset;
 			y2 += yOffset;
 			
-			consumer.accept(new Quadruplet<>(x1, y1, x2, y2));
+			double xMid = x1 + (x2 - x1) / 2;
+			double yMid = y1 + (y2 - y1) / 2;
+			
+			
+			gc.setStroke(color1);
+			gc.strokeLine(x1, y1, xMid, yMid);
+			
+			gc.setStroke(color2);
+			gc.strokeLine(xMid, yMid, x2, y2);
 		}
 		
 		@Override

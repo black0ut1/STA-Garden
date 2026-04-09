@@ -5,7 +5,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.control.Toggle;
 import javafx.scene.input.MouseEvent;
 import javafx.util.Duration;
@@ -29,14 +28,14 @@ public class MainStageController {
 		int newValue = (int) Math.round(newVal.doubleValue());
 		mainStage.timeSlider.setValue(newValue);
 		
-		mainStage.timeLabel.setText(String.format("%d", newValue));
+		mainStage.timeTA.setText(String.format("%2d", newValue));
 		mainStage.networkPane.setTime(newValue);
 	}
 	
 	public void onPlayButtonClicked(ActionEvent value) {
 		if (isPlaying) {
 			timeline.stop();
-			mainStage.playButton.setText("▶");
+			mainStage.playBT.setText("▶");
 			isPlaying = false;
 		} else {
 			timeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> {
@@ -44,7 +43,7 @@ public class MainStageController {
 				double max = mainStage.timeSlider.getMax();
 				if (current >= max) {
 					timeline.stop();
-					mainStage.playButton.setText("▶");
+					mainStage.playBT.setText("▶");
 					isPlaying = false;
 				} else {
 					mainStage.timeSlider.setValue(current + 1);
@@ -52,7 +51,7 @@ public class MainStageController {
 			}));
 			timeline.setCycleCount(Timeline.INDEFINITE);
 			timeline.play();
-			mainStage.playButton.setText("⏸");
+			mainStage.playBT.setText("⏸");
 			isPlaying = true;
 		}
 	}
@@ -60,7 +59,7 @@ public class MainStageController {
 	public void onSliderInteracted(MouseEvent event) {
 		if (isPlaying) {
 			timeline.stop();
-			mainStage.playButton.setText("▶");
+			mainStage.playBT.setText("▶");
 			isPlaying = false;
 		}
 	}

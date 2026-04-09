@@ -20,9 +20,9 @@ public class MainStage extends Stage {
 	public VBox controlPane;
 	public DTANetworkPane networkPane;
 	
-	public Button playButton;
+	public Button playBT;
 	public Slider timeSlider;
-	public Label timeLabel;
+	public TextField timeTA;
 	
 	public ToggleGroup visualizationToggleGroup;
 	
@@ -67,9 +67,9 @@ public class MainStage extends Stage {
 	public Node getSliderPane() {
 		HBox sliderPane = new HBox(10);
 		
-		playButton = new Button("▶");
-		playButton.setPrefWidth(30);
-		playButton.setOnAction(controller::onPlayButtonClicked);
+		playBT = new Button("▶");
+		playBT.setPrefWidth(30);
+		playBT.setOnAction(controller::onPlayButtonClicked);
 		
 		timeSlider = new Slider(0, MainGUI.totalTimeSteps - 1, 0);
 		timeSlider.setShowTickMarks(true);
@@ -81,10 +81,11 @@ public class MainStage extends Stage {
 		timeSlider.setOnMousePressed(controller::onSliderInteracted);
 		timeSlider.setOnMouseDragged(controller::onSliderInteracted);
 		
-		timeLabel = new Label(" 0");
-		timeLabel.setPrefWidth(25);
+		timeTA = new TextField(" 0");
+		timeTA.setEditable(false);
+		timeTA.setPrefWidth(30);
 		
-		sliderPane.getChildren().addAll(playButton, timeSlider, timeLabel);
+		sliderPane.getChildren().addAll(playBT, timeSlider, timeTA);
 		return sliderPane;
 	}
 	
@@ -92,34 +93,20 @@ public class MainStage extends Stage {
 		VBox togglePane = new VBox(5);
 		visualizationToggleGroup = new ToggleGroup();
 		
-		RadioButton flowButton = new RadioButton("Flow differences");
-		flowButton.setToggleGroup(visualizationToggleGroup);
-		flowButton.setUserData(VisualizationMode.FLOW);
-		flowButton.setSelected(true);
-		
-		Text flowDesc = new Text("Shows the differences in amount of vehicles. Red means the predicted " +
-				"amount is lower than the actual amount, blue means predicted amount is higher than the actual.");
-		flowDesc.setWrappingWidth(400);
-		
-		RadioButton cumulativeFlowButton = new RadioButton("Cumulative flow");
-		cumulativeFlowButton.setToggleGroup(visualizationToggleGroup);
-		cumulativeFlowButton.setUserData(VisualizationMode.CUMULATIVE_FLOW);
-		
-		Text cflowDesc = new Text("Shows the differences in amount of vehicles. Red means the predicted " +
-				"amount is lower than the actual amount, blue means predicted amount is higher than the actual.");
-		cflowDesc.setWrappingWidth(400);
-		
-		RadioButton volumeButton = new RadioButton("Volume differences");
-		volumeButton.setToggleGroup(visualizationToggleGroup);
-		volumeButton.setUserData(VisualizationMode.VOLUME);
+		for (VisualizationMode mode : VisualizationMode.values()) {
+			RadioButton button = new RadioButton(mode.name);
+			button.setToggleGroup(visualizationToggleGroup);
+			button.setUserData(mode);
+			togglePane.getChildren().add(button);
+		}
 		
 		Text volumeDesc = new Text("Shows the differences in amount of vehicles. Red means the predicted " +
 				"amount is lower than the actual amount, blue means predicted amount is higher than the actual.");
 		volumeDesc.setWrappingWidth(400);
 		
 		visualizationToggleGroup.selectedToggleProperty().addListener(controller::onVisualizationModeChanged);
-		togglePane.getChildren().addAll(flowButton, flowDesc, cumulativeFlowButton, cflowDesc, volumeButton,
-				volumeDesc);
+		((RadioButton) togglePane.getChildren().getFirst()).setSelected(true);
+		togglePane.getChildren().addAll(volumeDesc);
 		return togglePane;
 	}
 }
