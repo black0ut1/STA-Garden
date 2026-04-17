@@ -1,7 +1,6 @@
 package black0ut1.gui.view;
 
 import black0ut1.data.network.Network;
-import black0ut1.data.tuple.Quadruplet;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.gui.Constants;
 import black0ut1.gui.MainGUI;
@@ -14,7 +13,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import static black0ut1.gui.Constants.*;
 
@@ -37,7 +35,7 @@ public class DTANetworkPane extends Pane {
 	private Shape hoverShape = null;
 	private Shape selectedShape = null;
 	
-	private VisualizationMode mode = VisualizationMode.FLOW_ACTUAL;
+	private VisualizationMode mode = null;
 	private int time = 0;
 	
 	public DTANetworkPane(DynamicNetwork network, Network.Node[] nodes) {
@@ -115,15 +113,21 @@ public class DTANetworkPane extends Pane {
 					clickedShape = nodeShape;
 			}
 			
-			if (clickedShape == null)
+			if (clickedShape == null) {
+				event.accept(false, -1);
 				return;
+			}
 			
 			event.accept(clickedShape instanceof NodeShape, clickedShape.index);
 		});
 	}
 	
 	public void setSelectedShape(boolean isNode, int index) {
-		selectedShape = isNode ? nodeShapes[index] : linkShapes[index];
+		if (index < 0)
+			selectedShape = null;
+		else
+			selectedShape = isNode ? nodeShapes[index] : linkShapes[index];
+		
 		paint();
 	}
 	
@@ -193,12 +197,10 @@ public class DTANetworkPane extends Pane {
 					gc.setStroke(getDifferenceColor(difference));
 					linkShape.draw();
 					break;
-				default:
+				case null, default:
 					gc.setStroke(LINK_COLOR);
 					linkShape.draw();
-				
 			}
-			
 		}
 		
 		for (NodeShape nodeShape : nodeShapes) {

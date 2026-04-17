@@ -25,6 +25,10 @@ public class MainStage extends Stage {
 	public TextField timeTA;
 	
 	public ToggleGroup visualizationToggleGroup;
+	public Text volumeDesc;
+	
+	public Label details1LB;
+	public Label details2LB;
 	
 	public final MainStageController controller;
 	
@@ -59,8 +63,11 @@ public class MainStage extends Stage {
 		Label toggleTitle = new Label("Toggle visualization");
 		toggleTitle.setStyle("-fx-font-weight: bold; -fx-underline: true;");
 		
+		Label detailsTitle = new Label("Details");
+		detailsTitle.setStyle("-fx-font-weight: bold; -fx-underline: true;");
+		
 		controlPane.getChildren().addAll(sliderTitle, getSliderPane(), toggleTitle,
-				getTogglePane());
+				getTogglePane(), detailsTitle, getDetailsPane());
 		return controlPane;
 	}
 	
@@ -77,7 +84,7 @@ public class MainStage extends Stage {
 		timeSlider.setSnapToTicks(true);
 		timeSlider.setMinorTickCount(100);
 		timeSlider.setMinWidth(400);
-		timeSlider.valueProperty().addListener(controller::onSliderChanged);
+		timeSlider.valueProperty().addListener(controller::onSliderValueChanged);
 		timeSlider.setOnMousePressed(controller::onSliderInteracted);
 		timeSlider.setOnMouseDragged(controller::onSliderInteracted);
 		
@@ -100,13 +107,23 @@ public class MainStage extends Stage {
 			togglePane.getChildren().add(button);
 		}
 		
-		Text volumeDesc = new Text("Shows the differences in amount of vehicles. Red means the predicted " +
-				"amount is lower than the actual amount, blue means predicted amount is higher than the actual.");
+		volumeDesc = new Text();
 		volumeDesc.setWrappingWidth(400);
 		
 		visualizationToggleGroup.selectedToggleProperty().addListener(controller::onVisualizationModeChanged);
 		((RadioButton) togglePane.getChildren().getFirst()).setSelected(true);
 		togglePane.getChildren().addAll(volumeDesc);
 		return togglePane;
+	}
+	
+	public Node getDetailsPane() {
+		VBox detailsPane = new VBox();
+		
+		details1LB = new Label();
+		details2LB = new Label();
+		
+		controller.changeDetails();
+		detailsPane.getChildren().addAll(details1LB, details2LB);
+		return detailsPane;
 	}
 }
