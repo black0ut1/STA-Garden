@@ -2,15 +2,16 @@ package black0ut1.gui.view;
 
 import black0ut1.data.network.Network;
 import black0ut1.dynamic.DynamicNetwork;
-import black0ut1.gui.Constants;
+import black0ut1.dynamic.loading.link.Link;
+import black0ut1.gui.MainGUI;
+import black0ut1.gui.controller.DTANetworkPaneController;
+import black0ut1.gui.model.Model;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-
-import java.util.function.BiConsumer;
 
 import static black0ut1.gui.Constants.*;
 
@@ -19,22 +20,20 @@ public class DTANetworkPane extends Pane {
 	private final Canvas canvas;
 	private final GraphicsContext gc;
 	
-	private final LinkShape[] linkShapes;
-	private final NodeShape[] nodeShapes;
+	public final LinkShape[] linkShapes;
+	public final NodeShape[] nodeShapes;
 	
 	/** Coordinates of nodes normalized to [0, NORMALIZED_SCALE]. */
 	private final double[] normalizedNodesX, normalizedNodesY;
 	
-	private double scale = 1;
-	private Point2D offset = new Point2D(0, 0);
-	private Point2D tmpOffset = null;
-	private Point2D dragStart = null;
+	public double scale = 1;
+	public Point2D offset = new Point2D(0, 0);
 	
-	private Shape hoverShape = null;
-	private Shape selectedShape = null;
+	public final DTANetworkPaneController controller;
 	
 	public DTANetworkPane(DynamicNetwork network, Network.Node[] nodes) {
 		super();
+		this.controller = new DTANetworkPaneController(this);
 		
 		this.canvas = new Canvas();
 		this.getChildren().add(this.canvas);
@@ -51,76 +50,23 @@ public class DTANetworkPane extends Pane {
 		this.normalizedNodesX = new double[network.intersections.length];
 		this.normalizedNodesY = new double[network.intersections.length];
 		
-		setOnScroll(e -> {
-			double rot = e.getDeltaY();
-			scale += Constants.WHEEL_ROTATION_SCALE_FACTOR * rot * Math.abs(scale / 200);
-			if (scale < 0)
-				scale = 0;
-			
-			paint();
-		});
-		setOnMousePressed(e -> {
-			tmpOffset = offset;
-			this.dragStart = new Point2D(e.getX(), e.getY());
-		});
-		setOnMouseDragged(e -> {
-			double dX = (e.getX() - dragStart.getX()) / scale;
-			double dY = (e.getY() - dragStart.getY()) / scale;
-			offset = tmpOffset.add(dX, dY);
-			
-			paint();
-		});
-		setOnMouseMoved(e -> {
-			// transformation of canvas coordinates into node coordinates
-			// (accounting for affine transforms)
-			double x = (e.getX() - getWidth() / 2) / scale - offset.getX();
-			double y = (e.getY() - getHeight() / 2) / scale - offset.getY();
-			
-			hoverShape = null;
-			for (LinkShape linkShape : linkShapes) {
-				if (linkShape.containsPoint(x, y))
-					hoverShape = linkShape;
-			}
-			for (NodeShape nodeShape : nodeShapes) {
-				if (nodeShape.containsPoint(x, y))
-					hoverShape = nodeShape;
-			}
-			
-			paint();
-		});
+		setOnScroll(controller::onScroll);
+		setOnMousePressed(controller::onMousePressed);
+		setOnMouseDragged(controller::onMouseDragged);
+		setOnMouseMoved(controller::onMouseMoved);
+		setOnMouseClicked(controller::onMouseClicked);
+		Model.getInstance().hoveredShapeProperty.addListener((_, _, _) -> paint());
+		Model.getInstance().selectedShapeProperty.addListener((_, _, _) -> paint());
+		Model.getInstance().currentVisualizationModeProperty.addListener((_, _, _) -> paint());
+		Model.getInstance().currentTimeProperty.addListener((_, _, _) -> paint());
 		
 		computeNormalizedNodes(nodes);
 		paint();
 	}
 	
-	public void setOnShapeClicked(BiConsumer<Boolean, Integer> event) {
-		setOnMouseClicked(e -> {
-			double x = (e.getX() - getWidth() / 2) / scale - offset.getX();
-			double y = (e.getY() - getHeight() / 2) / scale - offset.getY();
-			
-			Shape clickedShape = null;
-			for (LinkShape linkShape : linkShapes) {
-				if (linkShape.containsPoint(x, y))
-					clickedShape = linkShape;
-			}
-			for (NodeShape nodeShape : nodeShapes) {
-				if (nodeShape.containsPoint(x, y))
-					clickedShape = nodeShape;
-			}
-			
-			if (clickedShape == null)
-				return;
-			
-			event.accept(clickedShape instanceof NodeShape, clickedShape.index);
-		});
-	}
-	
-	public void setSelectedShape(boolean isNode, int index) {
-		selectedShape = isNode ? nodeShapes[index] : linkShapes[index];
-		paint();
-	}
-	
-	private void paint() {
+	public void paint() {
+		Model model = Model.getInstance();
+		
 		gc.setFill(Color.WHITE);
 		gc.fillRect(0, 0, getWidth(), getHeight());
 		
@@ -130,23 +76,42 @@ public class DTANetworkPane extends Pane {
 		gc.translate(offset.getX(), offset.getY());
 		
 		gc.setLineWidth(LINK_WIDTH);
+		Shape hoveredShape = model.hoveredShapeProperty.get();
+		Shape selectedShape = model.selectedShapeProperty.get();
 		for (LinkShape linkShape : linkShapes) {
-			Paint color = linkShape == hoverShape
-					? HOVER_COLOR
-					: linkShape == selectedShape
-					? SELECT_COLOR
-					: LINK_COLOR;
+			
+			Paint color;
+			if (linkShape == hoveredShape)
+				color = HOVER_COLOR;
+			else if (linkShape == selectedShape)
+				color = SELECT_COLOR;
+			else {
+				switch (model.currentVisualizationModeProperty.get()) {
+					case VOLUME -> {
+						Link link = MainGUI.network.links[linkShape.index];
+						int time = model.currentTimeProperty.get();
+						double volume = link.cumulativeInflow[time] - link.cumulativeOutflow[time];
+						double capacity = link.jamDensity * link.length;
+						
+						color = LINK_COLOR.interpolate(Color.RED, volume / capacity);
+					}
+					default -> color = LINK_COLOR;
+				}
+			}
+			
 			gc.setStroke(color);
 			
 			linkShape.draw();
 		}
 		
 		for (NodeShape nodeShape : nodeShapes) {
-			Paint color = nodeShape == hoverShape
-					? HOVER_COLOR
-					: nodeShape == selectedShape
-					? SELECT_COLOR
-					: NODE_COLOR;
+			
+			Paint color;
+			if (nodeShape == hoveredShape)
+				color = HOVER_COLOR;
+			else if (nodeShape == selectedShape)
+				color = SELECT_COLOR;
+			else color = NODE_COLOR;
 			gc.setFill(color);
 			
 			nodeShape.draw();
@@ -190,7 +155,7 @@ public class DTANetworkPane extends Pane {
 		paint();
 	}
 	
-	private abstract static class Shape {
+	public abstract static class Shape {
 		public final int index;
 		
 		private Shape(int index) {
@@ -202,7 +167,7 @@ public class DTANetworkPane extends Pane {
 		public abstract boolean containsPoint(double x, double y);
 	}
 	
-	private class LinkShape extends Shape {
+	public class LinkShape extends Shape {
 		
 		private final int tailIndex, headIndex;
 		
@@ -259,7 +224,7 @@ public class DTANetworkPane extends Pane {
 		}
 	}
 	
-	private class NodeShape extends Shape {
+	public class NodeShape extends Shape {
 		
 		public NodeShape(int index) {
 			super(index);
