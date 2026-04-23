@@ -35,7 +35,7 @@ public class TimeDependentODM {
 				double uniformFlow = odm.get(i, j) / timeSteps;
 				
 				for (int t = 0; t < timeSteps; t++)
-					flow[t * odm.n * odm.n + i * odm.n + j] = uniformFlow * 100;
+					flow[t * odm.n * odm.n + i * odm.n + j] = uniformFlow;
 			}
 		
 		return new TimeDependentODM(flow, odm.n, timeSteps);

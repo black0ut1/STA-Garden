@@ -171,7 +171,7 @@ public class LinkPane extends VBox {
 	}
 	
 	public Node getTTplot() {
-		XYSeries series = new XYSeries("");
+		XYSeries series = new XYSeries("Travel time");
 		XYSeries infinities = new XYSeries("Infinity");
 		for (int t = 0; t < MainGUI.timeSteps; t++) {
 			if (MainGUI.travelTimes[link.index][t] == Double.POSITIVE_INFINITY)
@@ -179,13 +179,17 @@ public class LinkPane extends VBox {
 			else
 				series.add(t, MainGUI.travelTimes[link.index][t]);
 		}
+		double freeFlowTime = link.length / link.freeFlowSpeed;
+		XYSeries freeFlow = new  XYSeries("Free flow travel time");
+		freeFlow.add(0, freeFlowTime);
+		freeFlow.add(MainGUI.timeSteps,  freeFlowTime);
 		
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		dataset.addSeries(series);
 		dataset.addSeries(infinities);
+		dataset.addSeries(freeFlow);
 		
 		ttChart = ChartFactory.createXYLineChart(null, "Time", "Travel time", dataset);
-		ttChart.removeLegend();
 		ttChart.getXYPlot().getDomainAxis().setUpperBound(MainGUI.timeSteps);
 		ttChart.getXYPlot().getRangeAxis().setUpperBound(series.getMaxY() * 1.1);
 		
@@ -193,11 +197,6 @@ public class LinkPane extends VBox {
 		ttMarker = new ValueMarker(time);
 		ttMarker.setPaint(Color.MAGENTA);
 		ttChart.getXYPlot().addDomainMarker(ttMarker);
-		
-		double freeFlowTime = link.length / link.freeFlowSpeed;
-		ValueMarker freeFlowTTMarker = new ValueMarker(freeFlowTime);
-		freeFlowTTMarker.setPaint(Color.GREEN);
-		ttChart.getXYPlot().addRangeMarker(freeFlowTTMarker);
 		
 		ttCanvas = new Canvas(0, 200);
 		ttCanvas.widthProperty().bind(this.widthProperty().add(-20));
