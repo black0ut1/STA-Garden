@@ -91,9 +91,18 @@ public class DTANetworkPane extends Pane {
 						Link link = MainGUI.network.links[linkShape.index];
 						int time = model.currentTimeProperty.get();
 						double volume = link.cumulativeInflow[time] - link.cumulativeOutflow[time];
-						double capacity = link.jamDensity * link.length;
+						double jamVolume = link.jamDensity * link.length;
 						
-						color = LINK_COLOR.interpolate(Color.RED, volume / capacity);
+						color = LINK_COLOR.interpolate(Color.RED, volume / jamVolume);
+					}
+					case TRAVEL_TIME -> {
+						Link link = MainGUI.network.links[linkShape.index];
+						int time = model.currentTimeProperty.get();
+						double travelTime = MainGUI.travelTimes[linkShape.index][time];
+						
+						double freeFlowTravelTime = link.length / link.freeFlowSpeed;
+						double t = (travelTime - freeFlowTravelTime) / freeFlowTravelTime;
+						color = Color.GREEN.interpolate(Color.RED, t / freeFlowTravelTime);
 					}
 					default -> color = LINK_COLOR;
 				}

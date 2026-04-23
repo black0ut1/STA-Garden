@@ -12,12 +12,16 @@ import black0ut1.util.DynamicUtils;
 import black0ut1.util.Util;
 import javafx.application.Application;
 import javafx.stage.Stage;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.StandardChartTheme;
+
+import java.awt.*;
 
 public class MainGUI extends Application {
 	
 	public static DynamicNetwork network;
 	public static Network.Node[] nodes;
-	public static int timeSteps = 400;
+	public static int timeSteps = 200;
 	public static double[][] travelTimes;
 	
 	@Override
@@ -53,6 +57,12 @@ public class MainGUI extends Application {
 			travelTimes[i] = DynamicUtils.computeTravelTime(network.links[i].cumulativeInflow, network.links[i].cumulativeOutflow,
 					timeStep, network.links[i].length / network.links[i].freeFlowSpeed);
 		}
+		
+		StandardChartTheme theme = new StandardChartTheme("Default");
+		theme.setPlotBackgroundPaint(Color.WHITE);
+		theme.setDomainGridlinePaint(Color.LIGHT_GRAY);
+		theme.setRangeGridlinePaint(Color.LIGHT_GRAY);
+		ChartFactory.setChartTheme(theme);
 		
 		MainGUI.network = network;
 		MainGUI.nodes = pair.first().getNodes();
