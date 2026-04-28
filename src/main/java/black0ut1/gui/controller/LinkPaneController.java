@@ -1,54 +1,57 @@
 package black0ut1.gui.controller;
 
 import black0ut1.gui.MainGUI;
+import black0ut1.gui.model.Model;
 import black0ut1.gui.view.LinkPane;
-import javafx.beans.Observable;
-import javafx.beans.value.ObservableValue;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.input.MouseEvent;
-import javafx.util.StringConverter;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.ValueMarker;
+import org.jfree.chart.ui.RectangleAnchor;
+import org.jfree.chart.ui.TextAnchor;
 import org.jfree.fx.FXGraphics2D;
-import javafx.scene.canvas.Canvas;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.IntFunction;
 
 public class LinkPaneController {
 	
-	public final StringConverter<Number> timeToVolumeConverter = new StringConverter<>() {
-		@Override
-		public String toString(Number object) {
-			int time = object.intValue();
-			double volume = linkPane.link.cumulativeInflow[time] - linkPane.link.cumulativeOutflow[time];
-			return String.format("%.2f", volume);
-		}
-		
-		@Override
-		public Number fromString(String string) {
-			return null;
-		}
-	};
-	
-	public final StringConverter<Number> timeToTravelTimeConverter = new StringConverter<>() {
-		@Override
-		public String toString(Number object) {
-			int time = object.intValue();
-			return String.format("%.2f", MainGUI.travelTimes[linkPane.link.index][time]);
-		}
-		
-		@Override
-		public Number fromString(String string) {
-			return null;
-		}
-	};
-	
 	public final LinkPane linkPane;
-	
-	private final Object lock = new Object();
+	public final List<TimeBinding> timeBindings = new ArrayList<>();
 	
 	public LinkPaneController(LinkPane linkPane) {
 		this.linkPane = linkPane;
+		
+		Model.getInstance().currentTimeProperty.addListener((_, _, newValue) -> {
+			int time = newValue.intValue();
+			
+			for (TimeBinding tb : timeBindings) {
+				// change marker
+				tb.marker.setValue(time);
+				if (tb.labelSupplier != null)
+					tb.marker.setLabel(tb.labelSupplier.apply(time));
+				if (newValue.intValue() <= MainGUI.timeSteps / 2) {
+					tb.marker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
+					tb.marker.setLabelAnchor(RectangleAnchor.TOP_RIGHT);
+				} else {
+					tb.marker.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
+					tb.marker.setLabelAnchor(RectangleAnchor.TOP_LEFT);
+				}
+				
+				// redraw canvas
+				synchronized (tb.chart) {
+					var gc = tb.canvas.getGraphicsContext2D();
+					var g2 = new FXGraphics2D(gc);
+					tb.chart.draw(g2, new Rectangle(0, 0,
+							(int) tb.canvas.getWidth(), (int) tb.canvas.getHeight()));
+					gc.strokeRect(0, 0, tb.canvas.getWidth(), tb.canvas.getHeight());
+				}
+			}
+		});
 	}
 	
 	public void onChartCanvasClicked(MouseEvent e, String title, JFreeChart chart) {
@@ -58,7 +61,7 @@ public class LinkPaneController {
 			frame.setContentPane(new ChartPanel(chart) {
 				@Override
 				public void paintComponent(Graphics g) {
-					synchronized (lock) {
+					synchronized (chart) {
 						super.paintComponent(g);
 					}
 				}
@@ -68,45 +71,10 @@ public class LinkPaneController {
 		}
 	}
 	
-	public void onChartCanvasWidthChange(int newWidth, Canvas canvas, JFreeChart chart) {
-		var gc = canvas.getGraphicsContext2D();
-		var g2 = new FXGraphics2D(gc);
-		chart.draw(g2, new Rectangle(0, 0, newWidth, (int) canvas.getHeight()));
-		gc.strokeRect(0, 0, canvas.getWidth(), canvas.getHeight());
-	}
-	
-	public void onChartCanvasWidthChange(ObservableValue<? extends Number> observable,
-										 Number oldValue, Number newValue) {
-		synchronized (lock) {
-			var gc = linkPane.cvcCanvas.getGraphicsContext2D();
-			var g2 = new FXGraphics2D(gc);
-			linkPane.cvcChart.draw(g2, new Rectangle(0, 0, newValue.intValue(), (int) linkPane.cvcCanvas.getHeight()));
-			gc.strokeRect(0, 0, linkPane.cvcCanvas.getWidth(), linkPane.cvcCanvas.getHeight());
-			
-			gc = linkPane.ttCanvas.getGraphicsContext2D();
-			g2 = new FXGraphics2D(gc);
-			linkPane.ttChart.draw(g2, new Rectangle(0, 0, newValue.intValue(), (int) linkPane.ttCanvas.getHeight()));
-			gc.strokeRect(0, 0, linkPane.ttCanvas.getWidth(), linkPane.ttCanvas.getHeight());
-		}
-	}
-	
-	public void onCurrentTimeChanged(Observable observable, Number oldValue, Number newValue) {
-		synchronized (lock) {
-			linkPane.cvcMarker.setValue(newValue.intValue());
-			
-			var gc = linkPane.cvcCanvas.getGraphicsContext2D();
-			var g2 = new FXGraphics2D(gc);
-			linkPane.cvcChart.draw(g2, new Rectangle(0, 0,
-					(int) linkPane.cvcCanvas.getWidth(), (int) linkPane.cvcCanvas.getHeight()));
-			gc.strokeRect(0, 0, linkPane.cvcCanvas.getWidth(), linkPane.cvcCanvas.getHeight());
-			
-			linkPane.ttMarker.setValue(newValue.intValue());
-			
-			gc = linkPane.ttCanvas.getGraphicsContext2D();
-			g2 = new FXGraphics2D(gc);
-			linkPane.ttChart.draw(g2, new Rectangle(0, 0,
-					(int) linkPane.ttCanvas.getWidth(), (int) linkPane.ttCanvas.getHeight()));
-			gc.strokeRect(0, 0, linkPane.ttCanvas.getWidth(), linkPane.ttCanvas.getHeight());
-		}
-	}
+	public record TimeBinding(
+			ValueMarker marker,
+			IntFunction<String> labelSupplier,
+			Canvas canvas,
+			JFreeChart chart
+	) {}
 }

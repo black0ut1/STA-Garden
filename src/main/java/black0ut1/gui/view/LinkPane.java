@@ -8,6 +8,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -17,21 +18,19 @@ import javafx.util.Duration;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.ValueMarker;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.ui.RectangleAnchor;
+import org.jfree.chart.ui.TextAnchor;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.fx.FXGraphics2D;
 
 import java.awt.*;
+import java.util.function.BiConsumer;
+import java.util.function.IntFunction;
 
-public class LinkPane extends VBox {
-	
-	public ValueMarker cvcMarker;
-	public JFreeChart cvcChart;
-	public Canvas cvcCanvas;
-	
-	public ValueMarker ttMarker;
-	public JFreeChart ttChart;
-	public Canvas ttCanvas;
+public class LinkPane extends GridPane {
 	
 	public final LinkPaneController controller;
 	public final Link link;
@@ -44,12 +43,36 @@ public class LinkPane extends VBox {
 		setPadding(new Insets(10));
 		setMinWidth(0);
 		
-		Model.getInstance().currentTimeProperty.addListener(controller::onCurrentTimeChanged);
-		
 		getRoot();
+		
+		Model.getInstance().currentTimeProperty.set(Model.getInstance().currentTimeProperty.get() + 1);
+		Model.getInstance().currentTimeProperty.set(Model.getInstance().currentTimeProperty.get() - 1);
 	}
 	
 	public void getRoot() {
+		add(getDetailsPane(), 0, 0);
+		
+		TextFlow FDtitle = titleWithTooltip("Fundamental diagram", "Double click the chart to enlarge");
+		add(FDtitle, 0, 1);
+		add(getFDplot(), 0, 2);
+		
+		TextFlow CVCtitle = titleWithTooltip("Cumulative vehicle counts", "Double click the chart to enlarge");
+		add(CVCtitle, 0, 3);
+		add(getCVCplot(), 0, 4);
+		
+		TextFlow TTtitle = titleWithTooltip("Travel time", "Double click the chart to enlarge");
+		add(TTtitle, 0, 5);
+		add(getTTplot(), 0, 6);
+		
+		TextFlow flowTitle = titleWithTooltip("Inflow and outflow", "Double click the chart to enlarge");
+		add(flowTitle, 1, 3);
+		add(getFlowPlot(), 1, 4);
+	}
+	
+	public Node getDetailsPane() {
+		VBox detailsPane = new VBox();
+		detailsPane.setPadding(new Insets(10));
+		
 		Text title = new Text("Link " + link.index);
 		title.setFont(Font.font(null, FontWeight.BOLD, 30));
 		
@@ -57,7 +80,7 @@ public class LinkPane extends VBox {
 		Text head = new Text("Head: " + link.head.index);
 		Text tail = new Text("Tail: " + link.tail.index);
 		
-		getChildren().addAll(title, model, head, tail);
+		detailsPane.getChildren().addAll(title, model, head, tail);
 		
 		////////////////////////
 		
@@ -68,143 +91,10 @@ public class LinkPane extends VBox {
 			Text t = new Text(texts[i] + ": ");
 			t.setFont(Font.font(null, FontWeight.BOLD, t.getFont().getSize()));
 			TextFlow tf = new TextFlow(t, new Text(String.valueOf(values[i])));
-			getChildren().add(tf);
+			detailsPane.getChildren().add(tf);
 		}
 		
-		////////////////////////
-		
-		TextFlow FDtitle = titleWithTooltip("Fundamental diagram", "Double click the chart to enlarge");
-		TextFlow CVCtitle = titleWithTooltip("Cumulative vehicle counts", "Double click the chart to enlarge");
-		TextFlow TTtitle = titleWithTooltip("Travel time", "Double click the chart to enlarge");
-		
-		////////////////////////
-		
-		Text detailsTitle = new Text("Details");
-		detailsTitle.setFont(Font.font(null, FontWeight.BOLD, 15));
-		VBox.setMargin(detailsTitle, new Insets(10, 0, 0, 0));
-		
-		Text volume = new Text("Volume: ");
-		volume.setFont(Font.font(null, FontWeight.BOLD, volume.getFont().getSize()));
-		Text volumeValue = new Text();
-		volumeValue.textProperty().bindBidirectional(
-				Model.getInstance().currentTimeProperty, controller.timeToVolumeConverter);
-		
-		Text travelTime = new Text("Travel time: ");
-		travelTime.setFont(Font.font(null, FontWeight.BOLD, volume.getFont().getSize()));
-		Text travelTimeValue = new Text();
-		travelTimeValue.textProperty().bindBidirectional(
-				Model.getInstance().currentTimeProperty, controller.timeToTravelTimeConverter);
-		
-		////////////////////////
-		
-		getChildren().addAll(
-				FDtitle, getFDplot(),
-				CVCtitle, getCVCplot(),
-				TTtitle, getTTplot(),
-				detailsTitle, new TextFlow(volume, volumeValue), new TextFlow(travelTime, travelTimeValue)
-		);
-	}
-	
-	public Node getFDplot() {
-		XYSeries series = new XYSeries("");
-		series.add(0, 0);
-		series.add(link.capacity / link.freeFlowSpeed, link.capacity);
-		series.add(link.jamDensity, 0);
-		XYSeriesCollection dataset = new XYSeriesCollection(series);
-		
-		JFreeChart chart = ChartFactory.createXYLineChart(null, "Density", "Flow", dataset);
-		chart.removeLegend();
-		
-		Canvas canvas = new Canvas(0, 200);
-		canvas.widthProperty().bind(this.widthProperty().add(-20));
-		canvas.widthProperty().addListener((_, _, newValue) ->
-				controller.onChartCanvasWidthChange(newValue.intValue(), canvas, chart));
-		canvas.setOnMouseClicked(e -> controller.onChartCanvasClicked(e, "Fundamental diagram", chart));
-		
-		return canvas;
-	}
-	
-	public Node getCVCplot() {
-		XYSeries cumulativeInflow = new XYSeries("Cumulative inflow");
-		for (int t = 0; t < link.cumulativeInflow.length; t++) {
-			if (t > 0 && link.cumulativeInflow[t - 1] > 0 && link.cumulativeInflow[t] == 0)
-				break;
-			
-			cumulativeInflow.add(t, link.cumulativeInflow[t]);
-		}
-		
-		XYSeries cumulativeOutflow = new XYSeries("Cumulative outflow");
-		for (int t = 0; t < link.cumulativeOutflow.length; t++) {
-			if (t > 0 && link.cumulativeInflow[t - 1] > 0 && link.cumulativeInflow[t] == 0)
-				break;
-			
-			cumulativeOutflow.add(t, link.cumulativeOutflow[t]);
-		}
-		
-		XYSeriesCollection dataset = new XYSeriesCollection();
-		dataset.addSeries(cumulativeInflow);
-		dataset.addSeries(cumulativeOutflow);
-		
-		cvcChart = ChartFactory.createXYLineChart(null, "Time", "Vehicle count", dataset);
-		
-		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-		renderer.setSeriesPaint(0, new Color(0, 0, 255, 128));
-		renderer.setSeriesPaint(1, new Color(255, 0, 0, 128));
-		renderer.setSeriesShapesVisible(0, false);
-		renderer.setSeriesShapesVisible(1, false);
-		renderer.setDrawSeriesLineAsPath(false);
-		cvcChart.getXYPlot().setRenderer(renderer);
-		
-		cvcChart.getXYPlot().getRangeAxis().setLowerBound(0);
-		
-		int time = Model.getInstance().currentTimeProperty.get();
-		cvcMarker = new ValueMarker(time);
-		cvcMarker.setPaint(Color.MAGENTA);
-		cvcChart.getXYPlot().addDomainMarker(cvcMarker);
-		
-		cvcCanvas = new Canvas(0, 200);
-		cvcCanvas.widthProperty().bind(this.widthProperty().add(-20));
-		cvcCanvas.widthProperty().addListener(controller::onChartCanvasWidthChange);
-		cvcCanvas.setOnMouseClicked(e -> controller.onChartCanvasClicked(e, "Cumulative vehicle count", cvcChart));
-		
-		return cvcCanvas;
-	}
-	
-	public Node getTTplot() {
-		XYSeries series = new XYSeries("Travel time");
-		XYSeries infinities = new XYSeries("Infinity");
-		for (int t = 0; t < MainGUI.timeSteps; t++) {
-			if (MainGUI.travelTimes[link.index][t] == Double.POSITIVE_INFINITY)
-				infinities.add(t, 0);
-			else
-				series.add(t, MainGUI.travelTimes[link.index][t]);
-		}
-		double freeFlowTime = link.length / link.freeFlowSpeed;
-		XYSeries freeFlow = new  XYSeries("Free flow travel time");
-		freeFlow.add(0, freeFlowTime);
-		freeFlow.add(MainGUI.timeSteps,  freeFlowTime);
-		
-		XYSeriesCollection dataset = new XYSeriesCollection();
-		dataset.addSeries(series);
-		dataset.addSeries(infinities);
-		dataset.addSeries(freeFlow);
-		
-		ttChart = ChartFactory.createXYLineChart(null, "Time", "Travel time", dataset);
-		ttChart.getXYPlot().getDomainAxis().setUpperBound(MainGUI.timeSteps);
-		ttChart.getXYPlot().getRangeAxis().setUpperBound(series.getMaxY() * 1.1);
-		
-		int time = Model.getInstance().currentTimeProperty.get();
-		ttMarker = new ValueMarker(time);
-		ttMarker.setPaint(Color.MAGENTA);
-		ttChart.getXYPlot().addDomainMarker(ttMarker);
-		
-		ttCanvas = new Canvas(0, 200);
-		ttCanvas.widthProperty().bind(this.widthProperty().add(-20));
-		ttCanvas.widthProperty().addListener((_, _, newValue) ->
-				controller.onChartCanvasWidthChange(newValue.intValue(), ttCanvas, ttChart));
-		ttCanvas.setOnMouseClicked(e -> controller.onChartCanvasClicked(e, "Travel time", ttChart));
-		
-		return ttCanvas;
+		return detailsPane;
 	}
 	
 	public TextFlow titleWithTooltip(String titleText, String tooltipText) {
@@ -222,5 +112,148 @@ public class LinkPane extends VBox {
 		TextFlow tf = new TextFlow(title, questionMark);
 		VBox.setMargin(tf, new Insets(10, 0, 0, 0));
 		return tf;
+	}
+	
+	public Node getFDplot() {
+		XYSeries series = new XYSeries("");
+		series.add(0, 0);
+		series.add(link.capacity / link.freeFlowSpeed, link.capacity);
+		series.add(link.jamDensity, 0);
+		XYSeriesCollection dataset = new XYSeriesCollection(series);
+		
+		JFreeChart chart = ChartFactory.createXYLineChart(null, "Density", "Flow", dataset);
+		chart.removeLegend();
+		
+		Canvas canvas = new Canvas(400, 200);
+		var gc = canvas.getGraphicsContext2D();
+		var g2 = new FXGraphics2D(gc);
+		chart.draw(g2, new Rectangle(0, 0, (int) canvas.getWidth(), (int) canvas.getHeight()));
+		gc.strokeRect(0, 0, canvas.getWidth(), canvas.getHeight());
+		canvas.setOnMouseClicked(e -> controller.onChartCanvasClicked(e, "Fundamental diagram", chart));
+		
+		return canvas;
+	}
+	
+	public Node getCVCplot() {
+		XYSeries cumulativeInflow = new XYSeries("Cumulative inflow");
+		XYSeries cumulativeOutflow = new XYSeries("Cumulative outflow");
+		
+		for (int t = 0; t < link.cumulativeInflow.length; t++) {
+			cumulativeInflow.add(t, link.cumulativeInflow[t]);
+			cumulativeOutflow.add(t, link.cumulativeOutflow[t]);
+		}
+		
+		XYSeriesCollection dataset = new XYSeriesCollection();
+		dataset.addSeries(cumulativeInflow);
+		dataset.addSeries(cumulativeOutflow);
+		
+		return createTimeChart(dataset, "Time", "Vehicle count", "Cumulative vehicle count",
+				(_, r) -> {
+					r.setSeriesPaint(0, new Color(0, 0, 255, 128));
+					r.setSeriesPaint(1, new Color(255, 0, 0, 128));
+					r.setSeriesShapesVisible(0, false);
+					r.setSeriesShapesVisible(1, false);
+				},
+				time -> {
+					double cinflow = link.cumulativeInflow[time];
+					double coutflow = link.cumulativeOutflow[time];
+					return String.format("%.3f%n%.3f", cinflow, coutflow);
+				}
+		);
+	}
+	
+	public Node getTTplot() {
+		XYSeries travelTime = new XYSeries("Travel time");
+		for (int t = 0; t < MainGUI.timeSteps; t++)
+			if (MainGUI.travelTimes[link.index][t] != Double.POSITIVE_INFINITY)
+				travelTime.add(t, MainGUI.travelTimes[link.index][t]);
+		
+		double freeFlowTime = link.length / link.freeFlowSpeed;
+		XYSeries freeFlow = new XYSeries("Free flow travel time");
+		freeFlow.add(0, freeFlowTime);
+		freeFlow.add(MainGUI.timeSteps, freeFlowTime);
+		
+		XYSeriesCollection dataset = new XYSeriesCollection();
+		dataset.addSeries(travelTime);
+		dataset.addSeries(freeFlow);
+		
+		return createTimeChart(dataset, "Time", "Travel time", "Travel time",
+				(_, r) -> {
+					r.setSeriesPaint(0, Color.RED);
+					r.setSeriesPaint(1, new Color(0, 128, 0));
+					r.setSeriesShapesVisible(0, false);
+					r.setSeriesShapesVisible(1, false);
+				},
+				time -> String.format("%.3f", MainGUI.travelTimes[link.index][time])
+		);
+	}
+	
+	public Node getFlowPlot() {
+		XYSeries cumulativeInflow = new XYSeries("Inflow");
+		XYSeries cumulativeOutflow = new XYSeries("Outflow");
+		
+		for (int t = 0; t < link.inflow.length; t++) {
+			cumulativeInflow.add(t, link.inflow[t].totalFlow);
+			cumulativeOutflow.add(t, link.outflow[t].totalFlow);
+		}
+		
+		XYSeriesCollection dataset = new XYSeriesCollection();
+		dataset.addSeries(cumulativeInflow);
+		dataset.addSeries(cumulativeOutflow);
+		
+		return createTimeChart(dataset, "Time", "Flow", "Inflow and outflow",
+				(_, r) -> {
+					r.setSeriesPaint(0, new Color(0, 0, 255, 128));
+					r.setSeriesPaint(1, new Color(255, 0, 0, 128));
+					r.setSeriesShapesVisible(0, false);
+					r.setSeriesShapesVisible(1, false);
+				},
+				time -> {
+					double cinflow = link.inflow[time].totalFlow;
+					double coutflow = link.outflow[time].totalFlow;
+					return String.format("%.3f%n%.3f", cinflow, coutflow);
+				}
+		);
+	}
+	
+	private Canvas createTimeChart(XYSeriesCollection dataset, String xLabel, String yLabel, String popupTitle,
+	                               BiConsumer<XYPlot, XYLineAndShapeRenderer> plotCustomizer, IntFunction<String> markerLabelSupplier) {
+		JFreeChart chart = ChartFactory.createXYLineChart(null, xLabel, yLabel, dataset);
+		
+		XYPlot plot = chart.getXYPlot();
+		double maxY = Double.NEGATIVE_INFINITY;
+		for (Object series : dataset.getSeries())
+			maxY = Math.max(maxY, ((XYSeries) series).getMaxY());
+		plot.getRangeAxis().setUpperBound(maxY * 1.2);
+		plot.getRangeAxis().setLowerBound(0);
+		
+		if (plotCustomizer != null) {
+			XYLineAndShapeRenderer r = new XYLineAndShapeRenderer();
+			plotCustomizer.accept(plot, r);
+			plot.setRenderer(r);
+		}
+		
+		int time = Model.getInstance().currentTimeProperty.get();
+		ValueMarker marker = new ValueMarker(time);
+		marker.setPaint(Color.BLACK);
+		marker.setLabelBackgroundColor(Color.WHITE);
+		marker.setLabelFont(new java.awt.Font(null, java.awt.Font.BOLD, 12));
+		marker.setLabelAnchor(RectangleAnchor.TOP_RIGHT);
+		marker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
+		if (markerLabelSupplier != null)
+			marker.setLabel(markerLabelSupplier.apply(time));
+		plot.addDomainMarker(marker);
+		
+		Canvas canvas = new Canvas(400, 200);
+		
+		canvas.setOnMouseClicked(e ->
+				controller.onChartCanvasClicked(e, popupTitle, chart)
+		);
+		
+		LinkPaneController.TimeBinding tb = new LinkPaneController.TimeBinding(
+				marker, markerLabelSupplier, canvas, chart);
+		controller.timeBindings.add(tb);
+		
+		return canvas;
 	}
 }
