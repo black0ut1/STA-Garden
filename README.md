@@ -1,3 +1,7 @@
+### Branch Information
+This branch is a version of this project, which evaluates dynamic network loading on three
+networks: Sioux Falls, Chicago Sketch, and Berlin Center.
+
 ![](./convergence.png)
 
 # STA Garden
