@@ -10,7 +10,7 @@ import black0ut1.dynamic.equilibrium.STARouteChoice;
 import black0ut1.dynamic.equilibrium.StaticRouteChoice;
 import black0ut1.dynamic.loading.dnl.*;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
-import black0ut1.io.TNTP;
+import black0ut1.io.CSV;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.assignment.Settings;
 import black0ut1.static_.assignment.path.ProjectedGradient;
@@ -38,7 +38,7 @@ public class Main {
 		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
 		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
 		
-		var pair = Util.loadData(new TNTP(), networkFile, odmFile, nodeFile);
+		var pair = Util.loadData(new CSV(), networkFile, odmFile, nodeFile);
 		
 		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), 10);
 		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, stepSize, maxSteps);
