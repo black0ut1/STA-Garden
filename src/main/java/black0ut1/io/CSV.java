@@ -30,6 +30,10 @@ public class CSV extends InputOutput {
 	protected final static String BETA_COLUMN = "vdf_beta";
 	protected final static String FREE_FLOW_TIME_COLUMN = "vdf_fftt";
 	
+	protected final static String NODE_ID = "node_id";
+	protected final static String X_COORD = "x_coord";
+	protected final static String Y_COORD = "y_coord";
+	
 	@Override
 	protected List<Network.Edge> readEdges(String networkFile) {
 		try (BufferedReader reader = Files.newBufferedReader(Paths.get(networkFile))) {
@@ -81,15 +85,15 @@ public class CSV extends InputOutput {
 	@Override
 	protected Network.Node[] readNodes(String nodeFile, int nodesNum) {
 		try (BufferedReader reader = Files.newBufferedReader(Paths.get(nodeFile))) {
-			Network.Node[] nodes = new Network.Node[nodesNum];
+			var header = parseCsvHeader(reader);
 			
+			Network.Node[] nodes = new Network.Node[nodesNum];
 			reader.lines()
-					.skip(1)
 					.map(line -> line.split(DELIMITER))
 					.forEach(arr -> {
-						int nodeIndex = Integer.parseInt(arr[1]) - 1;
-						double x = Double.parseDouble(arr[3]);
-						double y = Double.parseDouble(arr[4]);
+						int nodeIndex = Integer.parseInt(arr[header.get(NODE_ID)]) - 1;
+						double x = Double.parseDouble(arr[header.get(X_COORD)]);
+						double y = Double.parseDouble(arr[header.get(Y_COORD)]);
 						nodes[nodeIndex] = new Network.Node(nodeIndex, x, y);
 					});
 			

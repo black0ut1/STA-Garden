@@ -29,12 +29,16 @@ public class MainGUI extends Application {
 	}
 	
 	public static void main(String[] args) {
-		String map = "SiouxFalls";
-		String networkFile = "data/" + map + "/link.csv";
-		String odmFile = "data/" + map + "/demand.csv";
-		String nodeFile = "data/" + map + "/node.csv";
-		String predictedFile = "data/" + map + "/predicted.csv";
-		String actualFile = "data/" + map + "/actual.csv";
+		if (args.length == 0) {
+			System.err.println("Launch the program with 1 argument - path to the folder with data (e.g. 'data/SiouxFalls').");
+			System.exit(1);
+		}
+		
+		String networkFile = args[0] + "/link.csv";
+		String odmFile = args[0] + "/demand.csv";
+		String nodeFile = args[0] + "/node.csv";
+		String predictedFile = args[0] + "/predicted.csv";
+		String actualFile = args[0] + "/actual.csv";
 		
 		var pair = Util.loadData(new CSV(), networkFile, odmFile, nodeFile);
 		
