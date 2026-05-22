@@ -4,21 +4,23 @@ import javafx.scene.paint.Color;
 
 public final class Constants {
 	
-	///////////////// MainGUI /////////////////
-	
-	public static final double HORIZONTAL_DIVIDER_POSITION = 0.8;
-	public static final double VERTICAL_DIVIDER_POSITION = 0.8;
-	
 	///////////////// DTANetworkPane /////////////////
-	public static final double NODE_RADIUS = 10;
+	public static final double NODE_RADIUS = 8;
 	public static final double LINK_WIDTH = 5;
 	public static final double LINK_OFFSET = 4;
 	
 	public static final Color NODE_COLOR = Color.BLACK;
 	public static final Color LINK_COLOR = Color.LIGHTGRAY;
-	public static final Color HOVER_COLOR = Color.LIGHTBLUE;
-	public static final Color SELECT_COLOR = Color.LIGHTGREEN;
+	public static final Color HOVER_COLOR = Color.BLACK;
+	public static final Color SELECT_COLOR = Color.BLACK;
 	
 	public static final double NORMALIZED_SCALE = 500;
 	public static final double WHEEL_ROTATION_SCALE_FACTOR = 1;
+	
+	///////////////// Visuzalization /////////////////
+	public static final double FLOW_MAX = 500;
+	public static final double FLOW_DIFF_MAX = 500;
+	
+	public static final double VOLUME_MAX = 500;
+	public static final double VOLUME_DIFF_MAX = 500;
 }

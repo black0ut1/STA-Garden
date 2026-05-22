@@ -66,8 +66,15 @@ public class MainStage extends Stage {
 		Label detailsTitle = new Label("Details");
 		detailsTitle.setStyle("-fx-font-weight: bold; -fx-underline: true;");
 		
+		Label descriptionTitle = new Label("Description");
+		descriptionTitle.setStyle("-fx-font-weight: bold; -fx-underline: true;");
+		
+		volumeDesc = new Text();
+		volumeDesc.setWrappingWidth(400);
+		
 		controlPane.getChildren().addAll(sliderTitle, getSliderPane(), toggleTitle,
-				getTogglePane(), detailsTitle, getDetailsPane());
+				getTogglePane(), detailsTitle, getDetailsPane(), descriptionTitle,
+				volumeDesc);
 		return controlPane;
 	}
 	
@@ -107,12 +114,8 @@ public class MainStage extends Stage {
 			togglePane.getChildren().add(button);
 		}
 		
-		volumeDesc = new Text();
-		volumeDesc.setWrappingWidth(400);
-		
 		visualizationToggleGroup.selectedToggleProperty().addListener(controller::onVisualizationModeChanged);
 		((RadioButton) togglePane.getChildren().getFirst()).setSelected(true);
-		togglePane.getChildren().addAll(volumeDesc);
 		return togglePane;
 	}
 	

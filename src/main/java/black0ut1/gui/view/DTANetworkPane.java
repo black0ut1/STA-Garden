@@ -9,8 +9,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
+import javafx.scene.paint.*;
 
 import java.util.function.BiConsumer;
 
@@ -144,6 +143,7 @@ public class DTANetworkPane extends Pane {
 	private void paint() {
 		gc.setFill(Color.WHITE);
 		gc.fillRect(0, 0, getWidth(), getHeight());
+		paintLegend();
 		
 		gc.save();
 		gc.translate(getWidth() / 2, getHeight() / 2);
@@ -167,34 +167,34 @@ public class DTANetworkPane extends Pane {
 				case FLOW_ACTUAL:
 					double actualInflow = MainGUI.actual[linkShape.index].inflow()[time];
 					double actualOutflow = MainGUI.actual[linkShape.index].outflow()[time];
-					linkShape.drawHalf(getDifferenceColor(actualInflow), getDifferenceColor(actualOutflow));
+					linkShape.drawHalf(getDifferenceColor(actualInflow, FLOW_MAX), getDifferenceColor(actualOutflow, FLOW_MAX));
 					break;
 				case FLOW_PREDICTED:
 					double predictedInflow = MainGUI.predicted[linkShape.index].inflow()[time];
 					double predictedOutflow = MainGUI.predicted[linkShape.index].outflow()[time];
-					linkShape.drawHalf(getDifferenceColor(-predictedInflow), getDifferenceColor(-predictedOutflow));
+					linkShape.drawHalf(getDifferenceColor(-predictedInflow, FLOW_MAX), getDifferenceColor(-predictedOutflow, FLOW_MAX));
 					break;
 				case FLOW_DIFFERENCE:
 					double inflowDiff = MainGUI.actual[linkShape.index].inflow()[time]
 							- MainGUI.predicted[linkShape.index].inflow()[time];
 					double outflowDiff = MainGUI.actual[linkShape.index].outflow()[time]
 							- MainGUI.predicted[linkShape.index].outflow()[time];
-					linkShape.drawHalf(getDifferenceColor(inflowDiff), getDifferenceColor(outflowDiff));
+					linkShape.drawHalf(getDifferenceColor(inflowDiff, FLOW_DIFF_MAX), getDifferenceColor(outflowDiff, FLOW_DIFF_MAX));
 					break;
 				case VOLUME_ACTUAL:
 					double actualVolume = MainGUI.actual[linkShape.index].volume()[time];
-					gc.setStroke(getDifferenceColor(actualVolume));
+					gc.setStroke(getDifferenceColor(actualVolume, VOLUME_MAX));
 					linkShape.draw();
 					break;
 				case VOLUME_PREDICTED:
 					double predictedVolume = MainGUI.predicted[linkShape.index].volume()[time];
-					gc.setStroke(getDifferenceColor(-predictedVolume));
+					gc.setStroke(getDifferenceColor(-predictedVolume, VOLUME_MAX));
 					linkShape.draw();
 					break;
 				case VOLUME_DIFFERENCE:
 					double difference = MainGUI.actual[linkShape.index].volume()[time]
 							- MainGUI.predicted[linkShape.index].volume()[time];
-					gc.setStroke(getDifferenceColor(difference));
+					gc.setStroke(getDifferenceColor(difference, VOLUME_DIFF_MAX));
 					linkShape.draw();
 					break;
 				case null, default:
@@ -207,14 +207,84 @@ public class DTANetworkPane extends Pane {
 			Paint color = nodeShape == hoverShape
 					? HOVER_COLOR
 					: nodeShape == selectedShape
-					? SELECT_COLOR
-					: NODE_COLOR;
+					  ? SELECT_COLOR
+					  : NODE_COLOR;
 			gc.setFill(color);
 			
 			nodeShape.draw();
 		}
 		
 		gc.restore();
+	}
+	
+	private void paintLegend() {
+		if (mode == null)
+			return;
+		
+		double offset = 30;
+		double width = 50;
+		double height = 150;
+		
+		double min = -1, mid = -1, max = -1;
+		LinearGradient gradient = null;
+		switch (mode) {
+			case FLOW_ACTUAL -> {
+				gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+						new Stop(0, Color.BLUE), new Stop(1, Color.LIGHTGRAY));
+				min = 0;
+				max = FLOW_MAX;
+			}
+			case FLOW_PREDICTED -> {
+				gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+						new Stop(0, Color.RED), new Stop(1, Color.LIGHTGRAY));
+				min = 0;
+				max = FLOW_MAX;
+			}
+			case VOLUME_ACTUAL -> {
+				gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+						new Stop(0, Color.BLUE), new Stop(1, Color.LIGHTGRAY));
+				min = 0;
+				max = VOLUME_MAX;
+			}
+			case VOLUME_PREDICTED -> {
+				gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+						new Stop(0, Color.BLUE), new Stop(0.5, Color.LIGHTGRAY), new Stop(1, Color.RED));
+				min = -VOLUME_MAX;
+				mid = 0;
+				max = VOLUME_MAX;
+			}
+			case FLOW_DIFFERENCE -> {
+				gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+						new Stop(0, Color.BLUE), new Stop(0.5, Color.LIGHTGRAY), new Stop(1, Color.RED));
+				min = -FLOW_DIFF_MAX;
+				mid = 0;
+				max = FLOW_DIFF_MAX;
+			}
+			case VOLUME_DIFFERENCE -> {
+				gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+						new Stop(0, Color.BLUE), new Stop(0.5, Color.LIGHTGRAY), new Stop(1, Color.RED));
+				min = -VOLUME_DIFF_MAX;
+				mid = 0;
+				max = VOLUME_DIFF_MAX;
+			}
+		}
+		
+		gc.setFill(gradient);
+		gc.fillRect(getWidth() - offset - width, offset, width, height);
+		gc.setStroke(Color.BLACK);
+		gc.strokeRect(getWidth() - offset - width, offset, width, height);
+		
+		gc.strokeText(String.valueOf(max),
+				getWidth() - offset - width - 5 * (1 + String.valueOf(max).length()),
+				offset + 5);
+		if (mid != -1) {
+			gc.strokeText(String.valueOf(mid),
+					getWidth() - offset - width - 5 * (1 + String.valueOf(mid).length()),
+					(offset + height) / 2 + 20);
+		}
+		gc.strokeText(String.valueOf(min),
+				getWidth() - offset - width - 5 * (1 + String.valueOf(min).length()),
+				offset + height + 5);
 	}
 	
 	private void computeNormalizedNodes(Network.Node[] nodes) {
@@ -240,13 +310,11 @@ public class DTANetworkPane extends Pane {
 		}
 	}
 	
-	public Color getDifferenceColor(double value) {
-		final double MAX_VOLUME = 500;
-		
+	public Color getDifferenceColor(double value, double max) {
 		if (value > 0)
-			return LINK_COLOR.interpolate(Color.BLUE, value / MAX_VOLUME);
+			return LINK_COLOR.interpolate(Color.BLUE, value / max);
 		else if (value < 0)
-			return LINK_COLOR.interpolate(Color.RED, -value / MAX_VOLUME);
+			return LINK_COLOR.interpolate(Color.RED, -value / max);
 		else
 			return LINK_COLOR;
 	}

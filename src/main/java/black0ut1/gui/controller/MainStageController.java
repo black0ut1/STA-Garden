@@ -99,8 +99,8 @@ public class MainStageController {
 			case FLOW_ACTUAL:
 				double actualInflow = MainGUI.actual[selectedLink].inflow()[time];
 				double actualOutflow = MainGUI.actual[selectedLink].outflow()[time];
-				mainStage.details1LB.setText("Actual inflow:        " + actualInflow);
-				mainStage.details2LB.setText("Actual outflow:      " + actualOutflow);
+				mainStage.details1LB.setText("Actual inflow:   " + actualInflow);
+				mainStage.details2LB.setText("Actual outflow: " + actualOutflow);
 				break;
 			case FLOW_PREDICTED:
 				double predictedInflow = MainGUI.predicted[selectedLink].inflow()[time];
@@ -108,9 +108,30 @@ public class MainStageController {
 				mainStage.details1LB.setText("Predicted inflow:   " + predictedInflow);
 				mainStage.details2LB.setText("Predicted outflow: " + predictedOutflow);
 				break;
-			default:
-				mainStage.details1LB.setText("Select link to see details");
+			case FLOW_DIFFERENCE:
+				double inflowDiff = MainGUI.actual[selectedLink].inflow()[time]
+						- MainGUI.predicted[selectedLink].inflow()[time];
+				double outflowDiff = MainGUI.actual[selectedLink].outflow()[time]
+						- MainGUI.predicted[selectedLink].outflow()[time];
+				mainStage.details1LB.setText("Inflow difference:   " + inflowDiff);
+				mainStage.details2LB.setText("Outflow difference: " + outflowDiff);
+				break;
+			case VOLUME_ACTUAL:
+				double actualVolume = MainGUI.actual[selectedLink].volume()[time];
+				mainStage.details1LB.setText("Actual volume: " + actualVolume);
 				mainStage.details2LB.setText("");
+				break;
+			case VOLUME_PREDICTED:
+				double predictedVolume = MainGUI.predicted[selectedLink].volume()[time];
+				mainStage.details1LB.setText("Predicted volume: " + predictedVolume);
+				mainStage.details2LB.setText("");
+				break;
+			case VOLUME_DIFFERENCE:
+				double volumeDifference = MainGUI.actual[selectedLink].volume()[time]
+						- MainGUI.predicted[selectedLink].volume()[time];
+				mainStage.details1LB.setText("Volume difference: " + volumeDifference);
+				mainStage.details2LB.setText("");
+				break;
 		}
 	}
 }
