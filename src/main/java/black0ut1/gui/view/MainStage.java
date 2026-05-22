@@ -97,7 +97,7 @@ public class MainStage extends Stage {
 		
 		timeTA = new TextField(" 0");
 		timeTA.setEditable(false);
-		timeTA.setPrefWidth(30);
+		timeTA.setPrefWidth(50);
 		
 		sliderPane.getChildren().addAll(playBT, timeSlider, timeTA);
 		return sliderPane;

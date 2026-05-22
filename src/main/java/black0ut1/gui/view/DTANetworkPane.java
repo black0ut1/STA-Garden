@@ -143,7 +143,6 @@ public class DTANetworkPane extends Pane {
 	private void paint() {
 		gc.setFill(Color.WHITE);
 		gc.fillRect(0, 0, getWidth(), getHeight());
-		paintLegend();
 		
 		gc.save();
 		gc.translate(getWidth() / 2, getHeight() / 2);
@@ -215,6 +214,7 @@ public class DTANetworkPane extends Pane {
 		}
 		
 		gc.restore();
+		paintLegend();
 	}
 	
 	private void paintLegend() {
@@ -248,7 +248,7 @@ public class DTANetworkPane extends Pane {
 			}
 			case VOLUME_PREDICTED -> {
 				gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
-						new Stop(0, Color.BLUE), new Stop(0.5, Color.LIGHTGRAY), new Stop(1, Color.RED));
+						new Stop(0, Color.RED), new Stop(0.5, Color.LIGHTGRAY), new Stop(1, Color.BLUE));
 				min = -VOLUME_MAX;
 				mid = 0;
 				max = VOLUME_MAX;

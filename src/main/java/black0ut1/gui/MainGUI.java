@@ -34,6 +34,16 @@ public class MainGUI extends Application {
 			System.exit(1);
 		}
 		
+		if (args[0].contains("SiouxFalls")) {
+			Constants.NODE_RADIUS = 8;
+			Constants.LINK_WIDTH = 5;
+			Constants.LINK_OFFSET = 4;
+		} else {
+			Constants.NODE_RADIUS = 1.5;
+			Constants.LINK_WIDTH = 1;
+			Constants.LINK_OFFSET = 1;
+		}
+		
 		String networkFile = args[0] + "/link.csv";
 		String odmFile = args[0] + "/demand.csv";
 		String nodeFile = args[0] + "/node.csv";

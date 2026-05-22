@@ -5,9 +5,9 @@ import javafx.scene.paint.Color;
 public final class Constants {
 	
 	///////////////// DTANetworkPane /////////////////
-	public static final double NODE_RADIUS = 8;
-	public static final double LINK_WIDTH = 5;
-	public static final double LINK_OFFSET = 4;
+	public static double NODE_RADIUS = 8;
+	public static double LINK_WIDTH = 5;
+	public static double LINK_OFFSET = 4;
 	
 	public static final Color NODE_COLOR = Color.BLACK;
 	public static final Color LINK_COLOR = Color.LIGHTGRAY;
