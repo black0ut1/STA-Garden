@@ -18,9 +18,9 @@ public final class Constants {
 	public static final double WHEEL_ROTATION_SCALE_FACTOR = 1;
 	
 	///////////////// Visuzalization /////////////////
-	public static final double FLOW_MAX = 500;
-	public static final double FLOW_DIFF_MAX = 500;
+	public static double FLOW_MAX = 500;
+	public static double FLOW_DIFF_MAX = 500;
 	
-	public static final double VOLUME_MAX = 500;
-	public static final double VOLUME_DIFF_MAX = 500;
+	public static double VOLUME_MAX = 500;
+	public static double VOLUME_DIFF_MAX = 500;
 }

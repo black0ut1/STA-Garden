@@ -33,6 +33,13 @@ public class MainGUI extends Application {
 			System.err.println("Launch the program with 1 argument - path to the folder with data (e.g. 'data/SiouxFalls').");
 			System.exit(1);
 		}
+		if (args.length == 2) {
+			double a = Double.parseDouble(args[1]);
+			Constants.FLOW_MAX = a;
+			Constants.FLOW_DIFF_MAX = a;
+			Constants.VOLUME_MAX = a;
+			Constants.VOLUME_DIFF_MAX = a;
+		}
 		
 		if (args[0].contains("SiouxFalls")) {
 			Constants.NODE_RADIUS = 8;
