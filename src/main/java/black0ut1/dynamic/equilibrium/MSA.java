@@ -52,6 +52,8 @@ public class MSA {
 
 		
 		for (int i = 0; i < maxIterations; i++) {
+			System.out.println("[DUE] Iteration: " + i);
+			
 			double lambda = 1.0 / (i + 2);
 			
 			MixtureFractions[][] targetMfs = shortestPaths.shortestPathMixtureFractions(costs);

@@ -10,6 +10,7 @@ import black0ut1.static_.assignment.path.*;
 import black0ut1.util.Util;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -19,7 +20,8 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
-public class RelativeGapVisualizationIntegrationTest {
+@Disabled
+public class RelativeGapVisualization {
 	
 	static Class<? extends Algorithm>[] algorithms = new Class[]{
 			MSA.class, FrankWolfe.class, FukushimaFrankWolfe.class, ConjugateFrankWolfe.class,
