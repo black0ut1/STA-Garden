@@ -23,7 +23,7 @@ import black0ut1.util.Util;
 
 public class Main {
 	
-	void main() {
+	public static void main(String[] args) {
 		String map = "SiouxFalls";
 		String networkFile = "data/" + map + "/" + map + "_net.tntp";
 		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
