@@ -10,7 +10,7 @@ repositories {
 }
 
 application {
-    mainClass = 'black0ut1.Main'
+    mainClass = 'black0ut1.GenerateData'
 }
 
 dependencies {
@@ -30,7 +30,7 @@ test {
 jar {
     manifest {
         attributes(
-                "Main-Class": "black0ut1.Main"
+                "Main-Class": "black0ut1.GenerateData"
         )
     }
 

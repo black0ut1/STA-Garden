@@ -20,24 +20,27 @@ import java.util.Objects;
 
 public class GenerateData {
 	
-	public static final String odms = "./data/training/odms/";
-	public static final String odmFile = "./data/training/demand.csv";
-	public static final String networkFile = "./data/training/link.csv";
-	
-	// SiouxFalls
-//	public static final double timeStep = 1;
-//	public static final int odmSteps = 1;
-//	public static final int totalSteps = 50;
-//	public static final double relativeGap = 1e-10;
-	
-	// ChicagoSketch
-	public static final double timeStep = 1;
-	public static final int odmSteps = 1;
-	public static final int totalSteps = 200;
-	public static final double relativeGap = 1e-6;
-	
 	public static void main(String[] args) {
-		DoubleMatrix odm = new CSV().parseODMatrix(odmFile);
+		if (args.length == 0 || !args[0].equals("SiouxFalls") && !args[0].equals("ChicagoSketch"))
+			throw new IllegalArgumentException("First argument must be either 'SiouxFalls' or 'ChicagoSketch'.");
+		
+		String map = args[0];
+		
+		double timeStep = 1;
+		int odmSteps = 1;
+		int totalSteps = (map.equals("SiouxFalls")) ? 50 : 200;
+		double relativeGap = (map.equals("SiouxFalls")) ? 1e-10 : 1e-6;
+		
+		System.out.println("==========================");
+		System.out.println("Network: " + map);
+		System.out.println("==========================");
+		
+		
+		String networkFile = "./data/" + map + "/link.csv";
+		String canonODM = "./data/" + map + "/demand.csv";
+		String odms = "./data/" + map + "/odms/";
+		
+		DoubleMatrix odm = new CSV().parseODMatrix(canonODM);
 		Network network = new CSV().parseNetwork(networkFile, null, odm.n);
 		
 		String[] files = Objects.requireNonNull(new File(odms).list());
@@ -49,7 +52,7 @@ public class GenerateData {
 			
 			////////////////////////////
 			odm = new CSV().parseODMatrix(odms + odmFile);
-			Bush[] bushes = destinationBushes(network, odm);
+			Bush[] bushes = destinationBushes(network, odm, relativeGap);
 			
 			TimeDependentODM tdodm = TimeDependentODM.fromStaticODM(odm, odmSteps);
 			DynamicNetwork dNetwork = DynamicNetwork.fromStaticNetwork(network, tdodm, timeStep, totalSteps);
@@ -65,12 +68,12 @@ public class GenerateData {
 			long tock = System.currentTimeMillis();
 			System.out.println("(" + (tock - tick) + "ms, " + finalAmountOfSteps + " steps)");
 			
-			new CSV().writeFlows("./data/training/flows/" + n + "_flows.txt", dNetwork);
-			new CSV().writeTurningFractions("./data/training/fractions/" + n + "_fractions.txt", dNetwork);
+			new CSV().writeFlows("./data/" + map + "/flows/" + n + "_flows.txt", dNetwork);
+			new CSV().writeTurningFractions("./data/" + map + "/fractions/" + n + "_fractions.txt", dNetwork);
 		}
 	}
 	
-	private static Bush[] destinationBushes(Network network, DoubleMatrix odm) {
+	private static Bush[] destinationBushes(Network network, DoubleMatrix odm, double relativeGap) {
 		Settings settings = new Settings(network, odm, 100, new Convergence.Builder()
 				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1, relativeGap));
 		ProjectedGradient pg = new ProjectedGradient(settings);
