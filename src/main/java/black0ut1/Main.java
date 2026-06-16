@@ -34,9 +34,9 @@ public class Main {
 		System.out.println("==========================");
 		
 		
-		String networkFile = "data/" + map + "/" + map + "_net.tntp";
-		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
-		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
+		String networkFile = "data/" + map + "/link.csv";
+		String odmFile = "data/" + map + "/demand.csv";
+		String nodeFile = "data/" + map + "/node.csv";
 		
 		var pair = Util.loadData(new CSV(), networkFile, odmFile, nodeFile);
 		
