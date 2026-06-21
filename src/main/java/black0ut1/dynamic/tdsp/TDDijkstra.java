@@ -4,8 +4,8 @@ import black0ut1.data.PriorityQueue;
 import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.node.Destination;
 import black0ut1.dynamic.loading.node.RoutedIntersection;
+import black0ut1.dynamic.loading.node.Zone;
 import black0ut1.util.DynamicUtils;
 
 import java.util.Arrays;
@@ -40,7 +40,7 @@ public class TDDijkstra {
 			RoutedIntersection intersection = network.routedIntersections[node];
 			
 			for (Link outgoingLink : intersection.outgoingLinks) {
-				if (outgoingLink.head instanceof Destination)
+				if (outgoingLink.head instanceof Zone)
 					continue;
 				
 				int headIndex = outgoingLink.head.index;

@@ -22,8 +22,7 @@ import black0ut1.util.Util;
 public class DynamicNetwork {
 	
 	public final RoutedIntersection[] routedIntersections;
-	public final Origin[] origins;
-	public final Destination[] destinations;
+	public final Zone[] zones;
 	/** The above three arrays merged into one for convenient use. */
 	public final Intersection[] intersections;
 	
@@ -33,35 +32,16 @@ public class DynamicNetwork {
 	/** The above three arrays merged into one for convenient use. */
 	public final Link[] allLinks;
 	
-	public DynamicNetwork(RoutedIntersection[] intersections, Origin[] origins, Destination[] destinations,
+	public DynamicNetwork(RoutedIntersection[] intersections, Zone[] zones,
 						  Link[] links, Connector[] originConnectors, Connector[] destinationConnectors) {
 		this.routedIntersections = intersections;
-		this.origins = origins;
-		this.destinations = destinations;
-		this.intersections = Util.concat(Intersection.class, intersections, origins, destinations);
+		this.zones = zones;
+		this.intersections = Util.concat(Intersection.class, intersections, zones);
 		
 		this.links = links;
 		this.originConnectors = originConnectors;
 		this.destinationConnectors = destinationConnectors;
 		this.allLinks = Util.concat(Link.class, links, originConnectors, destinationConnectors);
-	}
-	
-	/**
-	 * Sums up the total inflow and outflow over all links.
-	 * @param time The time in which the flows are summed up. Must not
-	 * be higher than the time the DNL is currently in.
-	 * @return Pair (total inflow, total outflow).
-	 */
-	public Pair<Double, Double> getTotalInflowOutflow(int time) {
-		double totalInflow = 0;
-		double totalOutflow = 0;
-		
-		for (Link link : allLinks) {
-			totalInflow += link.inflow[time].totalFlow;
-			totalOutflow += link.outflow[time].totalFlow;
-		}
-		
-		return new Pair<>(totalInflow, totalOutflow);
 	}
 	
 	public static DynamicNetwork fromStaticNetwork(Network network, TimeDependentODM odm, double timeStep, int steps) {
@@ -94,16 +74,13 @@ public class DynamicNetwork {
 		// 2. Create array of intersections and arrays of virtual
 		// origins and destinations
 		RoutedIntersection[] nodeArray = new RoutedIntersection[network.nodes];
-		Origin[] originArray = new Origin[network.zones];
-		Destination[] destinationArray = new Destination[network.zones];
+		Zone[] zoneArray = new Zone[network.zones];
 		
 		// 2.1. Create origins and destinations
 		for (int i = 0; i < network.zones; i++) {
-			originArray[i] = new Origin(i, originConnectors[i], odm);
-			originConnectors[i].tail = originArray[i];
-			
-			destinationArray[i] = new Destination(i, steps, destinationConnectors[i]);
-			destinationConnectors[i].head = destinationArray[i];
+			zoneArray[i] = new Zone(i, new Link[]{destinationConnectors[i]}, new Link[]{originConnectors[i]}, odm, steps);
+			originConnectors[i].tail = zoneArray[i];
+			destinationConnectors[i].head = zoneArray[i];
 		}
 		
 		// 2.2. Count the number of incoming and outgoing links of
@@ -145,7 +122,6 @@ public class DynamicNetwork {
 				outgoingLink.tail = nodeArray[i];
 		}
 		
-		return new DynamicNetwork(nodeArray, originArray, destinationArray,
-				linkArray, originConnectors, destinationConnectors);
+		return new DynamicNetwork(nodeArray, zoneArray, linkArray, originConnectors, destinationConnectors);
 	}
 }

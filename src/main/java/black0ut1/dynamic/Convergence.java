@@ -23,6 +23,8 @@ public class Convergence {
 		double tstt = 0;
 		
 		for (Link link : network.allLinks)
+			// The area between the cumulative curves, i.e. the number of vehicles on the
+			// link integrated over time.
 			for (int t = 0; t < link.cumulativeInflow.length - 1; t++) {
 				double n1 = link.cumulativeInflow[t] - link.cumulativeOutflow[t];
 				double n2 = link.cumulativeInflow[t + 1] - link.cumulativeOutflow[t + 1];

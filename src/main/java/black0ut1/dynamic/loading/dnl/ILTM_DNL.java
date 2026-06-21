@@ -5,9 +5,8 @@ import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
-import black0ut1.dynamic.loading.node.Destination;
 import black0ut1.dynamic.loading.node.RoutedIntersection;
-import black0ut1.dynamic.loading.node.Origin;
+import black0ut1.dynamic.loading.node.Zone;
 
 /**
  * Iterative link transmission model dynamic network loading (basic
@@ -45,15 +44,22 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 		}
 		
 		// 1. Load traffic from each origin onto the connector
-		for (Origin origin : network.origins) {
-			Link outgoingLink = origin.outgoingLinks[0];
+		for (Zone zone : network.zones) {
+			Link outgoingLink = zone.outgoingLinks[0];
 			outgoingLink.computeReceivingFlow(t);
 			
-			var pair = origin.computeOrientedMixtureFlows(t);
+			Link incomingLink = zone.incomingLinks[0];
+			incomingLink.computeSendingFlow(t);
+			
+			var pair = zone.computeOrientedMixtureFlows(t);
 			
 			MixtureFlow outgoingFlow = pair.second()[0];
 			outgoingLink.inflow[t] = outgoingFlow;
 			outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
+			
+			MixtureFlow incomingFlow = pair.first()[0];
+			incomingLink.outflow[t] = incomingFlow;
+			incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 		}
 		
 		// Initialize update potential of every intersection to inf
@@ -123,19 +129,6 @@ public class ILTM_DNL extends DynamicNetworkLoading {
 				node.potential = 0;
 			}
 		} while (abovePrecision());
-		
-		
-		// 3. Sink traffic from connector to each destination
-		for (Destination destination : network.destinations) {
-			Link incomingLink = destination.incomingLinks[0];
-			incomingLink.computeSendingFlow(t);
-			
-			var pair = destination.computeOrientedMixtureFlows(t);
-			
-			MixtureFlow incomingFlow = pair.first()[0];
-			incomingLink.outflow[t] = incomingFlow;
-			incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
-		}
 	}
 	
 	protected boolean abovePrecision() {

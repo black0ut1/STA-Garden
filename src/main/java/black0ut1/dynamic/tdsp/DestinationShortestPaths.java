@@ -24,7 +24,7 @@ public class DestinationShortestPaths {
 	
 	public double[][][] shortestPathCosts() {
 		// costs[t][n][d] is the shortest time from n to d, if starting at time t
-		double[][][] costs = new double[timeSteps + 1][network.routedIntersections.length][network.destinations.length];
+		double[][][] costs = new double[timeSteps + 1][network.routedIntersections.length][network.zones.length];
 		
 		for (double[][] a : costs)
 			for (double[] b : a)
@@ -32,7 +32,7 @@ public class DestinationShortestPaths {
 		
 		for (int t = timeSteps; t >= 0; t--) {
 			for (int n = 0; n < network.routedIntersections.length; n++) {
-				for (int d = 0; d < network.destinations.length; d++) {
+				for (int d = 0; d < network.zones.length; d++) {
 					
 					if (n == d) {
 						costs[t][n][d] = 0;
@@ -83,9 +83,9 @@ public class DestinationShortestPaths {
 			for (int n = 0; n < network.routedIntersections.length; n++) {
 				RoutedIntersection intersection = network.routedIntersections[n];
 				
-				DoubleMatrix[] tfs = new DoubleMatrix[network.destinations.length];
+				DoubleMatrix[] tfs = new DoubleMatrix[network.zones.length];
 				
-				for (int d = 0; d < network.destinations.length; d++) {
+				for (int d = 0; d < network.zones.length; d++) {
 					DoubleMatrix turningFractions = new DoubleMatrix(
 							intersection.incomingLinks.length,
 							intersection.outgoingLinks.length);

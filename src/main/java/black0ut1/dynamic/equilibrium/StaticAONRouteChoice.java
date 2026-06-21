@@ -40,7 +40,7 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 	}
 	
 	protected MixtureFractions createNodeFractions(double[][] destinationFlows, int node1) {
-		DoubleMatrix[] turningFractions = new DoubleMatrix[dNetwork.destinations.length];
+		DoubleMatrix[] turningFractions = new DoubleMatrix[dNetwork.zones.length];
 		
 		Intersection node = dNetwork.routedIntersections[node1];
 		

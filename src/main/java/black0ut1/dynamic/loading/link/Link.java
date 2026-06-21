@@ -1,6 +1,5 @@
 package black0ut1.dynamic.loading.link;
 
-import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.node.Intersection;
 

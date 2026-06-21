@@ -37,7 +37,7 @@ public class STARouteChoice implements StaticRouteChoice {
 	protected MixtureFractions createMixtureFractionsForIntersection(RoutedIntersection intersection) {
 		// Creates turning fractions for each destination
 		
-		DoubleMatrix[] turningFractions = new DoubleMatrix[network.destinations.length];
+		DoubleMatrix[] turningFractions = new DoubleMatrix[network.zones.length];
 		
 		for (int destination = 0; destination < destinationBushes.length; destination++) {
 			DoubleMatrix destinationTurningFractions = new DoubleMatrix(intersection.incomingLinks.length, intersection.outgoingLinks.length);

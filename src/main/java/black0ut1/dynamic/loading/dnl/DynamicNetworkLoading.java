@@ -4,8 +4,8 @@ import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
-import black0ut1.dynamic.loading.node.Destination;
 import black0ut1.dynamic.loading.node.RoutedIntersection;
+import black0ut1.dynamic.loading.node.Zone;
 
 /**
  * Abstract class that wraps the functionality of dynamic network
@@ -101,8 +101,8 @@ public abstract class DynamicNetworkLoading {
 		for (Link link : network.allLinks)
 			link.reset();
 		
-		for (Destination destination : network.destinations)
-			destination.reset();
+		for (Zone zone : network.zones)
+			zone.reset();
 		
 		for (RoutedIntersection intersection : network.routedIntersections)
 			intersection.setTurningFractions(null);
@@ -119,17 +119,17 @@ public abstract class DynamicNetworkLoading {
 	 */
 	public void checkDestinationInflows(boolean verbose) {
 		System.out.println("============ Checking arrived flows ============");
-		double[] odmDestinationInflow = new double[network.destinations.length];
+		double[] odmDestinationInflow = new double[network.zones.length];
 		
 		for (int destination = 0; destination < odm.zones; destination++)
 			for (int origin = 0; origin < odm.zones; origin++)
 				for (int t = 0; t < odm.timeSteps; t++)
 					odmDestinationInflow[destination] += odm.getDemand(origin, destination, t);
 		
-		double[] networkDestinationInflow = new double[network.destinations.length];
-		for (int destination = 0; destination < network.destinations.length; destination++) {
+		double[] networkDestinationInflow = new double[network.zones.length];
+		for (int destination = 0; destination < network.zones.length; destination++) {
 			
-			var destiantionInflow = network.destinations[destination].inflow;
+			var destiantionInflow = network.zones[destination].inflow;
 			for (int t = 0; t < steps; t++) {
 				
 				for (int d = 0; d < destiantionInflow[t].destinations.length; d++) {
@@ -147,7 +147,7 @@ public abstract class DynamicNetworkLoading {
 		}
 		
 		if (verbose)
-			for (int i = 0; i < network.destinations.length; i++) {
+			for (int i = 0; i < network.zones.length; i++) {
 				if (Math.abs(odmDestinationInflow[i] - networkDestinationInflow[i]) > 1e-5) {
 					System.out.println("The total inflow into destination " + i + " is different from ODM values. " +
 							"The total flow arrived is " + networkDestinationInflow[i] + ", but ODM says "
@@ -166,10 +166,10 @@ public abstract class DynamicNetworkLoading {
 		System.out.println("Sum of all flows arrived at every destination: " + networkTotal);
 		
 		double avgDifference = 0;
-		for (int i = 0; i < network.destinations.length; i++)
+		for (int i = 0; i < network.zones.length; i++)
 			avgDifference += Math.abs(odmDestinationInflow[i] - networkDestinationInflow[i]);
 		System.out.println("Difference between actual inflow to a destination and\n" +
-				"inflow according to ODM (averaged over destinations): " + avgDifference / network.destinations.length);
+				"inflow according to ODM (averaged over destinations): " + avgDifference / network.zones.length);
 	}
 	
 	public int getNodeUpdates() {

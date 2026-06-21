@@ -2,35 +2,42 @@ package black0ut1.dynamic.loading.node;
 
 import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.TimeDependentODM;
-import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.link.Link;
+import black0ut1.dynamic.loading.mixture.MixtureFlow;
 
-/**
- * Represents origin - a virtual node that loads traffic onto the
- * network - a dynamic flow source. Origin has only one outgoing link
- * and none incoming. The outgoing link must be able to accomodate for
- * all of the flow outgoing out of this origin.
- */
-public class Origin extends Intersection {
+import java.util.Arrays;
+
+public class Zone extends Intersection {
 	
 	protected final TimeDependentODM odm;
+	public final MixtureFlow[] inflow;
 	
-	public Origin(int index, Link outgoingLink, TimeDependentODM odm) {
-		super(index, null, new Link[]{outgoingLink});
+	public Zone(int index, Link[] incomingLinks, Link[] outgoingLinks, TimeDependentODM odm, int timeSteps) {
+		super(index, incomingLinks, outgoingLinks);
 		this.odm = odm;
+		this.inflow = new MixtureFlow[timeSteps];
 	}
 	
 	@Override
 	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time) {
+		Link incomingLink = incomingLinks[0];
+		double S = incomingLink.getSendingFlow();
+		
+		MixtureFlow incomingMixtureFlow = incomingLink
+				.getOutgoingMixtureFlow(time)
+				.copyWithFlow(S);
+		
+		inflow[time] = incomingMixtureFlow;
+		
 		
 		MixtureFlow outgoingMixtureFlow = createMixtureFlowFromODM(time);
-		
-		MixtureFlow[] outgoingMixtureFlows = new MixtureFlow[] {outgoingMixtureFlow};
-		return new Pair<>(null, outgoingMixtureFlows);
+		return new Pair<>(
+				new MixtureFlow[]{incomingMixtureFlow},
+				new MixtureFlow[]{outgoingMixtureFlow}
+		);
 	}
 	
 	protected MixtureFlow createMixtureFlowFromODM(int time) {
-		
 		double originFlow = 0;
 		for (int dest = 0; dest < odm.zones; dest++)
 			originFlow += odm.getDemand(this.index, dest, time);
@@ -53,5 +60,10 @@ public class Origin extends Intersection {
 		}
 		
 		return new MixtureFlow(originFlow, destinations, portions, len);
+	}
+	
+	public void reset() {
+		// release objects
+		Arrays.fill(inflow, null);
 	}
 }
