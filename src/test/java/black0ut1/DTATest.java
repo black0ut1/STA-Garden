@@ -7,46 +7,50 @@ import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.equilibrium.MSA;
 import black0ut1.dynamic.equilibrium.StaticAONRouteChoice;
 import black0ut1.dynamic.equilibrium.StaticRouteChoice;
-import black0ut1.dynamic.loading.dnl.BasicDNL;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
+import black0ut1.dynamic.loading.dnl.ILTM_DNL;
 import black0ut1.dynamic.tdsp.DestinationShortestPaths;
 import black0ut1.io.TNTP;
 import black0ut1.util.Util;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 @Disabled
-public class SiouxFallsDTA {
+public class DTATest {
 	
-	static Network network;
-	static DoubleMatrix odm;
-	static double stepSize = 2;
-	static int odmSteps = 10;
-	static int timeSteps = 150;
-	
-	@BeforeAll
-	static void setUpBeforeAll() {
-		String map = "SiouxFalls";
-		String networkFile = "data/" + map + "/" + map + "_net.tntp";
-		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
-		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
-		var pair = Util.loadData(new TNTP(), networkFile, odmFile, nodeFile);
-		network = pair.first();
-		odm = pair.second();
+	static Stream<Arguments> provideAlgorithms() {
+		// Network, step size, odm steps, time steps, msa steps
+		return Stream.of(
+				Arguments.of("SiouxFalls", 1, 30, 300, 100)
+				/*Arguments.of("ChicagoSketch", 0.5, 30, 350, 20)*/);
 	}
 	
-	@Test
-	void test() {
-		TimeDependentODM tdodm = TimeDependentODM.fromStaticUniform(odm, odmSteps);
+	@ParameterizedTest
+	@MethodSource("provideAlgorithms")
+	void test(String networkName, double stepSize, int odmSteps, int timeSteps, int msaSteps) {
+		String networkFile = "data/" + networkName + "/" + networkName + "_net.tntp";
+		String odmFile = "data/" + networkName + "/" + networkName + "_trips.tntp";
+		String nodeFile = "data/" + networkName + "/" + networkName + "_node.tntp";
+		var pair = Util.loadData(new TNTP(), networkFile, odmFile, nodeFile);
+		Network network = pair.first();
+		DoubleMatrix odm = pair.second();
+		
+		TimeDependentODM tdodm = TimeDependentODM.fromStaticGaussian(odm, odmSteps);
 		DynamicNetwork dynamicNetwork = DynamicNetwork.fromStaticNetwork(network, tdodm, stepSize, timeSteps);
 		
 		StaticRouteChoice routeChoice = new StaticAONRouteChoice(network, dynamicNetwork, odm, timeSteps);
-		DynamicNetworkLoading dnl = new BasicDNL(dynamicNetwork, tdodm, stepSize, timeSteps);
+		DynamicNetworkLoading dnl = new ILTM_DNL(dynamicNetwork, tdodm, stepSize, timeSteps, 1e-8);
 		DestinationShortestPaths tdsp = new DestinationShortestPaths(dynamicNetwork, stepSize, timeSteps);
 		
-		MSA msa = new MSA(dynamicNetwork, tdodm, routeChoice, dnl, tdsp, 100, stepSize);
+		MSA msa = new MSA(dynamicNetwork, tdodm, routeChoice, dnl, tdsp, msaSteps, stepSize);
+		long tick = System.currentTimeMillis();
 		msa.run();
+		long tock = System.currentTimeMillis();
 		dnl.checkDestinationInflows(true);
+		System.out.println("DTA took: " + (tock - tick) + "ms");
 	}
 }
