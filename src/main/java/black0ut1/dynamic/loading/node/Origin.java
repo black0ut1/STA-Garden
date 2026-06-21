@@ -33,7 +33,7 @@ public class Origin extends Intersection {
 		
 		double originFlow = 0;
 		for (int dest = 0; dest < odm.zones; dest++)
-			originFlow += odm.getFlow(this.index, dest, time);
+			originFlow += odm.getDemand(this.index, dest, time);
 		
 		if (originFlow == 0)
 			return MixtureFlow.ZERO;
@@ -43,7 +43,7 @@ public class Origin extends Intersection {
 		double[] portions = new double[odm.zones];
 		
 		for (int dest = 0; dest < odm.zones; dest++) {
-			double flow = odm.getFlow(this.index, dest, time);
+			double flow = odm.getDemand(this.index, dest, time);
 			
 			if (flow > 0) {
 				destinations[len] = dest;

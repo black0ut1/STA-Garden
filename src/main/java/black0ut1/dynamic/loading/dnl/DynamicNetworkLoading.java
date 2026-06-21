@@ -124,7 +124,7 @@ public abstract class DynamicNetworkLoading {
 		for (int destination = 0; destination < odm.zones; destination++)
 			for (int origin = 0; origin < odm.zones; origin++)
 				for (int t = 0; t < odm.timeSteps; t++)
-					odmDestinationInflow[destination] += odm.getFlow(origin, destination, t);
+					odmDestinationInflow[destination] += odm.getDemand(origin, destination, t);
 		
 		double[] networkDestinationInflow = new double[network.destinations.length];
 		for (int destination = 0; destination < network.destinations.length; destination++) {

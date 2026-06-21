@@ -37,7 +37,7 @@ public class Main {
 		int timeSteps = 150;
 		
 		// The ODM will generate flow for only first 10 time steps
-		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), odmSteps);
+		TimeDependentODM odm = TimeDependentODM.fromStaticUniform(pair.second(), odmSteps);
 		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, stepSize, timeSteps);
 		
 		double smallestFreeFlowTime = Double.POSITIVE_INFINITY;

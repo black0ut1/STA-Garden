@@ -14,7 +14,7 @@ public class Convergence {
 		for (int origin = 0; origin < odm.zones; origin++)
 			for (int destination = 0; destination < odm.zones; destination++)
 				for (int t = 0; t < odm.timeSteps; t++)
-					totalDemand1 += odm.getFlow(origin, destination, t);
+					totalDemand1 += odm.getDemand(origin, destination, t);
 		this.totalDemand = totalDemand1;
 	}
 	
@@ -38,7 +38,7 @@ public class Convergence {
 		for (int origin = 0; origin < odm.zones; origin++)
 			for (int destination = 0; destination < odm.zones; destination++)
 				for (int t = 0; t < odm.timeSteps; t++)
-					sptt += costs[t][origin][destination] * odm.getFlow(origin, destination, t);
+					sptt += costs[t][origin][destination] * odm.getDemand(origin, destination, t);
 		
 		return sptt;
 	}

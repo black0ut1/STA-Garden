@@ -35,7 +35,7 @@ public class BerlinDNL {
 		
 		var pair = Util.loadData(new TNTP(), networkFile, odmFile, nodeFile);
 		
-		TimeDependentODM odm = TimeDependentODM.fromStaticODM(pair.second(), 10);
+		TimeDependentODM odm = TimeDependentODM.fromStaticUniform(pair.second(), 10);
 		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, stepSize, maxSteps);
 		
 		DynamicNetworkLoading dnl = new ILTM_DNL(network, odm, stepSize, maxSteps, 1e-8);

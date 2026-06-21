@@ -38,7 +38,7 @@ public class SiouxFallsDTA {
 	
 	@Test
 	void test() {
-		TimeDependentODM tdodm = TimeDependentODM.fromStaticODM(odm, odmSteps);
+		TimeDependentODM tdodm = TimeDependentODM.fromStaticUniform(odm, odmSteps);
 		DynamicNetwork dynamicNetwork = DynamicNetwork.fromStaticNetwork(network, tdodm, stepSize, timeSteps);
 		
 		StaticRouteChoice routeChoice = new StaticAONRouteChoice(network, dynamicNetwork, odm, timeSteps);
