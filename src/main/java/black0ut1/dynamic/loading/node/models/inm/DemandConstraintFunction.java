@@ -1,4 +1,4 @@
-package black0ut1.dynamic.loading.node.inm;
+package black0ut1.dynamic.loading.node.models.inm;
 
 /**
  * This interface represents a demand constraint function of an incoming link. It takes

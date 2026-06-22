@@ -15,7 +15,7 @@ public class LinearNode extends Intersection {
 	}
 	
 	@Override
-	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeMixtureInflowsOutflows(int time) {
 		Link incoming = incomingLinks[0];
 		Link outgoing = outgoingLinks[0];
 		

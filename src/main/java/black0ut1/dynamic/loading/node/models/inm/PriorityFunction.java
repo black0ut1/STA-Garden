@@ -1,4 +1,4 @@
-package black0ut1.dynamic.loading.node.inm;
+package black0ut1.dynamic.loading.node.models.inm;
 
 /**
  * This interface represents a priority function of an incoming link. The priority

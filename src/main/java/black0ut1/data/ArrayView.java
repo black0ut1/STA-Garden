@@ -9,7 +9,7 @@ public class ArrayView<T> implements Iterator<T>, Iterable<T> {
 	private final int last;
 	
 	private int first;
-
+	
 	public ArrayView(T[] source, int first, int last) {
 		this.source = source;
 		this.first = first;

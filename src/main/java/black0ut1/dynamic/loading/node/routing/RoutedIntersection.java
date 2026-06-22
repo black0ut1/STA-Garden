@@ -1,23 +1,27 @@
-package black0ut1.dynamic.loading.node;
+package black0ut1.dynamic.loading.node.routing;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
 import black0ut1.dynamic.loading.link.Link;
+import black0ut1.dynamic.loading.node.Intersection;
+import black0ut1.dynamic.loading.node.models.NodeModel;
 
 /**
- * Intersection is a specialization of {@code Node} class for nodes
- * that have more than one outgoing link and thus need turning
- * fractions to determine where should incoming flows turn.
+ * Intersection is a specialization of {@link Intersection} class for nodes that have more
+ * than one outgoing link and thus need turning fractions to determine where should
+ * incoming flows turn.
  */
-public abstract class RoutedIntersection extends Intersection {
+public class RoutedIntersection extends Intersection {
 	
 	protected MixtureFractions[] turningFractions;
+	protected final NodeModel nodeModel;
 	public double potential;
 	
-	public RoutedIntersection(int index, Link[] incomingLinks, Link[] outgoingLinks) {
+	public RoutedIntersection(int index, Link[] incomingLinks, Link[] outgoingLinks, NodeModel nodeModel) {
 		super(index, incomingLinks, outgoingLinks);
+		this.nodeModel = nodeModel;
 	}
 	
 	public void setTurningFractions(MixtureFractions[] turningFractions) {
@@ -25,7 +29,7 @@ public abstract class RoutedIntersection extends Intersection {
 	}
 	
 	@Override
-	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeMixtureInflowsOutflows(int time) {
 		MixtureFractions fractions = turningFractions[time];
 		
 		// 1. Compute total turning fractions
@@ -47,7 +51,14 @@ public abstract class RoutedIntersection extends Intersection {
 		}
 		
 		// 2. Execute the specific node model
-		var pair = computeInflowsOutflows(totalTurningFractions);
+		double[] sendingFlows = new double[incomingLinks.length];
+		for (int i = 0; i < incomingLinks.length; i++)
+			sendingFlows[i] = incomingLinks[i].getSendingFlow();
+		double[] receivingFlows = new double[outgoingLinks.length];
+		for (int j = 0; j < outgoingLinks.length; j++)
+			receivingFlows[j] = outgoingLinks[j].getReceivingFlow();
+		
+		var pair = nodeModel.computeTotalInflowsOutflows(totalTurningFractions, sendingFlows, receivingFlows);
 		double[] inflows = pair.first();
 		double[] outflows = pair.second();
 		
@@ -88,11 +99,5 @@ public abstract class RoutedIntersection extends Intersection {
 		}
 		
 		return new Pair<>(incomingMixtureFlows, outgoingMixtureFlows);
-	}
-	
-	protected abstract Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix totalTurningFractions);
-	
-	public MixtureFractions[] getTurningFractions() {
-		return turningFractions;
 	}
 }

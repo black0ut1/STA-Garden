@@ -5,7 +5,7 @@ import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFlow;
-import black0ut1.dynamic.loading.node.RoutedIntersection;
+import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 import black0ut1.dynamic.loading.node.Zone;
 
 import java.util.Arrays;
@@ -49,7 +49,7 @@ public class FS_ILTM_DNL extends ILTM_DNL {
 			Link incomingLink = zone.incomingLinks[0];
 			incomingLink.computeSendingFlow(t);
 			
-			var pair = zone.computeOrientedMixtureFlows(t);
+			var pair = zone.computeMixtureInflowsOutflows(t);
 			
 			MixtureFlow outgoingFlow = pair.second()[0];
 			outgoingLink.inflow[t] = outgoingFlow;
@@ -88,7 +88,7 @@ public class FS_ILTM_DNL extends ILTM_DNL {
 					outgoingLink.computeReceivingFlow(t);
 				
 				// 2.1.3 Compute oriented flows using intersection model
-				var pair = node.computeOrientedMixtureFlows(t);
+				var pair = node.computeMixtureInflowsOutflows(t);
 				
 				// 2.1.4 Remove oriented flows from incoming links
 				for (int i = 0; i < node.incomingLinks.length; i++) {

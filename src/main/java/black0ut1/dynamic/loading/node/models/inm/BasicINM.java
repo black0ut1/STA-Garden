@@ -1,4 +1,4 @@
-package black0ut1.dynamic.loading.node.inm;
+package black0ut1.dynamic.loading.node.models.inm;
 
 import black0ut1.data.BitSet32;
 import black0ut1.data.DoubleMatrix;
@@ -17,27 +17,16 @@ public class BasicINM extends INM {
 	
 	protected final double[] priorities;
 	
-	public BasicINM(int index, Link[] incomingLinks, Link[] outgoingLinks, double[] priorities) {
-		super(index, incomingLinks, outgoingLinks);
+	public BasicINM(double[] priorities) {
 		this.priorities = priorities;
 	}
 	
-	/**
-	 * This constructor uses link capacities as priorities making the instance equivalent
-	 * to {@link black0ut1.dynamic.loading.node.TampereUnsignalized}.
-	 */
-	public BasicINM(int index, Link[] incomingLinks, Link[] outgoingLinks) {
-		this(index, incomingLinks, outgoingLinks, new double[incomingLinks.length]);
-		for (int i = 0; i < incomingLinks.length; i++)
-			this.priorities[i] = incomingLinks[i].capacity;
-	}
-	
 	@Override
-	Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix totalTurningFractions,
-													double[] sendingFlows, double[] receivingFlows) {
+	public Pair<double[], double[]> computeTotalInflowsOutflows(
+			DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
 		// 2. Compute initial flows according to (15)
-		double[] inflows = new double[incomingLinks.length];
-		double[] outflows = new double[outgoingLinks.length];
+		double[] inflows = new double[sendingFlows.length];
+		double[] outflows = new double[receivingFlows.length];
 		
 		// 3. Compute initial set D according to (18)
 		BitSet32 D = determineUnconstrainedLinks(
@@ -47,32 +36,32 @@ public class BasicINM extends INM {
 		while (!D.isClear()) {
 			
 			// (a) Compute psi(q) according to (19)
-			double[] psi_in = new double[incomingLinks.length];
-			for (int i = 0; i < incomingLinks.length; i++)
+			double[] psi_in = new double[sendingFlows.length];
+			for (int i = 0; i < sendingFlows.length; i++)
 				psi_in[i] = (D.get(i) ? 1 : 0) * priorities[i];
 			
-			double[] psi_out = new double[outgoingLinks.length];
-			for (int i = 0; i < incomingLinks.length; i++)
-				for (int j = 0; j < outgoingLinks.length; j++)
+			double[] psi_out = new double[receivingFlows.length];
+			for (int i = 0; i < sendingFlows.length; i++)
+				for (int j = 0; j < receivingFlows.length; j++)
 					psi_out[j] += totalTurningFractions.get(i, j) * psi_in[i];
 			
 			// (b) Compute theta according to (24)
 			double theta = Double.POSITIVE_INFINITY;
-			for (int i = 0; i < incomingLinks.length; i++)
+			for (int i = 0; i < sendingFlows.length; i++)
 				if (D.get(i)) {
 					double factor = (sendingFlows[i] - inflows[i]) / psi_in[i];
 					theta = Math.min(theta, factor);
 				}
-			for (int j = 0; j < outgoingLinks.length; j++)
-				if (D.get(incomingLinks.length + j)) {
+			for (int j = 0; j < receivingFlows.length; j++)
+				if (D.get(sendingFlows.length + j)) {
 					double factor = (receivingFlows[j] - outflows[j]) / psi_out[j];
 					theta = Math.min(theta, factor);
 				}
 			
 			// (c) q = q + theta * psi(q) according to (23)
-			for (int i = 0; i < incomingLinks.length; i++)
+			for (int i = 0; i < sendingFlows.length; i++)
 				inflows[i] += theta * psi_in[i];
-			for (int j = 0; j < outgoingLinks.length; j++)
+			for (int j = 0; j < receivingFlows.length; j++)
 				outflows[j] += theta * psi_out[j];
 			
 			// (d) D = D(q) according to (18)

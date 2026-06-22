@@ -5,7 +5,7 @@ import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.loading.link.Connector;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.mixture.MixtureFractions;
-import black0ut1.dynamic.loading.node.RoutedIntersection;
+import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 import black0ut1.util.DynamicUtils;
 
 import java.util.Arrays;

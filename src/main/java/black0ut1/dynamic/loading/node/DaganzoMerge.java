@@ -41,7 +41,7 @@ public class DaganzoMerge extends Intersection {
 	}
 
 	@Override
-	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeMixtureInflowsOutflows(int time) {
 		Link outgoingLink = outgoingLinks[0];
 		double R = outgoingLink.getReceivingFlow();
 

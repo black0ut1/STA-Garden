@@ -19,7 +19,7 @@ public class Zone extends Intersection {
 	}
 	
 	@Override
-	public Pair<MixtureFlow[], MixtureFlow[]> computeOrientedMixtureFlows(int time) {
+	public Pair<MixtureFlow[], MixtureFlow[]> computeMixtureInflowsOutflows(int time) {
 		Link incomingLink = incomingLinks[0];
 		double S = incomingLink.getSendingFlow();
 		

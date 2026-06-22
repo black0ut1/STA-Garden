@@ -4,7 +4,7 @@ import black0ut1.data.PriorityQueue;
 import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.node.RoutedIntersection;
+import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 import black0ut1.dynamic.loading.node.Zone;
 import black0ut1.util.DynamicUtils;
 

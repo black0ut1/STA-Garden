@@ -1,10 +1,9 @@
-package black0ut1.dynamic.loading.node.inm;
+package black0ut1.dynamic.loading.node.models.inm;
 
 import black0ut1.data.BitSet32;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.tuple.Pair;
-import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.node.RoutedIntersection;
+import black0ut1.dynamic.loading.node.models.NodeModel;
 
 /**
  * A base class for different algorithms solving the flows using Incremental Node Model
@@ -15,43 +14,24 @@ import black0ut1.dynamic.loading.node.RoutedIntersection;
  * - (Flotterod and Rohde, 2011) Operational macroscopic modeling of complex urban road
  * intersections
  */
-public abstract class INM extends RoutedIntersection {
-	
-	public INM(int index, Link[] incomingLinks, Link[] outgoingLinks) {
-		super(index, incomingLinks, outgoingLinks);
-	}
+public abstract class INM implements NodeModel {
 	
 	/** The INM without node supply constraints. Uses default sending and receiving flows. */
-	protected Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix totalTurningFractions) {
-		double[] sendingFlows = new double[incomingLinks.length];
-		for (int i = 0; i < incomingLinks.length; i++)
-			sendingFlows[i] = incomingLinks[i].getSendingFlow();
-		
-		double[] receivingFlows = new double[outgoingLinks.length];
-		for (int i = 0; i < outgoingLinks.length; i++)
-			receivingFlows[i] = outgoingLinks[i].getReceivingFlow();
-		
-		return computeInflowsOutflows(totalTurningFractions, sendingFlows, receivingFlows);
-	}
-	
-	/**
-	 * This method represents the INM parametrized with sending flows and receiving flows
-	 * (equation (25) in (Flotterod and Rohde, 2011)).
-	 */
-	abstract Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix totalTurningFractions,
-															 double[] sendingFlows, double[] receivingFlows);
+	@Override
+	public abstract Pair<double[], double[]> computeTotalInflowsOutflows(
+			DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows);
 	
 	/** Creates the set D(q) as defined in (18). */
 	protected BitSet32 determineUnconstrainedLinks(DoubleMatrix totalTurningFractions,
 												   double[] inflows, double[] outflows,
 												   double[] sendingFlows, double[] receivingFlows) {
-		BitSet32 D = new BitSet32(incomingLinks.length + outgoingLinks.length);
+		BitSet32 D = new BitSet32(sendingFlows.length + receivingFlows.length);
 		
-		for (int i = 0; i < incomingLinks.length; i++) {
+		for (int i = 0; i < sendingFlows.length; i++) {
 			boolean sendingFlowConstrained = inflows[i] >= sendingFlows[i];
 			
 			boolean receivingFlowConstrained = false;
-			for (int j = 0; j < outgoingLinks.length; j++)
+			for (int j = 0; j < receivingFlows.length; j++)
 				if (totalTurningFractions.get(i, j) > 0)
 					if (outflows[j] >= receivingFlows[j]) {
 						receivingFlowConstrained = true;
@@ -62,11 +42,11 @@ public abstract class INM extends RoutedIntersection {
 				D.set(i);
 		}
 		
-		for (int j = 0; j < outgoingLinks.length; j++) {
+		for (int j = 0; j < receivingFlows.length; j++) {
 			boolean receivingFlowConstrained = outflows[j] >= receivingFlows[j];
 			
 			boolean sendingFlowConstrained = true;
-			for (int i = 0; i < incomingLinks.length; i++)
+			for (int i = 0; i < sendingFlows.length; i++)
 				if (D.get(i))
 					if (totalTurningFractions.get(i, j) > 0) {
 						sendingFlowConstrained = false;
@@ -74,7 +54,7 @@ public abstract class INM extends RoutedIntersection {
 					}
 			
 			if (!receivingFlowConstrained && !sendingFlowConstrained)
-				D.set(incomingLinks.length + j);
+				D.set(sendingFlows.length + j);
 		}
 		
 		return D;

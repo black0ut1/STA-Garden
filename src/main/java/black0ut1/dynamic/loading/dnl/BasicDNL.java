@@ -40,7 +40,7 @@ public class BasicDNL extends DynamicNetworkLoading {
 			Link incomingLink = zone.incomingLinks[0];
 			incomingLink.computeSendingFlow(t);
 			
-			var pair = zone.computeOrientedMixtureFlows(t);
+			var pair = zone.computeMixtureInflowsOutflows(t);
 			
 			MixtureFlow outgoingFlow = pair.second()[0];
 			outgoingLink.inflow[t] = outgoingFlow;
@@ -64,7 +64,7 @@ public class BasicDNL extends DynamicNetworkLoading {
 				outgoingLink.computeReceivingFlow(t);
 			
 			// 2.3 Compute oriented flows using intersection model
-			var pair = node.computeOrientedMixtureFlows(t);
+			var pair = node.computeMixtureInflowsOutflows(t);
 			
 			// 2.4 Remove oriented flows from incoming links
 			for (int i = 0; i < node.incomingLinks.length; i++) {

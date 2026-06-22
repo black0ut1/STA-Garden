@@ -1,4 +1,4 @@
-package black0ut1.dynamic.loading.node.inm;
+package black0ut1.dynamic.loading.node.models.inm;
 
 import black0ut1.data.BitSet32;
 import black0ut1.data.DoubleMatrix;
@@ -18,15 +18,15 @@ public class GeneralINM extends INM {
 	protected static final double H = 10;
 	protected final PriorityFunction[] priorities;
 	
-	public GeneralINM(int index, Link[] incomingLinks, Link[] outgoingLinks, PriorityFunction[] priorities) {
-		super(index, incomingLinks, outgoingLinks);
+	public GeneralINM(PriorityFunction[] priorities) {
 		this.priorities = priorities;
 	}
 	
 	@Override
-	Pair<double[], double[]> computeInflowsOutflows(DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
-		double[] inflows = new double[incomingLinks.length];
-		double[] outflows = new double[outgoingLinks.length];
+	public Pair<double[], double[]> computeTotalInflowsOutflows(
+			DoubleMatrix totalTurningFractions, double[] sendingFlows, double[] receivingFlows) {
+		double[] inflows = new double[sendingFlows.length];
+		double[] outflows = new double[receivingFlows.length];
 		
 		BitSet32 D = determineUnconstrainedLinks(
 				totalTurningFractions, inflows, outflows, sendingFlows, receivingFlows);
@@ -34,20 +34,20 @@ public class GeneralINM extends INM {
 		while (!D.isClear()) {
 			
 			// psi_in is the derivative of inflows, psi_out is the derivative of outflows
-			double[] psi_in = new double[incomingLinks.length];
-			for (int i = 0; i < incomingLinks.length; i++)
+			double[] psi_in = new double[sendingFlows.length];
+			for (int i = 0; i < sendingFlows.length; i++)
 				if (D.get(i)) // if i not in D => psi_in[i] = 0
 					psi_in[i] = priorities[i].priority(inflows, outflows);
 			
-			double[] psi_out = new double[outgoingLinks.length];
-			for (int i = 0; i < incomingLinks.length; i++)
-				for (int j = 0; j < outgoingLinks.length; j++)
+			double[] psi_out = new double[receivingFlows.length];
+			for (int i = 0; i < sendingFlows.length; i++)
+				for (int j = 0; j < receivingFlows.length; j++)
 					psi_out[j] += totalTurningFractions.get(i, j) * psi_in[i];
 			
 			// update inflows and outflows using Euler's method
-			for (int i = 0; i < incomingLinks.length; i++)
+			for (int i = 0; i < sendingFlows.length; i++)
 				inflows[i] += H * psi_in[i];
-			for (int j = 0; j < outgoingLinks.length; j++)
+			for (int j = 0; j < receivingFlows.length; j++)
 				outflows[j] += H * psi_out[j];
 			
 			// TODO optimize to check only active links

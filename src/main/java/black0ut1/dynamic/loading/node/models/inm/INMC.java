@@ -1,6 +1,6 @@
-package black0ut1.dynamic.loading.node.inm;
+package black0ut1.dynamic.loading.node.models.inm;
 
-import black0ut1.dynamic.loading.node.RoutedIntersection;
+import black0ut1.dynamic.loading.node.models.NodeModel;
 
 /**
  * This class represents the Incremental Node Model with node supply Constrains (INMC). It
@@ -11,16 +11,15 @@ import black0ut1.dynamic.loading.node.RoutedIntersection;
  * - (Flotterod and Rohde, 2011) Operational macroscopic modeling of complex urban road
  * intersections
  */
-public abstract class INMC extends RoutedIntersection {
+public abstract class INMC implements NodeModel {
 	
-	/** The backing INM solver whose {@link INM#computeInflowsOutflows} method is used. */
+	/** The backing INM solver whose {@link INM#computeTotalInflowsOutflows} method is used. */
 	protected final INM inm;
 	
 	/** See {@link DemandConstraintFunction}. */
 	protected final DemandConstraintFunction demandConstraints;
 	
 	public INMC(INM inm, DemandConstraintFunction demandConstraints) {
-		super(inm.index, inm.incomingLinks, inm.outgoingLinks);
 		this.inm = inm;
 		this.demandConstraints = demandConstraints;
 	}

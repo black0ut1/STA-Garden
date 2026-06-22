@@ -1,11 +1,13 @@
 package black0ut1.dynamic;
 
 import black0ut1.data.network.Network;
-import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.link.Connector;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.node.*;
+import black0ut1.dynamic.loading.node.models.NodeModel;
+import black0ut1.dynamic.loading.node.models.TampereUnsignalized;
+import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 import black0ut1.util.Util;
 
 /**
@@ -115,7 +117,12 @@ public class DynamicNetwork {
 			for (Network.Edge link : network.forwardStar(i))
 				outgoingLinks[j++] = linkArray[link.index];
 			
-			nodeArray[i] = new TampereUnsignalized(i, incomingLinks, outgoingLinks);
+			double[] priorities = new double[incomingLinks.length];
+			for (int k = 0; k < priorities.length; k++)
+				priorities[k] = incomingLinks[k].capacity;
+			NodeModel nodeModel = new TampereUnsignalized(priorities);
+			
+			nodeArray[i] = new RoutedIntersection(i, incomingLinks, outgoingLinks, nodeModel);
 			for (Link incomingLink : incomingLinks)
 				incomingLink.head = nodeArray[i];
 			for (Link outgoingLink : outgoingLinks)
