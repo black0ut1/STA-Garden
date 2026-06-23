@@ -18,27 +18,37 @@ import black0ut1.static_.assignment.path.ProjectedGradient;
 import black0ut1.util.NetworkUtils;
 import black0ut1.util.Util;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 @Disabled
-public class BerlinDNL {
+public class DNLTest {
 	
-	@Test
-	void test() {
-		String map = "BerlinCenter";
-		String networkFile = "data/" + map + "/" + map + "_net.tntp";
-		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
-		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
-		
-		double stepSize = 1;
-		int maxSteps = 620;
+	static Stream<Arguments> provideConfigurations() {
+		// Network, step size, odm steps, time steps
+		return Stream.of(
+				Arguments.of("SiouxFalls", 1, 30, 300, 100),
+				Arguments.of("ChicagoSketch", 1, 30, 350, 20),
+				Arguments.of("BerlinCenter", 1, 30, 630)
+		);
+	}
+	
+	@ParameterizedTest
+	@MethodSource("provideConfigurations")
+	void test(String networkName, double stepSize, int odmSteps, int timeSteps) {
+		String networkFile = "data/" + networkName + "/" + networkName + "_net.tntp";
+		String odmFile = "data/" + networkName + "/" + networkName + "_trips.tntp";
+		String nodeFile = "data/" + networkName + "/" + networkName + "_node.tntp";
 		
 		var pair = Util.loadData(new TNTP(), networkFile, odmFile, nodeFile);
 		
-		TimeDependentODM odm = TimeDependentODM.fromStaticUniform(pair.second(), 10);
-		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, stepSize, maxSteps);
+		TimeDependentODM odm = TimeDependentODM.fromStaticGaussian(pair.second(), odmSteps);
+		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, stepSize, timeSteps);
 		
-		DynamicNetworkLoading dnl = new ILTM_DNL(network, odm, stepSize, maxSteps, 1e-8);
+		DynamicNetworkLoading dnl = new ILTM_DNL(network, odm, stepSize, timeSteps, 1e-8);
 		MixtureFractions[][] initialRouteChoice = destinationBushes(pair.first(), pair.second(), network);
 		dnl.setTurningFractions(initialRouteChoice);
 		

@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 @Disabled
 public class DTATest {
 	
-	static Stream<Arguments> provideAlgorithms() {
+	static Stream<Arguments> provideConfigurations() {
 		// Network, step size, odm steps, time steps, msa steps
 		return Stream.of(
 				Arguments.of("SiouxFalls", 1, 30, 300, 100)
@@ -30,7 +30,7 @@ public class DTATest {
 	}
 	
 	@ParameterizedTest
-	@MethodSource("provideAlgorithms")
+	@MethodSource("provideConfigurations")
 	void test(String networkName, double stepSize, int odmSteps, int timeSteps, int msaSteps) {
 		String networkFile = "data/" + networkName + "/" + networkName + "_net.tntp";
 		String odmFile = "data/" + networkName + "/" + networkName + "_trips.tntp";
