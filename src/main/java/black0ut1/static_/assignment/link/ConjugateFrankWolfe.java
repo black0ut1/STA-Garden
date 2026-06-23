@@ -53,7 +53,7 @@ public class ConjugateFrankWolfe extends FrankWolfe {
 		
 		double alpha = (denominator == 0)
 				? 0
-				: Util.projectToInterval(numerator / denominator, 0, 1 - s.CONJUGATE_FW_ALPHA_TOLERANCE);
+				: Util.clamp(numerator / denominator, 0, 1 - s.CONJUGATE_FW_ALPHA_TOLERANCE);
 		
 		for (int i = 0; i < network.edges; i++)
 			newTarget[i] = alpha * oldTarget[i] + (1 - alpha) * newTarget[i];

@@ -3,9 +3,7 @@ package black0ut1.util;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Pair;
-import black0ut1.io.CSV;
 import black0ut1.io.InputOutput;
-import black0ut1.io.TNTP;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
@@ -34,8 +32,12 @@ public class Util {
 		}
 	}
 	
-	public static double projectToInterval(double x, double min, double max) {
-		return Math.max(Math.min(x, max), min);
+	public static double clamp(double x, double min, double max) {
+		if (x < min)
+			return min;
+		if (x > max)
+			return max;
+		return x;
 	}
 	
 	@SafeVarargs

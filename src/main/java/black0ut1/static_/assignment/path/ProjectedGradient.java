@@ -87,7 +87,7 @@ public class ProjectedGradient extends PathBasedAlgorithm {
 
 		if (numerator == 0)
 			return 0;
-		return Util.projectToInterval(-numerator / denominator, 0, maxStepSize);
+		return Util.clamp(-numerator / denominator, 0, maxStepSize);
 	}
 	
 	protected void shiftFlows(int origin, int destination, double[] stepDirection, double stepSize) {

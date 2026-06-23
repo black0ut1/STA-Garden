@@ -53,6 +53,6 @@ public class FrankWolfe extends LinkBasedAlgorithm {
 			lambda = newLamda;
 		}
 		
-		return Util.projectToInterval(lambda, 0, 1);
+		return Util.clamp(lambda, 0, 1);
 	}
 }

@@ -45,7 +45,7 @@ public class GradientProjection extends PathBasedAlgorithm {
 			denominator += s.costFunction.derivative(edge, flows[edgeIndex]);
 		}
 		
-		return Util.projectToInterval(numerator / denominator, 0, path.flow);
+		return Util.clamp(numerator / denominator, 0, path.flow);
 	}
 	
 	protected void shiftFlows(double flowDelta, Path basicPath, Path path) {
