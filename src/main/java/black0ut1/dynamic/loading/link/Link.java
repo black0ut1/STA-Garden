@@ -2,6 +2,7 @@ package black0ut1.dynamic.loading.link;
 
 import black0ut1.dynamic.loading.routing.MixtureFlow;
 import black0ut1.dynamic.loading.node.Intersection;
+import black0ut1.util.Util;
 
 import java.util.Arrays;
 
@@ -99,54 +100,88 @@ public abstract class Link {
 		return sendingFlow;
 	}
 	
-	public MixtureFlow getOutgoingMixtureFlow(int time) {
+	public MixtureFlow getOutgoingMixtureFlow(int time, double flow) {
 		if (time == 0)
 			return MixtureFlow.ZERO;
+		if (flow < 1e-10)
+			return MixtureFlow.ZERO;
 		
-		double currOutflow = cumulativeOutflow[time];
+		// this method occurs in the instant before t-th time step, since it retrieves
+		// the mixture of sending flow, which itself is computedin the same instant
 		
-		// find the time when the cumulative flows are equal (the time
-		// when currOutflow entered the link)
-		MixtureFlow outMixture = null;
-		for (int t = time; t >= 0; t--) {
+		// This is the point at the very front of the link
+		double outflow1 = cumulativeOutflow[time];
+		// This is the point at the back of flow
+		double outflow2 = cumulativeOutflow[time] + flow;
+		// The time at which outflow2 entered the link: cumulativeInflow[t2] == outflow2
+		// It is guaranteed that t1 < t2 and t1 == t2 only if flow == 0
+		double t1 = -1;
+		// The time at which outflow1 entered the link: cumulativeInflow[t1] == outflow1
+		double t2 = -1;
+		
+		// 1. Find the time at which outflow2 entered the link
+		int t = time;
+		for (; t >= 0; t--) {
 			
-			if (Math.abs(cumulativeInflow[t] - currOutflow) < 1e-8) {
-				// found time is exactly an integer (or to combat
-				// numerical problems, very close to integer)
-				outMixture = inflow[t];
+			if (Util.equals(cumulativeInflow[t], outflow2, 1e-10)) {
+				
+				// found time is integer (or close enough)
+				t2 = t;
 				break;
 				
-			} else if (cumulativeInflow[t] < currOutflow) {
-				if (t == time - 1)
-					return inflow[time - 1];
+			} else if (cumulativeInflow[t] < outflow2) {
 				
-				// found time is not integer, must interpolate
+				// found time is not integer -> must interpolate
 				double a = cumulativeInflow[t];
 				double b = cumulativeInflow[t + 1];
 				
 				// t + p is the found time
-				double p = (currOutflow - a) / (b - a);
-				
-				MixtureFlow A = inflow[t];
-				MixtureFlow B = inflow[t + 1];
-				
-				// A + p * (B - A) = p * B + (1 - p) * A
-				outMixture = B.copyWithFlow(B.totalFlow * p)
-						.plus(
-								A.copyWithFlow(A.totalFlow * (1 - p))
-						);
+				double p = (outflow2 - a) / (b - a);
+				t2 = t + p;
 				break;
 			}
 		}
 		
+		// 2. Find the time at which outflow1 entered the link
+		for (; t >= 0; t--) {
+			if (Util.equals(cumulativeInflow[t], outflow1, 1e-10)) {
+				
+				// found time is integer (or close enough)
+				t1 = t;
+				break;
+				
+			} else if (cumulativeInflow[t] < outflow1) {
+				
+				// found time is not integer -> must interpolate
+				double a = cumulativeInflow[t];
+				double b = cumulativeInflow[t + 1];
+				
+				// t + p is the found time
+				double p = (outflow1 - a) / (b - a);
+				t1 = t + p;
+				break;
+			}
+		}
 		
-		// this should not occur in theory (outflow cum is larger than
-		// inflow cum), because numerical problems it can happen as
-		// fallback take the latest mixture
-		if (outMixture == null)
-			outMixture = inflow[time - 1];
+		// 3. Create the mixture flow of the `flow` amount of flow at the beggining of the
+		// link by summing `inflow` over the time interval [t1, t2].
+		int t1i = (int) t1;
+		int t2i = (int) t2;
 		
-		return outMixture;
+		if (t1i == t2i) // all flow arrived in the same time step
+			return inflow[(int) t1].copyWithFlow(flow);
+		
+		double t1f = t1 - t1i;
+		double t2f = t2 - t2i;
+		
+		MixtureFlow result = inflow[t1i].copyWithFlow((1 - t1f) * inflow[t1i].totalFlow);
+		if (t2f != 0)
+			result = result.plus(inflow[t2i].copyWithFlow(t2f * inflow[t2i].totalFlow));
+		if (t1i + 1 < t2i)
+			for (int i = t1i + 1; i < t2i; i++)
+				result = result.plus(inflow[i]);
+		
+		return result;
 	}
 	
 	/**

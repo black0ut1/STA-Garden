@@ -21,8 +21,7 @@ public class LinearNode extends Intersection {
 		
 		double flow = Math.min(incoming.getSendingFlow(), outgoing.getReceivingFlow());
 		MixtureFlow mixtureFlow = incoming
-				.getOutgoingMixtureFlow(time)
-				.copyWithFlow(flow);
+				.getOutgoingMixtureFlow(time, flow);
 		
 		MixtureFlow[] incomingMixtureFlows = new MixtureFlow[] {mixtureFlow};
 		MixtureFlow[] outgoingMixtureFlows = new MixtureFlow[] {mixtureFlow};

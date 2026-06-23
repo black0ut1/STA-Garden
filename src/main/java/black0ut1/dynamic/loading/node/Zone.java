@@ -24,8 +24,7 @@ public class Zone extends Intersection {
 		double S = incomingLink.getSendingFlow();
 		
 		MixtureFlow incomingMixtureFlow = incomingLink
-				.getOutgoingMixtureFlow(time)
-				.copyWithFlow(S);
+				.getOutgoingMixtureFlow(time, S);
 		
 		inflow[time] = incomingMixtureFlow;
 		

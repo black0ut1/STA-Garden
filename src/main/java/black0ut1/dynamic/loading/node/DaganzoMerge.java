@@ -57,8 +57,7 @@ public class DaganzoMerge extends Intersection {
 			for (int i = 0; i < incomingLinks.length; i++) {
 				double S = incomingLinks[i].getSendingFlow();
 				
-				MixtureFlow of = incomingLinks[i].getOutgoingMixtureFlow(time);
-				incomingMixtureFlows[i] = of.copyWithFlow(S);
+				incomingMixtureFlows[i] = incomingLinks[i].getOutgoingMixtureFlow(time, S);
 				
 				outgoingMixtureFlow = outgoingMixtureFlow.plus(incomingMixtureFlows[i]);
 			}
@@ -110,8 +109,7 @@ public class DaganzoMerge extends Intersection {
 			
 			MixtureFlow[] incomingMixtureFlows = new MixtureFlow[incomingLinks.length];
 			for (int i = 0; i < incomingLinks.length; i++) {
-				MixtureFlow of = incomingLinks[i].getOutgoingMixtureFlow(time);
-				incomingMixtureFlows[i] = of.copyWithFlow(transitionFlows[i]);
+				incomingMixtureFlows[i] = incomingLinks[i].getOutgoingMixtureFlow(time, remainingS[i]);
 				
 				outgoingMixtureFlow = outgoingMixtureFlow.plus(incomingMixtureFlows[i]);
 			}

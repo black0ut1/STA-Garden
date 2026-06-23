@@ -40,6 +40,10 @@ public class Util {
 		return x;
 	}
 	
+	public static boolean equals(double a, double b, double margin) {
+		return Math.abs(a - b) <= margin;
+	}
+	
 	@SafeVarargs
 	public static <T> T[] concat(Class<?> type, T[]... arrays) {
 		int length = 0;

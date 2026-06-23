@@ -52,6 +52,7 @@ public abstract class DynamicNetworkLoading {
 			
 			double totalFlow = getTotalFlowOnNetwork(t);
 			System.out.print(", total flow on network: " + totalFlow);
+			System.out.flush();
 		}
 		System.out.println();
 	}

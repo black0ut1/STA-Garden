@@ -32,11 +32,18 @@ public class RoutedIntersection extends Intersection {
 	public Pair<MixtureFlow[], MixtureFlow[]> computeMixtureInflowsOutflows(int time) {
 		MixtureFractions fractions = turningFractions[time];
 		
+		double[] sendingFlows = new double[incomingLinks.length];
+		for (int i = 0; i < incomingLinks.length; i++)
+			sendingFlows[i] = incomingLinks[i].getSendingFlow();
+		double[] receivingFlows = new double[outgoingLinks.length];
+		for (int j = 0; j < outgoingLinks.length; j++)
+			receivingFlows[j] = outgoingLinks[j].getReceivingFlow();
+		
 		// 1. Compute total turning fractions
 		DoubleMatrix totalTurningFractions = new DoubleMatrix(incomingLinks.length, outgoingLinks.length);
 		MixtureFlow[] mixtureFlows = new MixtureFlow[incomingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++) {
-			mixtureFlows[i] = incomingLinks[i].getOutgoingMixtureFlow(time);
+			mixtureFlows[i] = incomingLinks[i].getOutgoingMixtureFlow(time, sendingFlows[i]);
 			
 			for (int d = 0; d < mixtureFlows[i].destinations.length; d++) {
 				int destination = mixtureFlows[i].destinations[d];
@@ -51,13 +58,6 @@ public class RoutedIntersection extends Intersection {
 		}
 		
 		// 2. Execute the specific node model
-		double[] sendingFlows = new double[incomingLinks.length];
-		for (int i = 0; i < incomingLinks.length; i++)
-			sendingFlows[i] = incomingLinks[i].getSendingFlow();
-		double[] receivingFlows = new double[outgoingLinks.length];
-		for (int j = 0; j < outgoingLinks.length; j++)
-			receivingFlows[j] = outgoingLinks[j].getReceivingFlow();
-		
 		var pair = nodeModel.computeTotalInflowsOutflows(totalTurningFractions, sendingFlows, receivingFlows);
 		double[] inflows = pair.first();
 		double[] outflows = pair.second();
