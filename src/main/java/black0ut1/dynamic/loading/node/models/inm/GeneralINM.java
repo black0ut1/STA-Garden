@@ -3,7 +3,6 @@ package black0ut1.dynamic.loading.node.models.inm;
 import black0ut1.data.BitSet32;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.tuple.Pair;
-import black0ut1.dynamic.loading.link.Link;
 
 /**
  * A generalization of the {@link BasicINM} solver for arbitrary priority functions. It

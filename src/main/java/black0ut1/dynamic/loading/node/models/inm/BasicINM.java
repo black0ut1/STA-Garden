@@ -3,7 +3,6 @@ package black0ut1.dynamic.loading.node.models.inm;
 import black0ut1.data.BitSet32;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.tuple.Pair;
-import black0ut1.dynamic.loading.link.Link;
 
 /**
  * The basic INM solver as described in (Flotterod and Rohde, 2011), Algorithm 1. Here,

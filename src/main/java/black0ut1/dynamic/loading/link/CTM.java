@@ -1,7 +1,7 @@
 package black0ut1.dynamic.loading.link;
 
 
-import black0ut1.dynamic.loading.mixture.MixtureFlow;
+import black0ut1.dynamic.loading.routing.MixtureFlow;
 import black0ut1.util.Util;
 
 public class CTM extends Link {

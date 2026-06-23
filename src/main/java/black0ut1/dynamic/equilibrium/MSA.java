@@ -5,7 +5,7 @@ import black0ut1.dynamic.Convergence;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
-import black0ut1.dynamic.loading.mixture.MixtureFractions;
+import black0ut1.dynamic.loading.routing.MixtureFractions;
 import black0ut1.dynamic.tdsp.DestinationShortestPaths;
 
 public class MSA {

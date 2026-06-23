@@ -3,7 +3,7 @@ package black0ut1.dynamic.equilibrium;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.dynamic.DynamicNetwork;
-import black0ut1.dynamic.loading.mixture.MixtureFractions;
+import black0ut1.dynamic.loading.routing.MixtureFractions;
 import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.util.SSSP;
 

@@ -3,7 +3,7 @@ package black0ut1.dynamic.loading.dnl;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.mixture.MixtureFlow;
+import black0ut1.dynamic.loading.routing.MixtureFlow;
 import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.node.Zone;
 

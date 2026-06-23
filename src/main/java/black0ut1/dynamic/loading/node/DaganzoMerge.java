@@ -2,7 +2,7 @@ package black0ut1.dynamic.loading.node;
 
 import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.mixture.MixtureFlow;
+import black0ut1.dynamic.loading.routing.MixtureFlow;
 
 import java.util.Vector;
 

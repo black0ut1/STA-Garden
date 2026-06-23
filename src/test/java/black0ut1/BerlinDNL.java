@@ -10,7 +10,7 @@ import black0ut1.dynamic.equilibrium.STARouteChoice;
 import black0ut1.dynamic.equilibrium.StaticRouteChoice;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.dnl.ILTM_DNL;
-import black0ut1.dynamic.loading.mixture.MixtureFractions;
+import black0ut1.dynamic.loading.routing.MixtureFractions;
 import black0ut1.io.TNTP;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.assignment.Settings;
