@@ -46,6 +46,8 @@ public class BerlinDNL {
 		dnl.loadNetwork();
 		long tock = System.currentTimeMillis();
 		System.out.println((tock - tick) + "ms");
+		
+		dnl.checkDestinationInflows(true);
 	}
 	
 	MixtureFractions[][] destinationBushes(Network network, DoubleMatrix odm, DynamicNetwork dNetwork) {

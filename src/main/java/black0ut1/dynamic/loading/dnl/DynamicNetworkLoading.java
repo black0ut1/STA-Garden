@@ -135,7 +135,7 @@ public abstract class DynamicNetworkLoading {
 				for (int d = 0; d < destiantionInflow[t].destinations.length; d++) {
 					int destination1 = destiantionInflow[t].destinations[d];
 					
-					if (destination1 != destination) {
+					if (Math.abs(destination1 - destination) > 1e-10) {
 						System.out.println("Mixture flow arrived to destination " + destination +
 								" contains a portion belonging to other destination " + destination1 +
 								" (time: " + t + ", portion: " + destiantionInflow[t].portions[d] + ")");
@@ -168,8 +168,7 @@ public abstract class DynamicNetworkLoading {
 		double avgDifference = 0;
 		for (int i = 0; i < network.zones.length; i++)
 			avgDifference += Math.abs(odmDestinationInflow[i] - networkDestinationInflow[i]);
-		System.out.println("Difference between actual inflow to a destination and\n" +
-				"inflow according to ODM (averaged over destinations): " + avgDifference / network.zones.length);
+		System.out.println("ADIE: " + avgDifference / network.zones.length);
 	}
 	
 	public int getNodeUpdates() {
