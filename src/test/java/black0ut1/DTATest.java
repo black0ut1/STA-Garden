@@ -9,7 +9,7 @@ import black0ut1.dynamic.equilibrium.StaticAONRouteChoice;
 import black0ut1.dynamic.equilibrium.StaticRouteChoice;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.dnl.ILTM_DNL;
-import black0ut1.dynamic.tdsp.DestinationShortestPaths;
+import black0ut1.dynamic.tdsp.DOT;
 import black0ut1.io.TNTP;
 import black0ut1.util.Util;
 import org.junit.jupiter.api.Disabled;
@@ -44,7 +44,7 @@ public class DTATest {
 		
 		StaticRouteChoice routeChoice = new StaticAONRouteChoice(network, dynamicNetwork, odm, timeSteps);
 		DynamicNetworkLoading dnl = new ILTM_DNL(dynamicNetwork, tdodm, stepSize, timeSteps, 1e-8);
-		DestinationShortestPaths tdsp = new DestinationShortestPaths(dynamicNetwork, stepSize, timeSteps);
+		DOT tdsp = new DOT(dynamicNetwork, stepSize, timeSteps, false);
 		
 		MSA msa = new MSA(dynamicNetwork, tdodm, routeChoice, dnl, tdsp, msaSteps, stepSize);
 		long tick = System.currentTimeMillis();

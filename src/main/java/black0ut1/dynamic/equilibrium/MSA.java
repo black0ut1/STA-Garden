@@ -6,7 +6,7 @@ import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.routing.MixtureFractions;
-import black0ut1.dynamic.tdsp.DestinationShortestPaths;
+import black0ut1.dynamic.tdsp.DOT;
 
 public class MSA {
 	
@@ -19,17 +19,17 @@ public class MSA {
 	/** The DNL scheme used throughout the dynamic assignment. */
 	protected final DynamicNetworkLoading dnl;
 	
-	protected final DestinationShortestPaths shortestPaths;
+	protected final DOT tdsp;
 	protected final double stepSize;
 	
 	public MSA(DynamicNetwork network, TimeDependentODM odm, StaticRouteChoice initialRouteChoice,
-			   DynamicNetworkLoading dnl, DestinationShortestPaths tdsp, int maxIterations, double stepSize) {
+	           DynamicNetworkLoading dnl, DOT tdsp, int maxIterations, double stepSize) {
 		this.network = network;
 		this.odm = odm;
 		this.initialRouteChoice = initialRouteChoice;
 		this.dnl = dnl;
 		this.maxIterations = maxIterations;
-		this.shortestPaths = tdsp;
+		this.tdsp = tdsp;
 		this.stepSize = stepSize;
 	}
 	
@@ -41,7 +41,9 @@ public class MSA {
 		dnl.loadNetwork();
 //		dnl.checkDestinationInflows(false);
 		
-		var costs = shortestPaths.shortestPathCosts();
+		var pair = tdsp.shortestPaths();
+		double[][][] costs = pair.first();
+		MixtureFractions[][] targetMfs = pair.second();
 		
 		double tstt = convergence.totalSystemTravelTime(network, stepSize);
 		System.out.println("[DUE] Total system travel time: " + tstt);
@@ -55,8 +57,6 @@ public class MSA {
 			System.out.println("[DUE] Iteration: " + i);
 			
 			double lambda = 1.0 / (i + 2);
-			
-			MixtureFractions[][] targetMfs = shortestPaths.shortestPathMixtureFractions(costs);
 			
 			for (int n = 0; n < targetMfs.length; n++)
 				for (int t = 0; t < targetMfs[n].length; t++) {
@@ -75,7 +75,9 @@ public class MSA {
 			
 			dnl.loadNetwork();
 			
-			costs = shortestPaths.shortestPathCosts();
+			pair = tdsp.shortestPaths();
+			costs = pair.first();
+			targetMfs = pair.second();
 			
 			tstt = convergence.totalSystemTravelTime(network, stepSize);
 			System.out.println("[DUE] Total system travel time: " + tstt);

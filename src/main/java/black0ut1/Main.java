@@ -12,7 +12,7 @@ import black0ut1.dynamic.equilibrium.StaticRouteChoice;
 import black0ut1.dynamic.loading.dnl.BasicDNL;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.tdsp.DestinationShortestPaths;
+import black0ut1.dynamic.tdsp.DOT;
 import black0ut1.io.TNTP;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.assignment.Settings;
@@ -49,7 +49,7 @@ public class Main {
 		
 		StaticRouteChoice routeChoice = new StaticAONRouteChoice(pair.first(), network, pair.second(), timeSteps);
 		DynamicNetworkLoading dnl = new BasicDNL(network, odm, stepSize, timeSteps);
-		DestinationShortestPaths tdsp = new DestinationShortestPaths(network, stepSize, timeSteps);
+		DOT tdsp = new DOT(network, stepSize, timeSteps, false);
 		
 		MSA msa = new MSA(network, odm, routeChoice, dnl, tdsp, 100, stepSize);
 		msa.run();

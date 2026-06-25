@@ -103,7 +103,7 @@ public abstract class Link {
 	public MixtureFlow getOutgoingMixtureFlow(int time, double flow) {
 		if (time == 0)
 			return MixtureFlow.ZERO;
-		if (flow < 1e-10)
+		if (flow < 1e-8)
 			return MixtureFlow.ZERO;
 		
 		// this method occurs in the instant before t-th time step, since it retrieves
