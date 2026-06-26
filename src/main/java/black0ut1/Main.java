@@ -6,13 +6,7 @@ import black0ut1.data.network.Network;
 import black0ut1.data.network.Path;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
-import black0ut1.dynamic.equilibrium.MSA;
-import black0ut1.dynamic.equilibrium.StaticAONRouteChoice;
-import black0ut1.dynamic.equilibrium.StaticRouteChoice;
-import black0ut1.dynamic.loading.dnl.BasicDNL;
-import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
-import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.tdsp.DOT;
+import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 import black0ut1.io.TNTP;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.assignment.Settings;
@@ -20,11 +14,13 @@ import black0ut1.static_.assignment.path.ProjectedGradient;
 import black0ut1.util.NetworkUtils;
 import black0ut1.util.Util;
 
+import java.util.Arrays;
+
 
 public class Main {
 	
 	public static void main(String[] args) {
-		String map = "SiouxFalls";
+		String map = "ChicagoSketch";
 		String networkFile = "data/" + map + "/" + map + "_net.tntp";
 		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
 		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
@@ -32,27 +28,37 @@ public class Main {
 		var pair = Util.loadData(new TNTP(), networkFile, odmFile, nodeFile);
 //		new GUI(new AssignmentPanel(pair.first()));
 		
-		double stepSize = 2;
-		int odmSteps = 10;
-		int timeSteps = 150;
+		double stepSize = 0.5;
+		int odmSteps = 30;
+		int timeSteps = 350;
 		
 		// The ODM will generate flow for only first 10 time steps
 		TimeDependentODM odm = TimeDependentODM.fromStaticUniform(pair.second(), odmSteps);
 		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, stepSize, timeSteps);
 		
-		double smallestFreeFlowTime = Double.POSITIVE_INFINITY;
-		for (Link link : network.links)
-			smallestFreeFlowTime = Math.min(smallestFreeFlowTime, link.length / link.freeFlowSpeed);
-		System.out.println("Smallest free flow time: " + smallestFreeFlowTime);
+		long sumOutlinks = 0;
+		for (RoutedIntersection routedIntersection : network.routedIntersections)
+			sumOutlinks += routedIntersection.outgoingLinks.length;
+		System.out.printf("Average outdegree: %.2f%n", (double) sumOutlinks / network.routedIntersections.length);
+		System.out.println("Number of routed intersections: " + network.routedIntersections.length);
+		System.out.println("Number of zones: " + network.zones.length);
+		System.out.println("Time steps: " + timeSteps);
+		System.out.println();
 		
-//		var destinationBushes = destinationBushes(pair.first(), pair.second());
+		long numParameters = sumOutlinks * network.zones.length * timeSteps;
+		System.out.println("Number of turning parameters: " + numParameters);
+		System.out.println("Parameters in RAM: " + numParameters * 8 / (1000 * 1000) + " MB");
 		
-		StaticRouteChoice routeChoice = new StaticAONRouteChoice(pair.first(), network, pair.second(), timeSteps);
-		DynamicNetworkLoading dnl = new BasicDNL(network, odm, stepSize, timeSteps);
-		DOT tdsp = new DOT(network, stepSize, timeSteps, false);
+		int[] linksByOutlinkNum = new int[16];
+		for (RoutedIntersection routedIntersection : network.routedIntersections)
+			linksByOutlinkNum[routedIntersection.outgoingLinks.length]++;
+		System.out.println("Numbers of intersections with specified amount of outgoing links: \n" + Arrays.toString(linksByOutlinkNum));
 		
-		MSA msa = new MSA(network, odm, routeChoice, dnl, tdsp, 100, stepSize);
-		msa.run();
+		double[][][][] a = new double[network.routedIntersections.length][network.zones.length][timeSteps][];
+		for (int i = 0; i < network.routedIntersections.length; i++)
+			for (int j = 0; j < network.zones.length; j++)
+				for (int k = 0; k < timeSteps; k++)
+					a[i][j][k] = new double[network.routedIntersections[i].outgoingLinks.length];
 	}
 	
 	private static Bush[] destinationBushes(Network network, DoubleMatrix odm) {
