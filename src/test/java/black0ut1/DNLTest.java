@@ -10,7 +10,7 @@ import black0ut1.dynamic.equilibrium.STARouteChoice;
 import black0ut1.dynamic.equilibrium.StaticRouteChoice;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.dnl.ILTM_DNL;
-import black0ut1.dynamic.loading.routing.MixtureFractions;
+import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.io.TNTP;
 import black0ut1.static_.assignment.Convergence;
 import black0ut1.static_.assignment.Settings;
@@ -49,7 +49,7 @@ public class DNLTest {
 		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, stepSize, timeSteps);
 		
 		DynamicNetworkLoading dnl = new ILTM_DNL(network, odm, stepSize, timeSteps, 1e-8);
-		MixtureFractions[][] initialRouteChoice = destinationBushes(pair.first(), pair.second(), network);
+		MixtureOutgoingFractions[][] initialRouteChoice = destinationBushes(pair.first(), pair.second(), network);
 		dnl.setTurningFractions(initialRouteChoice);
 		
 		long tick = System.currentTimeMillis();
@@ -60,7 +60,7 @@ public class DNLTest {
 		dnl.checkDestinationInflows(true);
 	}
 	
-	MixtureFractions[][] destinationBushes(Network network, DoubleMatrix odm, DynamicNetwork dNetwork) {
+	MixtureOutgoingFractions[][] destinationBushes(Network network, DoubleMatrix odm, DynamicNetwork dNetwork) {
 		Settings settings = new Settings(network, odm, 20, new Convergence.Builder()
 				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1));
 		ProjectedGradient pg = new ProjectedGradient(settings);

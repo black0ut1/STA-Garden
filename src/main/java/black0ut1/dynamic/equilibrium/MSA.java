@@ -1,11 +1,10 @@
 package black0ut1.dynamic.equilibrium;
 
-import black0ut1.data.DoubleMatrix;
 import black0ut1.dynamic.Convergence;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
-import black0ut1.dynamic.loading.routing.MixtureFractions;
+import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.tdsp.DOT;
 
 public class MSA {
@@ -36,14 +35,14 @@ public class MSA {
 	public void run() {
 		Convergence convergence = new Convergence(odm);
 		
-		MixtureFractions[][] mfs = initialRouteChoice.computeInitialMixtureFractions();
+		MixtureOutgoingFractions[][] mfs = initialRouteChoice.computeInitialMixtureFractions();
 		dnl.setTurningFractions(mfs);
 		dnl.loadNetwork();
 //		dnl.checkDestinationInflows(false);
 		
 		var pair = tdsp.shortestPaths();
 		double[][][] costs = pair.first();
-		MixtureFractions[][] targetMfs = pair.second();
+		MixtureOutgoingFractions[][] targetMfs = pair.second();
 		
 		double tstt = convergence.totalSystemTravelTime(network, stepSize);
 		System.out.println("[DUE] Total system travel time: " + tstt);
@@ -60,16 +59,15 @@ public class MSA {
 			
 			for (int n = 0; n < targetMfs.length; n++)
 				for (int t = 0; t < targetMfs[n].length; t++) {
-					MixtureFractions mf1 = mfs[n][t];
-					MixtureFractions mf2 = targetMfs[n][t];
+					MixtureOutgoingFractions mf1 = mfs[n][t];
+					MixtureOutgoingFractions mf2 = targetMfs[n][t];
 					
 					for (int d = 0; d < mf2.destinationTurningFractions.length; d++) {
-						DoubleMatrix tf1 = mf1.destinationTurningFractions[d];
-						DoubleMatrix tf2 = mf2.destinationTurningFractions[d];
+						double[] tf1 = mf1.destinationTurningFractions[d];
+						double[] tf2 = mf2.destinationTurningFractions[d];
 						
-						DoubleMatrix result = tf1.plus(tf2.plus(tf1.scale(-1)).scale(lambda));
-						
-						mfs[n][t].destinationTurningFractions[d] = result;
+						for (int j = 0; j < tf1.length; j++)
+							tf1[j] = (1 - lambda) * tf1[j] + lambda * tf2[j];
 					}
 				}
 			

@@ -3,7 +3,7 @@ package black0ut1.dynamic.loading.dnl;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.routing.MixtureFractions;
+import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 import black0ut1.dynamic.loading.node.Zone;
 
@@ -81,7 +81,7 @@ public abstract class DynamicNetworkLoading {
 	 * time step - {@code turningFractions[i][t]} are MixtureFractions
 	 * used by intersection i during time step t.
 	 */
-	public void setTurningFractions(MixtureFractions[][] turningFractions) {
+	public void setTurningFractions(MixtureOutgoingFractions[][] turningFractions) {
 		for (int i = 0; i < network.routedIntersections.length; i++)
 			network.routedIntersections[i].setTurningFractions(turningFractions[i]);
 	}

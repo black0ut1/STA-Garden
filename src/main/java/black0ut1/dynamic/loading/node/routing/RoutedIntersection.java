@@ -3,7 +3,7 @@ package black0ut1.dynamic.loading.node.routing;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.loading.routing.MixtureFlow;
-import black0ut1.dynamic.loading.routing.MixtureFractions;
+import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.node.models.NodeModel;
@@ -15,7 +15,7 @@ import black0ut1.dynamic.loading.node.models.NodeModel;
  */
 public class RoutedIntersection extends Intersection {
 	
-	protected MixtureFractions[] turningFractions;
+	protected MixtureOutgoingFractions[] turningFractions;
 	protected final NodeModel nodeModel;
 	public double potential;
 	
@@ -24,13 +24,13 @@ public class RoutedIntersection extends Intersection {
 		this.nodeModel = nodeModel;
 	}
 	
-	public void setTurningFractions(MixtureFractions[] turningFractions) {
+	public void setTurningFractions(MixtureOutgoingFractions[] turningFractions) {
 		this.turningFractions = turningFractions;
 	}
 	
 	@Override
 	public Pair<MixtureFlow[], MixtureFlow[]> computeMixtureInflowsOutflows(int time) {
-		MixtureFractions fractions = turningFractions[time];
+		MixtureOutgoingFractions fractions = turningFractions[time];
 		
 		double[] sendingFlows = new double[incomingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++)
@@ -50,9 +50,9 @@ public class RoutedIntersection extends Intersection {
 				double portion = mixtureFlows[i].portions[d];
 				
 				for (int j = 0; j < outgoingLinks.length; j++) {
-					DoubleMatrix destinationFractions = fractions.getDestinationFractions(destination);
+					double[] destinationFractions = fractions.getDestinationFractions(destination);
 					totalTurningFractions.set(i, j,
-							totalTurningFractions.get(i, j) + portion * destinationFractions.get(i, j));
+							totalTurningFractions.get(i, j) + portion * destinationFractions[j]);
 				}
 			}
 		}
@@ -81,11 +81,11 @@ public class RoutedIntersection extends Intersection {
 			double[] portions = new double[fractions.destinationTurningFractions.length];
 			
 			for (int d = 0; d < fractions.destinationTurningFractions.length; d++) {
-				DoubleMatrix destinationFractions = fractions.destinationTurningFractions[d];
+				double[] destinationFractions = fractions.destinationTurningFractions[d];
 				
 				double sum = 0;
 				for (int i = 0; i < incomingLinks.length; i++)
-					sum += incomingMixtureFlows[i].getDestinationFlow(d) * destinationFractions.get(i, j);
+					sum += incomingMixtureFlows[i].getDestinationFlow(d) * destinationFractions[j];
 				
 				if (sum > 0) {
 					destinations[len] = d;

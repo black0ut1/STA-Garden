@@ -1,0 +1,21 @@
+package black0ut1.dynamic.loading.routing;
+
+/**
+ * Class for defining, how MixtureFlow turns at an intersection. It
+ * decomposes turning fractions of some intersection by destinations.
+ * Turning fraction tf[i][j] is a number from interval [0, 1] that
+ * expresses portion of flow entering intersection from incoming
+ * link i, that exits using outgoing link j.
+ */
+public class MixtureOutgoingFractions {
+	
+	public final double[][] destinationTurningFractions;
+	
+	public MixtureOutgoingFractions(double[][] destinationTurningFractions) {
+		this.destinationTurningFractions = destinationTurningFractions;
+	}
+	
+	public double[] getDestinationFractions(int destination) {
+		return destinationTurningFractions[destination];
+	}
+}

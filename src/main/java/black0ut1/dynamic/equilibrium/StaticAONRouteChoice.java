@@ -3,7 +3,7 @@ package black0ut1.dynamic.equilibrium;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.dynamic.DynamicNetwork;
-import black0ut1.dynamic.loading.routing.MixtureFractions;
+import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.util.SSSP;
 
@@ -23,8 +23,8 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 		this.timeSteps = timeSteps;
 	}
 	
-	public MixtureFractions[][] computeInitialMixtureFractions() {
-		MixtureFractions[][] result = new MixtureFractions[network.nodes][timeSteps];
+	public MixtureOutgoingFractions[][] computeInitialMixtureFractions() {
+		MixtureOutgoingFractions[][] result = new MixtureOutgoingFractions[network.nodes][timeSteps];
 		
 		double[][] destinationFlows = assignFlows();
 		
@@ -39,14 +39,14 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 		return result;
 	}
 	
-	protected MixtureFractions createNodeFractions(double[][] destinationFlows, int node1) {
-		DoubleMatrix[] turningFractions = new DoubleMatrix[dNetwork.zones.length];
+	protected MixtureOutgoingFractions createNodeFractions(double[][] destinationFlows, int node1) {
+		double[][] turningFractions = new double[dNetwork.zones.length][];
 		
 		Intersection node = dNetwork.routedIntersections[node1];
 		
 		// compute fractions for a destination
 		for (int destination = 0; destination < network.zones; destination++) {
-			DoubleMatrix destinationFractions = new DoubleMatrix(node.incomingLinks.length, node.outgoingLinks.length);
+			double[] destinationFractions = new double[node.outgoingLinks.length];
 			
 			// the amount of flow going through the node
 			double nodeFlow = 0;
@@ -82,21 +82,17 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 			// Destination flow do not use this intersection -> fractions will be
 			// uniformly distributed
 			if (nodeFlow == 0) {
-				
-				for (int i = 0; i < node.incomingLinks.length; i++)
-					for (int j = 0; j < node.outgoingLinks.length; j++)
-						destinationFractions.set(i, j, 1.0 / node.outgoingLinks.length);
+				Arrays.fill(destinationFractions, 1.0 / node.outgoingLinks.length);
 				
 			} // all flow from each incoming link is going into J
 			else {
-				for (int i = 0; i < node.incomingLinks.length; i++)
-					destinationFractions.set(i, J, 1);
+				destinationFractions[J] = 1;
 			}
 			
 			turningFractions[destination] = destinationFractions;
 		}
 		
-		return new MixtureFractions(turningFractions);
+		return new MixtureOutgoingFractions(turningFractions);
 	}
 	
 	protected double[][] assignFlows() {
