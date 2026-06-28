@@ -9,13 +9,19 @@ package black0ut1.dynamic.loading.routing;
  */
 public class MixtureOutgoingFractions {
 	
-	public final double[][] destinationTurningFractions;
+	protected final double[][] destinationTurningFractions;
+	public final int destinations;
 	
 	public MixtureOutgoingFractions(double[][] destinationTurningFractions) {
 		this.destinationTurningFractions = destinationTurningFractions;
+		this.destinations = destinationTurningFractions.length;
 	}
 	
-	public double[] getDestinationFractions(int destination) {
-		return destinationTurningFractions[destination];
+	public double getFraction(int d, int j) {
+		return destinationTurningFractions[d][j];
+	}
+	
+	public void setFraction(int d, int j, double val) {
+		destinationTurningFractions[d][j] = val;
 	}
 }

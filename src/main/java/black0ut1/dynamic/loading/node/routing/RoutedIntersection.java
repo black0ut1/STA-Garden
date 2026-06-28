@@ -50,9 +50,8 @@ public class RoutedIntersection extends Intersection {
 				double portion = mixtureFlows[i].portions[d];
 				
 				for (int j = 0; j < outgoingLinks.length; j++) {
-					double[] destinationFractions = fractions.getDestinationFractions(destination);
 					totalTurningFractions.set(i, j,
-							totalTurningFractions.get(i, j) + portion * destinationFractions[j]);
+							totalTurningFractions.get(i, j) + portion * fractions.getFraction(destination, j));
 				}
 			}
 		}
@@ -77,15 +76,13 @@ public class RoutedIntersection extends Intersection {
 			}
 			
 			int len = 0;
-			int[] destinations = new int[fractions.destinationTurningFractions.length];
-			double[] portions = new double[fractions.destinationTurningFractions.length];
+			int[] destinations = new int[fractions.destinations];
+			double[] portions = new double[fractions.destinations];
 			
-			for (int d = 0; d < fractions.destinationTurningFractions.length; d++) {
-				double[] destinationFractions = fractions.destinationTurningFractions[d];
-				
+			for (int d = 0; d < fractions.destinations; d++) {
 				double sum = 0;
 				for (int i = 0; i < incomingLinks.length; i++)
-					sum += incomingMixtureFlows[i].getDestinationFlow(d) * destinationFractions[j];
+					sum += incomingMixtureFlows[i].getDestinationFlow(d) * fractions.getFraction(d, j);
 				
 				if (sum > 0) {
 					destinations[len] = d;

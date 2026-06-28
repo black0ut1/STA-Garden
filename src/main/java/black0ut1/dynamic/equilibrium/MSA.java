@@ -62,12 +62,11 @@ public class MSA {
 					MixtureOutgoingFractions mf1 = mfs[n][t];
 					MixtureOutgoingFractions mf2 = targetMfs[n][t];
 					
-					for (int d = 0; d < mf2.destinationTurningFractions.length; d++) {
-						double[] tf1 = mf1.destinationTurningFractions[d];
-						double[] tf2 = mf2.destinationTurningFractions[d];
-						
-						for (int j = 0; j < tf1.length; j++)
-							tf1[j] = (1 - lambda) * tf1[j] + lambda * tf2[j];
+					for (int d = 0; d < network.zones.length; d++) {
+						for (int j = 0; j < network.routedIntersections[n].outgoingLinks.length; j++) {
+							double newValue = (1 - lambda) * mf1.getFraction(d, j) + lambda * mf2.getFraction(d, j);
+							mf1.setFraction(d, j, newValue);
+						}
 					}
 				}
 			

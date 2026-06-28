@@ -5,6 +5,7 @@ import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.node.Intersection;
+import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.util.DynamicUtils;
 import black0ut1.util.Util;
@@ -70,7 +71,7 @@ public class DOT {
 				if (t == timeSteps)
 					continue;
 				
-				mfs[d][t].getDestinationFractions(d)[0] = 1;
+				mfs[d][t].setFraction(d, 0, 1);
 			}
 		
 		// 3. (Optional) Initialize costs at th last time step
@@ -126,9 +127,9 @@ public class DOT {
 								break;
 							}
 						
-						double[] turningFractions = mfs[n][t].getDestinationFractions(d);
-						Arrays.fill(turningFractions, 0);
-						turningFractions[J] = 1;
+						for (int j = 0; j < link.tail.outgoingLinks.length; j++)
+							mfs[n][t].setFraction(d, j, 0);
+						mfs[n][t].setFraction(d, J, 1);
 					}
 				}
 			}
@@ -165,16 +166,15 @@ public class DOT {
 					mark[tailNode] = 1;
 					costs[timeSteps][tailNode][destination] = newCost;
 					
-					double[] turningFractions = mfs[tailNode][timeSteps - 1].getDestinationFractions(destination);
-					turningFractions[incomingLinkIndex] = 1;
+					mfs[tailNode][timeSteps - 1].setFraction(destination, incomingLinkIndex, 1);
 					
 					pq.add(tailNode, newCost);
 				} else if (newCost < costs[0][tailNode][headNode]) {
 					costs[timeSteps][tailNode][destination] = newCost;
 					
-					double[] turningFractions = mfs[tailNode][timeSteps - 1].getDestinationFractions(destination);
-					Arrays.fill(turningFractions, 0);
-					turningFractions[incomingLinkIndex] = 1;
+					for (int j = 0; j < tail.outgoingLinks.length; j++)
+						mfs[tailNode][timeSteps - 1].setFraction(destination, j, 0);
+					mfs[tailNode][timeSteps - 1].setFraction(destination, incomingLinkIndex, 0);
 					
 					pq.setLowerPriority(tailNode, newCost);
 				}
