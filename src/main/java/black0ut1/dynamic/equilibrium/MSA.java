@@ -35,14 +35,14 @@ public class MSA {
 	public void run() {
 		Convergence convergence = new Convergence(odm);
 		
-		MixtureOutgoingFractions[][] mfs = initialRouteChoice.computeInitialMixtureFractions();
+		var mfs = initialRouteChoice.computeInitialMixtureFractions();
 		dnl.setTurningFractions(mfs);
 		dnl.loadNetwork();
 //		dnl.checkDestinationInflows(false);
 		
 		var pair = tdsp.shortestPaths();
 		double[][][] costs = pair.first();
-		MixtureOutgoingFractions[][] targetMfs = pair.second();
+		var targetMfs = pair.second();
 		
 		double tstt = convergence.totalSystemTravelTime(network, stepSize);
 		System.out.println("[DUE] Total system travel time: " + tstt);
@@ -58,14 +58,17 @@ public class MSA {
 			double lambda = 1.0 / (i + 2);
 			
 			for (int n = 0; n < targetMfs.length; n++)
-				for (int t = 0; t < targetMfs[n].length; t++) {
-					MixtureOutgoingFractions mf1 = mfs[n][t];
-					MixtureOutgoingFractions mf2 = targetMfs[n][t];
+				for (int t = 0; t < targetMfs[n].timeSteps; t++) {
+					MixtureOutgoingFractions mf1 = mfs[n];
+					MixtureOutgoingFractions mf2 = targetMfs[n];
 					
 					for (int d = 0; d < network.zones.length; d++) {
 						for (int j = 0; j < network.routedIntersections[n].outgoingLinks.length; j++) {
-							double newValue = (1 - lambda) * mf1.getFraction(d, j) + lambda * mf2.getFraction(d, j);
-							mf1.setFraction(d, j, newValue);
+							double a = mf1.getFraction(t, d, j);
+							double b = mf2.getFraction(t, d, j);
+							
+							double newValue = (1 - lambda) * a + lambda * b;
+							mf1.setFraction(t, d, j, newValue);
 						}
 					}
 				}

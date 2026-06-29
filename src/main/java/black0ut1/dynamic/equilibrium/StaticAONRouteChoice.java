@@ -7,8 +7,6 @@ import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.util.SSSP;
 
-import java.util.Arrays;
-
 public class StaticAONRouteChoice implements StaticRouteChoice {
 	
 	protected final Network network;
@@ -23,24 +21,20 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 		this.timeSteps = timeSteps;
 	}
 	
-	public MixtureOutgoingFractions[][] computeInitialMixtureFractions() {
-		MixtureOutgoingFractions[][] result = new MixtureOutgoingFractions[network.nodes][timeSteps];
+	public MixtureOutgoingFractions[] computeInitialMixtureFractions() {
+		MixtureOutgoingFractions[] result = new MixtureOutgoingFractions[network.nodes];
 		
 		double[][] destinationFlows = assignFlows();
 		
 		// create first mixture fraction for each node
 		for (int node = 0; node < network.nodes; node++)
-			result[node][0] = createNodeFractions(destinationFlows, node);
-		
-		// copy the first mixture fraction to each time step
-		for (int i = 0; i < network.nodes; i++)
-			Arrays.fill(result[i], result[i][0]);
+			result[node] = createNodeFractions(destinationFlows, node);
 		
 		return result;
 	}
 	
 	protected MixtureOutgoingFractions createNodeFractions(double[][] destinationFlows, int node1) {
-		MixtureOutgoingFractions fractions = new MixtureOutgoingFractions(dNetwork, node1);
+		MixtureOutgoingFractions fractions = new MixtureOutgoingFractions(dNetwork, node1, timeSteps);
 		
 		Intersection node = dNetwork.routedIntersections[node1];
 		
@@ -83,11 +77,13 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 			if (nodeFlow == 0) {
 				double fraction = 1.0 / node.outgoingLinks.length;
 				for (int j = 0; j < node.outgoingLinks.length; j++)
-					fractions.setFraction(destination, j, fraction);
+					for (int t = 0; t < timeSteps; t++)
+						fractions.setFraction(t, destination, j, fraction);
 				
 			} // all flow from each incoming link is going into J
 			else {
-				fractions.setFraction(destination, J, 1);
+				for (int t = 0; t < timeSteps; t++)
+					fractions.setFraction(t, destination, J, 1);
 			}
 		}
 		

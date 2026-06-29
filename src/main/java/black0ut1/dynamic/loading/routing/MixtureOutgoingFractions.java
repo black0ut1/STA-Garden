@@ -11,22 +11,25 @@ import black0ut1.dynamic.DynamicNetwork;
  */
 public class MixtureOutgoingFractions {
 	
-	protected final double[][] destinationTurningFractions;
+	protected final double[][][] destinationTurningFractions;
 	public final int destinations;
+	public final int timeSteps;
 	
-	public MixtureOutgoingFractions(DynamicNetwork network, int n) {
-		this.destinationTurningFractions = new double[network.zones.length][];
-		for (int i = 0; i < network.zones.length; i++)
-			destinationTurningFractions[i] = new double[network.routedIntersections[n].outgoingLinks.length];
+	public MixtureOutgoingFractions(DynamicNetwork network, int n, int timeSteps) {
+		this.destinationTurningFractions = new double[timeSteps][network.zones.length][];
+		for (int t = 0; t < timeSteps; t++)
+			for (int i = 0; i < network.zones.length; i++)
+				destinationTurningFractions[t][i] = new double[network.routedIntersections[n].outgoingLinks.length];
 		
-		this.destinations = destinationTurningFractions.length;
+		this.destinations = network.zones.length;
+		this.timeSteps = timeSteps;
 	}
 	
-	public double getFraction(int d, int j) {
-		return destinationTurningFractions[d][j];
+	public double getFraction(int t, int d, int j) {
+		return destinationTurningFractions[t][d][j];
 	}
 	
-	public void setFraction(int d, int j, double val) {
-		destinationTurningFractions[d][j] = val;
+	public void setFraction(int t, int d, int j, double val) {
+		destinationTurningFractions[t][d][j] = val;
 	}
 }

@@ -49,7 +49,7 @@ public class DNLTest {
 		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, stepSize, timeSteps);
 		
 		DynamicNetworkLoading dnl = new ILTM_DNL(network, odm, stepSize, timeSteps, 1e-8);
-		MixtureOutgoingFractions[][] initialRouteChoice = destinationBushes(pair.first(), pair.second(), network);
+		var initialRouteChoice = destinationBushes(pair.first(), pair.second(), network);
 		dnl.setTurningFractions(initialRouteChoice);
 		
 		long tick = System.currentTimeMillis();
@@ -60,7 +60,7 @@ public class DNLTest {
 		dnl.checkDestinationInflows(true);
 	}
 	
-	MixtureOutgoingFractions[][] destinationBushes(Network network, DoubleMatrix odm, DynamicNetwork dNetwork) {
+	MixtureOutgoingFractions[] destinationBushes(Network network, DoubleMatrix odm, DynamicNetwork dNetwork) {
 		Settings settings = new Settings(network, odm, 20, new Convergence.Builder()
 				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1));
 		ProjectedGradient pg = new ProjectedGradient(settings);

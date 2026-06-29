@@ -4,5 +4,5 @@ import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 
 public interface StaticRouteChoice {
 	
-	MixtureOutgoingFractions[][] computeInitialMixtureFractions();
+	MixtureOutgoingFractions[] computeInitialMixtureFractions();
 }
