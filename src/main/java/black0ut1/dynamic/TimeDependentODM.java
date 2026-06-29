@@ -43,6 +43,14 @@ public class TimeDependentODM {
 		return demand[time * zones * zones + origin * zones + destination];
 	}
 	
+	public TimeDependentODM scale(double scale) {
+		double[] scaledDemand = new double[demand.length];
+		for (int i = 0; i < demand.length; i++)
+			scaledDemand[i] = demand[i] * scale;
+		
+		return new TimeDependentODM(scaledDemand, zones, timeSteps);
+	}
+	
 	/**
 	 * Creates a time-dependent ODM from a static ODM, such that an original value (i, j)
 	 * is distrubuted uniformly over time.

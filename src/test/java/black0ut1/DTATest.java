@@ -39,7 +39,9 @@ public class DTATest {
 		Network network = pair.first();
 		DoubleMatrix odm = pair.second();
 		
-		TimeDependentODM tdodm = TimeDependentODM.fromStaticGaussian(odm, odmSteps);
+		TimeDependentODM tdodm = TimeDependentODM
+				.fromStaticGaussian(odm, odmSteps)
+				.scale(10);
 		DynamicNetwork dynamicNetwork = DynamicNetwork.fromStaticNetwork(network, tdodm, stepSize, timeSteps);
 		
 		StaticRouteChoice routeChoice = new StaticAONRouteChoice(network, dynamicNetwork, odm, timeSteps);
