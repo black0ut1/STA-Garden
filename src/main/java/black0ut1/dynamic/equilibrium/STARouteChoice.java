@@ -36,17 +36,16 @@ public class STARouteChoice implements StaticRouteChoice {
 	protected MixtureOutgoingFractions createMixtureFractionsForIntersection(RoutedIntersection intersection) {
 		// Creates turning fractions for each destination
 		
-		double[][] turningFractions = new double[network.zones.length][];
+		MixtureOutgoingFractions fractions = new MixtureOutgoingFractions(network, intersection.index);
 		
 		for (int destination = 0; destination < destinationBushes.length; destination++) {
-			double[] destinationTurningFractions = new double[intersection.outgoingLinks.length];
 			
 			// 1a) Intersection is the destination
 			if (intersection.index == destination) {
 				
 				// traffic from all incoming links will leave using the connector (which
 				// is the first outgoing link)
-				destinationTurningFractions[0] = 1;
+				fractions.setFraction(destination, 0, 1);
 				
 			} // 1b) Intersection is not the destination
 			else {
@@ -65,7 +64,8 @@ public class STARouteChoice implements StaticRouteChoice {
 				// uniformly distributed
 				if (outgoingFlow == 0) {
 					double fraction = 1.0 / intersection.outgoingLinks.length;
-					Arrays.fill(destinationTurningFractions, fraction);
+					for (int j = 0; j < intersection.outgoingLinks.length; j++)
+						fractions.setFraction(destination, j, fraction);
 				}
 				else {
 					for (int j = 0; j < intersection.outgoingLinks.length; j++) {
@@ -75,14 +75,12 @@ public class STARouteChoice implements StaticRouteChoice {
 								? 0 // outgoing link is connector to some other destination
 								: bush.getEdgeFlow(outgoingLinkIndex) / outgoingFlow;
 						
-						destinationTurningFractions[j] = fraction;
+						fractions.setFraction(destination, j, fraction);
 					}
 				}
 			}
-			
-			turningFractions[destination] = destinationTurningFractions;
 		}
 		
-		return new MixtureOutgoingFractions(turningFractions);
+		return fractions;
 	}
 }

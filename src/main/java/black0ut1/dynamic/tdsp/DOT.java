@@ -5,7 +5,6 @@ import black0ut1.data.tuple.Pair;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.node.Intersection;
-import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.util.DynamicUtils;
 import black0ut1.util.Util;
@@ -53,14 +52,9 @@ public class DOT {
 			for (double[] b : a)
 				Arrays.fill(b, Double.POSITIVE_INFINITY);
 		
-		for (int n = 0; n < network.routedIntersections.length; n++) {
-			Intersection intersection = network.routedIntersections[n];
-			
-			for (int t = 0; t < timeSteps; t++) {
-				double[][] tfs = new double[network.zones.length][intersection.outgoingLinks.length];
-				mfs[n][t] = new MixtureOutgoingFractions(tfs);
-			}
-		}
+		for (int n = 0; n < network.routedIntersections.length; n++)
+			for (int t = 0; t < timeSteps; t++)
+				mfs[n][t] = new MixtureOutgoingFractions(network, n);
 		
 		// 2. Initialize costs from destinations to themselves to 0, initialize turning
 		// fractions of nodes adjacent to destinations

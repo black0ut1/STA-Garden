@@ -1,5 +1,7 @@
 package black0ut1.dynamic.loading.routing;
 
+import black0ut1.dynamic.DynamicNetwork;
+
 /**
  * Class for defining, how MixtureFlow turns at an intersection. It
  * decomposes turning fractions of some intersection by destinations.
@@ -12,8 +14,11 @@ public class MixtureOutgoingFractions {
 	protected final double[][] destinationTurningFractions;
 	public final int destinations;
 	
-	public MixtureOutgoingFractions(double[][] destinationTurningFractions) {
-		this.destinationTurningFractions = destinationTurningFractions;
+	public MixtureOutgoingFractions(DynamicNetwork network, int n) {
+		this.destinationTurningFractions = new double[network.zones.length][];
+		for (int i = 0; i < network.zones.length; i++)
+			destinationTurningFractions[i] = new double[network.routedIntersections[n].outgoingLinks.length];
+		
 		this.destinations = destinationTurningFractions.length;
 	}
 	
