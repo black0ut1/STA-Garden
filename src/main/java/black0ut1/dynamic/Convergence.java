@@ -22,7 +22,7 @@ public class Convergence {
 	public double totalSystemTravelTime(DynamicNetwork network, double stepSize) {
 		double tstt = 0;
 		
-		for (Link link : network.allLinks)
+		for (Link link : network.links)
 			// The area between the cumulative curves, i.e. the number of vehicles on the
 			// link integrated over time.
 			for (int t = 0; t < link.cumulativeInflow.length - 1; t++) {
@@ -39,8 +39,11 @@ public class Convergence {
 		
 		for (int origin = 0; origin < odm.zones; origin++)
 			for (int destination = 0; destination < odm.zones; destination++)
-				for (int t = 0; t < odm.timeSteps; t++)
-					sptt += costs[t][origin][destination] * odm.getDemand(origin, destination, t);
+				for (int t = 0; t < odm.timeSteps; t++) {
+					double demand = odm.getDemand(origin, destination, t);
+					if (demand > 0) // to avoid NaNs
+						sptt += costs[t][origin][destination] * demand;
+				}
 		
 		return sptt;
 	}
