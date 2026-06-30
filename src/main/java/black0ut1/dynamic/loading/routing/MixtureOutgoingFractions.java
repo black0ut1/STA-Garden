@@ -40,4 +40,17 @@ public class MixtureOutgoingFractions {
 		int J = network.routedIntersections[n].outgoingLinks.length;
 		values[offsets[n] + t * destinations * J + d * J + j] = val;
 	}
+	
+	public class Indices {
+		
+		protected final byte[] values = new byte[intersections * destinations * timeSteps];
+		
+		public byte getIndex(int n, int t, int d) {
+			return values[n * timeSteps * destinations + t * destinations + d];
+		}
+		
+		public void setIndex(int n, int t, int d, byte j) {
+			values[n * timeSteps * destinations + t * destinations + d] = j;
+		}
+	}
 }

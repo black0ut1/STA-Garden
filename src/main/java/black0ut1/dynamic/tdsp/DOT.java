@@ -34,7 +34,7 @@ public class DOT {
 		this.sssp = sssp;
 	}
 	
-	public Pair<double[][][], MixtureOutgoingFractions> shortestPaths() {
+	public Pair<double[][][], MixtureOutgoingFractions.Indices> shortestPaths(MixtureOutgoingFractions c) {
 		// TODO optimize memory by returning only link indices (whether to array of all
 		//  links or arrays of outgoing links for each node)
 		// TODO precompute travel times for integer time steps
@@ -45,7 +45,7 @@ public class DOT {
 		
 		// costs[t][n][d] is the shortest time from n to d, if departing from n at time t
 		double[][][] costs = new double[timeSteps + 1][network.routedIntersections.length][network.zones.length];
-		MixtureOutgoingFractions mfs = new MixtureOutgoingFractions(network, timeSteps);
+		MixtureOutgoingFractions.Indices ougoingIndices = c.new Indices();
 		
 		// 1. Initialize all costs to infinity, initialize mixture fractions
 		for (double[][] a : costs)
@@ -61,13 +61,13 @@ public class DOT {
 				if (t == timeSteps)
 					continue;
 				
-				mfs.setFraction(d, t, d, 0, 1);
+				ougoingIndices.setIndex(d, t, d, (byte) 0);
 			}
 		
 		// 3. (Optional) Initialize costs at th last time step
 		if (sssp) {
 			for (int d = 0; d < network.zones.length; d++)
-				sssp(costs, mfs, d);
+				sssp(costs, ougoingIndices, d);
 		}
 		
 		// 4. Set the rest of the values in decreasing order of time
@@ -117,18 +117,16 @@ public class DOT {
 								break;
 							}
 						
-						for (int j = 0; j < link.tail.outgoingLinks.length; j++)
-							mfs.setFraction(n, t, d, j, 0);
-						mfs.setFraction(n, t, d, J, 1);
+						ougoingIndices.setIndex(n, t, d, (byte) J);
 					}
 				}
 			}
 		}
 		
-		return new Pair<>(costs, mfs);
+		return new Pair<>(costs, ougoingIndices);
 	}
 	
-	protected void sssp(double[][][] costs, MixtureOutgoingFractions mfs, int destination) {
+	protected void sssp(double[][][] costs, MixtureOutgoingFractions.Indices ougoingIndices, int destination) {
 		PriorityQueue pq = new PriorityQueue(network.intersections.length, 0);
 		byte[] mark = new byte[network.intersections.length];
 		
@@ -155,17 +153,11 @@ public class DOT {
 				if (mark[tailNode] == 0) {
 					mark[tailNode] = 1;
 					costs[timeSteps][tailNode][destination] = newCost;
-					
-					mfs.setFraction(tailNode, timeSteps - 1, destination, incomingLinkIndex, 1);
-					
+					ougoingIndices.setIndex(tailNode, timeSteps - 1, destination, (byte) incomingLinkIndex);
 					pq.add(tailNode, newCost);
-				} else if (newCost < costs[timeSteps][tailNode][headNode]) {
+				} else if (newCost < costs[timeSteps][tailNode][destination]) {
 					costs[timeSteps][tailNode][destination] = newCost;
-					
-					for (int j = 0; j < tail.outgoingLinks.length; j++)
-						mfs.setFraction(tailNode, timeSteps - 1, destination, j, 0);
-					mfs.setFraction(tailNode, timeSteps - 1, destination, incomingLinkIndex, 1);
-					
+					ougoingIndices.setIndex(tailNode, timeSteps - 1, destination, (byte) incomingLinkIndex);
 					pq.setLowerPriority(tailNode, newCost);
 				}
 			}

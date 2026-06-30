@@ -4,6 +4,7 @@ import black0ut1.dynamic.Convergence;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
+import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.tdsp.DOT;
 
 public class MSA {
@@ -39,9 +40,9 @@ public class MSA {
 		dnl.loadNetwork();
 //		dnl.checkDestinationInflows(false);
 		
-		var pair = tdsp.shortestPaths();
+		var pair = tdsp.shortestPaths(mfs);
 		double[][][] costs = pair.first();
-		var targetMfs = pair.second();
+		MixtureOutgoingFractions.Indices shortestOugoingLinks = pair.second();
 		
 		double tstt = convergence.totalSystemTravelTime(network, stepSize);
 		System.out.println("[DUE] Total system travel time: " + tstt);
@@ -56,24 +57,29 @@ public class MSA {
 			
 			double lambda = 1.0 / (i + 2);
 			
-			for (int n = 0; n < targetMfs.intersections; n++)
-				for (int t = 0; t < targetMfs.timeSteps; t++) {
+			for (int n = 0; n < mfs.intersections; n++)
+				for (int t = 0; t < mfs.timeSteps; t++) {
 					for (int d = 0; d < network.zones.length; d++) {
 						for (int j = 0; j < network.routedIntersections[n].outgoingLinks.length; j++) {
-							double a = mfs.getFraction(n, t, d, j);
-							double b = targetMfs.getFraction(n, t, d, j);
+							double fraction = mfs.getFraction(n, t, d, j);
 							
-							double newValue = (1 - lambda) * a + lambda * b;
-							mfs.setFraction(n, t, d, j, newValue);
+							double newFraction;
+							if (shortestOugoingLinks.getIndex(n, t, d) == j) {
+								newFraction = (1 - lambda) * fraction + lambda;
+							} else {
+								newFraction = (1 - lambda) * fraction;
+							}
+							
+							mfs.setFraction(n, t, d, j, newFraction);
 						}
 					}
 				}
 			
 			dnl.loadNetwork();
 			
-			pair = tdsp.shortestPaths();
+			pair = tdsp.shortestPaths(mfs);
 			costs = pair.first();
-			targetMfs = pair.second();
+			shortestOugoingLinks = pair.second();
 			
 			tstt = convergence.totalSystemTravelTime(network, stepSize);
 			System.out.println("[DUE] Total system travel time: " + tstt);
