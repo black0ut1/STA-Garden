@@ -1,27 +1,30 @@
 package black0ut1.dynamic.loading.routing;
 
 import black0ut1.dynamic.DynamicNetwork;
+import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 
-/**
- * Class for defining, how MixtureFlow turns at an intersection. It
- * decomposes turning fractions of some intersection by destinations.
- * Turning fraction tf[i][j] is a number from interval [0, 1] that
- * expresses portion of flow entering intersection from incoming
- * link i, that exits using outgoing link j.
- */
 public class MixtureOutgoingFractions {
 	
-	protected final double[][][][] destinationTurningFractions;
+	protected final double[] values;
+	protected final int[] offsets;
+	protected final DynamicNetwork network;
+	
 	public final int intersections;
 	public final int destinations;
 	public final int timeSteps;
 	
 	public MixtureOutgoingFractions(DynamicNetwork network, int timeSteps) {
-		this.destinationTurningFractions = new double[network.routedIntersections.length][timeSteps][network.zones.length][];
-		for (int n = 0; n < network.routedIntersections.length; n++)
-			for (int t = 0; t < timeSteps; t++)
-				for (int i = 0; i < network.zones.length; i++)
-					destinationTurningFractions[n][t][i] = new double[network.routedIntersections[n].outgoingLinks.length];
+		int outdegreeSum = 0;
+		for (RoutedIntersection routedIntersection : network.routedIntersections)
+			outdegreeSum += routedIntersection.outgoingLinks.length;
+		
+		this.values = new double[outdegreeSum * timeSteps * network.zones.length];
+		this.offsets = new int[network.routedIntersections.length];
+		for (int i = 1; i < network.routedIntersections.length; i++) {
+			this.offsets[i] = this.offsets[i - 1] + timeSteps * network.zones.length *
+					network.routedIntersections[i - 1].outgoingLinks.length;
+		}
+		this.network = network;
 		
 		this.intersections = network.routedIntersections.length;
 		this.destinations = network.zones.length;
@@ -29,10 +32,12 @@ public class MixtureOutgoingFractions {
 	}
 	
 	public double getFraction(int n, int t, int d, int j) {
-		return destinationTurningFractions[n][t][d][j];
+		int J = network.routedIntersections[n].outgoingLinks.length;
+		return values[offsets[n] + t * destinations * J + d * J + j];
 	}
 	
 	public void setFraction(int n, int t, int d, int j, double val) {
-		destinationTurningFractions[n][t][d][j] = val;
+		int J = network.routedIntersections[n].outgoingLinks.length;
+		values[offsets[n] + t * destinations * J + d * J + j] = val;
 	}
 }

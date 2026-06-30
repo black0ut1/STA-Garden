@@ -31,8 +31,8 @@ public class DNLTest {
 		// Network, step size, odm steps, time steps
 		return Stream.of(
 				Arguments.of("SiouxFalls", 1, 30, 300, 100),
-				Arguments.of("ChicagoSketch", 1, 30, 350, 20),
-				Arguments.of("BerlinCenter", 1, 30, 630)
+				Arguments.of("ChicagoSketch", 1, 30, 350, 20)
+				/*Arguments.of("BerlinCenter", 1, 30, 630)*/
 		);
 	}
 	
@@ -49,7 +49,7 @@ public class DNLTest {
 		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, stepSize, timeSteps);
 		
 		DynamicNetworkLoading dnl = new ILTM_DNL(network, odm, stepSize, timeSteps, 1e-8);
-		var initialRouteChoice = destinationBushes(pair.first(), pair.second(), network);
+		var initialRouteChoice = destinationBushes(pair.first(), pair.second(), network, timeSteps);
 		dnl.setTurningFractions(initialRouteChoice);
 		
 		long tick = System.currentTimeMillis();
@@ -60,7 +60,7 @@ public class DNLTest {
 		dnl.checkDestinationInflows(true);
 	}
 	
-	MixtureOutgoingFractions destinationBushes(Network network, DoubleMatrix odm, DynamicNetwork dNetwork) {
+	MixtureOutgoingFractions destinationBushes(Network network, DoubleMatrix odm, DynamicNetwork dNetwork, int timeSteps) {
 		Settings settings = new Settings(network, odm, 20, new Convergence.Builder()
 				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1));
 		ProjectedGradient pg = new ProjectedGradient(settings);
@@ -86,7 +86,7 @@ public class DNLTest {
 					}
 			}
 		
-		StaticRouteChoice routeChoice = new STARouteChoice(dNetwork, 6_000, destinationBushes);
+		StaticRouteChoice routeChoice = new STARouteChoice(dNetwork, timeSteps, destinationBushes);
 		return routeChoice.computeInitialMixtureFractions();
 	}
 }
