@@ -60,7 +60,7 @@ public class DNLTest {
 		dnl.checkDestinationInflows(true);
 	}
 	
-	MixtureOutgoingFractions[] destinationBushes(Network network, DoubleMatrix odm, DynamicNetwork dNetwork) {
+	MixtureOutgoingFractions destinationBushes(Network network, DoubleMatrix odm, DynamicNetwork dNetwork) {
 		Settings settings = new Settings(network, odm, 20, new Convergence.Builder()
 				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1));
 		ProjectedGradient pg = new ProjectedGradient(settings);

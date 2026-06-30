@@ -21,20 +21,19 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 		this.timeSteps = timeSteps;
 	}
 	
-	public MixtureOutgoingFractions[] computeInitialMixtureFractions() {
-		MixtureOutgoingFractions[] result = new MixtureOutgoingFractions[network.nodes];
+	public MixtureOutgoingFractions computeInitialMixtureFractions() {
+		MixtureOutgoingFractions result = new MixtureOutgoingFractions(dNetwork, timeSteps);
 		
 		double[][] destinationFlows = assignFlows();
 		
 		// create first mixture fraction for each node
 		for (int node = 0; node < network.nodes; node++)
-			result[node] = createNodeFractions(destinationFlows, node);
+			createNodeFractions(result, destinationFlows, node);
 		
 		return result;
 	}
 	
-	protected MixtureOutgoingFractions createNodeFractions(double[][] destinationFlows, int node1) {
-		MixtureOutgoingFractions fractions = new MixtureOutgoingFractions(dNetwork, node1, timeSteps);
+	protected void createNodeFractions(MixtureOutgoingFractions result, double[][] destinationFlows, int node1) {
 		
 		Intersection node = dNetwork.routedIntersections[node1];
 		
@@ -78,16 +77,14 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 				double fraction = 1.0 / node.outgoingLinks.length;
 				for (int j = 0; j < node.outgoingLinks.length; j++)
 					for (int t = 0; t < timeSteps; t++)
-						fractions.setFraction(t, destination, j, fraction);
+						result.setFraction(node1, t, destination, j, fraction);
 				
 			} // all flow from each incoming link is going into J
 			else {
 				for (int t = 0; t < timeSteps; t++)
-					fractions.setFraction(t, destination, J, 1);
+					result.setFraction(node1, t, destination, J, 1);
 			}
 		}
-		
-		return fractions;
 	}
 	
 	protected double[][] assignFlows() {

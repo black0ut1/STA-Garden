@@ -50,7 +50,7 @@ public class RoutedIntersection extends Intersection {
 				
 				for (int j = 0; j < outgoingLinks.length; j++) {
 					totalTurningFractions.set(i, j,
-							totalTurningFractions.get(i, j) + portion * fractions.getFraction(time, destination, j));
+							totalTurningFractions.get(i, j) + portion * fractions.getFraction(this.index, time, destination, j));
 				}
 			}
 		}
@@ -81,7 +81,7 @@ public class RoutedIntersection extends Intersection {
 			for (int d = 0; d < fractions.destinations; d++) {
 				double sum = 0;
 				for (int i = 0; i < incomingLinks.length; i++)
-					sum += incomingMixtureFlows[i].getDestinationFlow(d) * fractions.getFraction(time, d, j);
+					sum += incomingMixtureFlows[i].getDestinationFlow(d) * fractions.getFraction(this.index, time, d, j);
 				
 				if (sum > 0) {
 					destinations[len] = d;

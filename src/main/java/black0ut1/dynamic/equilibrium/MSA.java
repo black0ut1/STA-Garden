@@ -4,7 +4,6 @@ import black0ut1.dynamic.Convergence;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
-import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.tdsp.DOT;
 
 public class MSA {
@@ -57,18 +56,15 @@ public class MSA {
 			
 			double lambda = 1.0 / (i + 2);
 			
-			for (int n = 0; n < targetMfs.length; n++)
-				for (int t = 0; t < targetMfs[n].timeSteps; t++) {
-					MixtureOutgoingFractions mf1 = mfs[n];
-					MixtureOutgoingFractions mf2 = targetMfs[n];
-					
+			for (int n = 0; n < targetMfs.intersections; n++)
+				for (int t = 0; t < targetMfs.timeSteps; t++) {
 					for (int d = 0; d < network.zones.length; d++) {
 						for (int j = 0; j < network.routedIntersections[n].outgoingLinks.length; j++) {
-							double a = mf1.getFraction(t, d, j);
-							double b = mf2.getFraction(t, d, j);
+							double a = mfs.getFraction(n, t, d, j);
+							double b = targetMfs.getFraction(n, t, d, j);
 							
 							double newValue = (1 - lambda) * a + lambda * b;
-							mf1.setFraction(t, d, j, newValue);
+							mfs.setFraction(n, t, d, j, newValue);
 						}
 					}
 				}

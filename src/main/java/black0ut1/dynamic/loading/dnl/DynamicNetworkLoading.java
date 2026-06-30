@@ -81,9 +81,9 @@ public abstract class DynamicNetworkLoading {
 	 * time step - {@code turningFractions[i][t]} are MixtureFractions
 	 * used by intersection i during time step t.
 	 */
-	public void setTurningFractions(MixtureOutgoingFractions[] turningFractions) {
+	public void setTurningFractions(MixtureOutgoingFractions turningFractions) {
 		for (int i = 0; i < network.routedIntersections.length; i++)
-			network.routedIntersections[i].setTurningFractions(turningFractions[i]);
+			network.routedIntersections[i].setTurningFractions(turningFractions);
 	}
 	
 	/**

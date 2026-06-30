@@ -18,19 +18,18 @@ public class STARouteChoice implements StaticRouteChoice {
 		this.destinationBushes = destinationBushes;
 	}
 	
-	public MixtureOutgoingFractions[] computeInitialMixtureFractions() {
-		MixtureOutgoingFractions[] result = new MixtureOutgoingFractions[network.routedIntersections.length];
+	public MixtureOutgoingFractions computeInitialMixtureFractions() {
+		MixtureOutgoingFractions result = new MixtureOutgoingFractions(network, maxSteps);
 		
 		for (RoutedIntersection intersection : network.routedIntersections)
-			result[intersection.index] = createMixtureFractionsForIntersection(intersection);
+			createMixtureFractionsForIntersection(result, intersection);
 		
 		return result;
 	}
 	
-	protected MixtureOutgoingFractions createMixtureFractionsForIntersection(RoutedIntersection intersection) {
+	protected void createMixtureFractionsForIntersection(
+			MixtureOutgoingFractions result, RoutedIntersection intersection) {
 		// Creates turning fractions for each destination
-		
-		MixtureOutgoingFractions fractions = new MixtureOutgoingFractions(network, intersection.index, maxSteps);
 		
 		for (int destination = 0; destination < destinationBushes.length; destination++) {
 			
@@ -40,7 +39,7 @@ public class STARouteChoice implements StaticRouteChoice {
 				// traffic from all incoming links will leave using the connector (which
 				// is the first outgoing link)
 				for (int t = 0; t < maxSteps; t++)
-					fractions.setFraction(t, destination, 0, 1);
+					result.setFraction(intersection.index, t, destination, 0, 1);
 				
 			} // 1b) Intersection is not the destination
 			else {
@@ -61,7 +60,7 @@ public class STARouteChoice implements StaticRouteChoice {
 					double fraction = 1.0 / intersection.outgoingLinks.length;
 					for (int j = 0; j < intersection.outgoingLinks.length; j++)
 						for (int t = 0; t < maxSteps; t++)
-							fractions.setFraction(t, destination, j, fraction);
+							result.setFraction(intersection.index, t, destination, j, fraction);
 				}
 				else {
 					for (int j = 0; j < intersection.outgoingLinks.length; j++) {
@@ -72,12 +71,10 @@ public class STARouteChoice implements StaticRouteChoice {
 								: bush.getEdgeFlow(outgoingLinkIndex) / outgoingFlow;
 						
 						for (int t = 0; t < maxSteps; t++)
-							fractions.setFraction(t, destination, j, fraction);
+							result.setFraction(intersection.index, t, destination, j, fraction);
 					}
 				}
 			}
 		}
-		
-		return fractions;
 	}
 }
