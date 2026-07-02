@@ -17,23 +17,20 @@ public class DynamicUtils {
 	 * The resulting array may contain positive infinities at the end, if the cumulative
 	 * flows do not contain enough data for some of the last time steps (this will occur
 	 * if the DNL wasn't ran until all the traffic arrived at destinations).
-	 * @param cumulativeInflow Cumulative inflow of said link.
-	 * @param cumulativeOutflow Cumulative outflow of said link.
+	 * @param link Link of which travel time for each time step is computed.
 	 * @param stepSize Size of a single time step.
-	 * @param freeFlowTime Free flow time of said link.
 	 * @return Array of travel times for each time t.
 	 */
-	public static double[] computeTravelTime(double[] cumulativeInflow, double[] cumulativeOutflow,
-											 double stepSize, double freeFlowTime) {
-		double[] travelTimes = new double[cumulativeInflow.length];
+	public static double[] computeTravelTime(Link link, double stepSize) {
+		double[] travelTimes = new double[link.cumulativeInflow.length];
 		
 		for (int t = 0; t < travelTimes.length; t++) {
 			// the number of a vehicle, that entered the link at time t
-			double n = cumulativeInflow[t];
+			double n = link.cumulativeInflow[t];
 			
 			double T = Double.POSITIVE_INFINITY; // the time this vehicle left the link
 			for (int t2 = t; t2 < travelTimes.length; t2++) {
-				double outflow2 = cumulativeOutflow[t2];
+				double outflow2 = link.cumulativeOutflow[t2];
 				
 				if (Math.abs(n - outflow2) < 1e-8) { // the exit time is exactly integer
 					T = t2;
@@ -41,7 +38,7 @@ public class DynamicUtils {
 				} else if (n < outflow2) { // the exit time must be interpolated
 					// exit time will be interpolated between t1 and t2
 					int t1 = t2 - 1;
-					double outflow1 = cumulativeOutflow[t1];
+					double outflow1 = link.cumulativeOutflow[t1];
 					
 					T = t1 + (n - outflow1) / (outflow2 - outflow1);
 					break;
@@ -49,7 +46,7 @@ public class DynamicUtils {
 			}
 			
 			// travel time cannot be lower than free flow time
-			travelTimes[t] = Math.max(stepSize * (T - t), freeFlowTime);
+			travelTimes[t] = Math.max(stepSize * (T - t), link.length / link.freeFlowSpeed);
 		}
 		
 		return travelTimes;

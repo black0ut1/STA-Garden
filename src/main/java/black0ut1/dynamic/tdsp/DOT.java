@@ -35,10 +35,6 @@ public class DOT {
 	}
 	
 	public Pair<double[][][], MixtureOutgoingFractions.Indices> shortestPaths(MixtureOutgoingFractions c) {
-		// TODO optimize memory by returning only link indices (whether to array of all
-		//  links or arrays of outgoing links for each node)
-		// TODO precompute travel times for integer time steps
-		
 		// costs are defined at boundaries between time steps while mixture fractions are
 		// defined during time steps, the resolution here is to use the left boundary
 		// values
@@ -70,6 +66,11 @@ public class DOT {
 				sssp(costs, ougoingIndices, d);
 		}
 		
+		double[][] travelTimes = new double[network.links.length][];
+		for (int i = 0; i < network.links.length; i++)
+			travelTimes[i] = DynamicUtils.computeTravelTime(network.links[i], stepSize);
+		
+		
 		// 4. Set the rest of the values in decreasing order of time
 		for (int d = 0; d < network.zones.length; d++) {
 			for (int t = timeSteps; t >= 0; t--) {
@@ -78,7 +79,7 @@ public class DOT {
 					int m = link.head.index;
 					
 					// this must not be lower than step size, i.e. travelTime / stepSize >= 1
-					double travelTime = DynamicUtils.computeTravelTime(t, link, stepSize);
+					double travelTime = travelTimes[link.index][t];
 					double travelTimeNormalized = travelTime / stepSize;
 					
 					int rounded = (int) Math.round(travelTimeNormalized);
