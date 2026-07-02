@@ -51,4 +51,8 @@ public class Convergence {
 	public double averageExcessCost(double tstt, double sptt) {
 		return (tstt - sptt) / totalDemand;
 	}
+	
+	public double relativeGap(double tstt, double sptt) {
+		return (tstt - sptt) / sptt;
+	}
 }

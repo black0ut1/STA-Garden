@@ -45,11 +45,13 @@ public class MSA {
 		MixtureOutgoingFractions.Indices shortestOugoingLinks = pair.second();
 		
 		double tstt = convergence.totalSystemTravelTime(network, stepSize);
-		System.out.println("[DUE] Total system travel time: " + tstt);
+		System.out.println("[DUE] Total system travel time:  " + tstt);
 		double sptt = convergence.shortestPathTravelTime(costs);
 		System.out.println("[DUE] Shortest path travel time: " + sptt);
 		double aec = convergence.averageExcessCost(tstt, sptt);
 		System.out.println("[DUE] Average excess cost: " + aec);
+		double rg = convergence.relativeGap(tstt, sptt);
+		System.out.println("[DUE] Relative gap:        " + rg);
 
 		
 		for (int i = 0; i < maxIterations; i++) {
@@ -82,11 +84,13 @@ public class MSA {
 			shortestOugoingLinks = pair.second();
 			
 			tstt = convergence.totalSystemTravelTime(network, stepSize);
-			System.out.println("[DUE] Total system travel time: " + tstt);
+			System.out.println("[DUE] Total system travel time:  " + tstt);
 			sptt = convergence.shortestPathTravelTime(costs);
 			System.out.println("[DUE] Shortest path travel time: " + sptt);
 			aec = convergence.averageExcessCost(tstt, sptt);
 			System.out.println("[DUE] Average excess cost: " + aec);
+			rg = convergence.relativeGap(tstt, sptt);
+			System.out.println("[DUE] Relative gap:        " + rg);
 		}
 		
 //		dnl.checkDestinationInflows(false);
