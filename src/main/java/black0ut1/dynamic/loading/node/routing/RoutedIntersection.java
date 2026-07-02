@@ -78,10 +78,32 @@ public class RoutedIntersection extends Intersection {
 			int[] destinations = new int[fractions.destinations];
 			double[] portions = new double[fractions.destinations];
 			
-			for (int d = 0; d < fractions.destinations; d++) {
+			// counters[i] is the index of the first destination in incomingMixtureFlows[i].destinations larger than d.
+			// This allows for a sequential search of incomingMixtureFlows[i].destinations instead of repeated binary
+			// search. It also takes advantage of loop A going over all destinations, otherwise we would have to jump
+			// over destinations in loop B that are in incomingMixtureFlows[i].destinations but not in loop A.
+			int[] counters = new int[incomingMixtureFlows.length];
+			for (int i = 0; i < incomingLinks.length; i++)
+				if (incomingMixtureFlows[i] == MixtureFlow.ZERO)
+					counters[i] = -1;
+			
+			for (int d = 0; d < fractions.destinations; d++) { // Loop A
 				double sum = 0;
-				for (int i = 0; i < incomingLinks.length; i++)
-					sum += incomingMixtureFlows[i].getDestinationFlow(d) * fractions.getFraction(this.index, time, d, j);
+				
+				for (int i = 0; i < incomingLinks.length; i++) { // Loop B
+					if (counters[i] == -1)
+						continue;
+					
+					if (incomingMixtureFlows[i].destinations[counters[i]] == d) {
+						sum += incomingMixtureFlows[i].portions[counters[i]] * incomingMixtureFlows[i].totalFlow
+								* fractions.getFraction(this.index, time, d, j);
+						counters[i]++;
+					}
+					
+					// All destinations in incomingMixtureFlows[i] have been processed, it can be ignored
+					if (counters[i] == incomingMixtureFlows[i].destinations.length)
+						counters[i] = -1;
+				}
 				
 				if (sum > 0) {
 					destinations[len] = d;

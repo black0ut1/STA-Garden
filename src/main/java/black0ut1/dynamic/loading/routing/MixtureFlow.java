@@ -1,7 +1,5 @@
 package black0ut1.dynamic.loading.routing;
 
-import java.util.Arrays;
-
 /**
  * This class represents a flow in DNL. The flow cannot be only a
  * double, because we must track how much of the flow is going to each
@@ -39,20 +37,6 @@ public class MixtureFlow {
 		this.totalFlow = totalFlow;
 		this.destinations = destinations;
 		this.portions = portions;
-	}
-	
-	/**
-	 * Return the portion of the total flow that is heading for a
-	 * specific destination.
-	 * @param destination Destination index.
-	 * @return totalFlow * destination portion
-	 */
-	public double getDestinationFlow(int destination) {
-		int i = Arrays.binarySearch(destinations, destination);
-		if (i < 0)
-			return 0;
-		
-		return totalFlow * portions[i];
 	}
 	
 	public MixtureFlow plus(MixtureFlow other) {
