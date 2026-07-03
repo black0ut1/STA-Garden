@@ -25,13 +25,13 @@ public class DTATest {
 	static Stream<Arguments> provideConfigurations() {
 		// Network, step size, odm steps, time steps, msa steps
 		return Stream.of(
-				Arguments.of("SiouxFalls", 1, 30, 300, 100)
-				/*Arguments.of("ChicagoSketch", 0.5, 30, 350, 20)*/);
+				Arguments.of("SiouxFalls", 1, 30, 300, 100, 10)
+				/*Arguments.of("ChicagoSketch", 0.5, 30, 350, 20, 2)*/);
 	}
 	
 	@ParameterizedTest
 	@MethodSource("provideConfigurations")
-	void test(String networkName, double stepSize, int odmSteps, int timeSteps, int msaSteps) {
+	void test(String networkName, double stepSize, int odmSteps, int timeSteps, int msaSteps, double odmScale) {
 		String networkFile = "data/" + networkName + "/" + networkName + "_net.tntp";
 		String odmFile = "data/" + networkName + "/" + networkName + "_trips.tntp";
 		String nodeFile = "data/" + networkName + "/" + networkName + "_node.tntp";
@@ -41,7 +41,7 @@ public class DTATest {
 		
 		TimeDependentODM tdodm = TimeDependentODM
 				.fromStaticGaussian(odm, odmSteps)
-				.scale(10);
+				.scale(odmScale);
 		DynamicNetwork dynamicNetwork = DynamicNetwork.fromStaticNetwork(network, tdodm, stepSize, timeSteps);
 		
 		StaticRouteChoice routeChoice = new StaticAONRouteChoice(network, dynamicNetwork, odm, timeSteps);
@@ -52,7 +52,7 @@ public class DTATest {
 		long tick = System.currentTimeMillis();
 		msa.run();
 		long tock = System.currentTimeMillis();
-		dnl.checkDestinationInflows(true);
+//		dnl.checkDestinationInflows(true);
 		System.out.println("DTA took: " + (tock - tick) + "ms");
 	}
 }
