@@ -1,5 +1,6 @@
 package black0ut1.util;
 
+import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.link.Link;
 
 public class DynamicUtils {
@@ -102,5 +103,40 @@ public class DynamicUtils {
 			vehiclesOnLink[t] = cumulativeInflow[t] - cumulativeOutflow[t];
 		
 		return vehiclesOnLink;
+	}
+	
+	/**
+	 * Computes the cumulative flow function (or cumulative vehicle number) for arbitrary
+	 * time and position on the link using the Lax-Hopf formula for triangular fundamental
+	 * diagram. This assumes that the link is a LTM.
+	 * @param link The LTM link.
+	 * @param stepSize Step size of the DNL.
+	 * @param t Normalized time, {@code 0 <= t <= link.cumulativeInflow.length}.
+	 * @param x Position on the link, {@code 0 < x < link.length} (the ends are cumulative
+	 * inflow/outflow).
+	 * @return The value of the cumulative flow function at the given time and position,
+	 * i.e. N(x, t).
+	 */
+	public static double computeCumulativeFlowAtPosition(LTM link, double stepSize, double t, double x) {
+		// the time at which the uncongested characteristic crosses the upstream end
+		double uncongestedTime = t - x / link.freeFlowSpeed / stepSize;
+		if (uncongestedTime < 0)
+			uncongestedTime = 0;
+		
+		// value of the cumulative inflow there
+		int uncongestedTimeFloor = (int) uncongestedTime;
+		double phi = uncongestedTime - uncongestedTimeFloor;
+		double uncongestedValue = (1 - phi) * link.cumulativeInflow[uncongestedTimeFloor] +
+				phi * link.cumulativeInflow[uncongestedTimeFloor + 1];
+		
+		// the time at which the congested characteristic crosses the downstream end
+		double congestedTime = t - (link.length - x) / link.backwardWaveSpeed / stepSize;
+		
+		int congestedTimeFloor = (int) congestedTime;
+		double psi = congestedTime - congestedTimeFloor;
+		double congestedValue = (1 - psi) * link.cumulativeOutflow[congestedTimeFloor]
+				+ psi * link.cumulativeOutflow[congestedTimeFloor + 1];
+		
+		return Math.min(uncongestedValue, congestedValue + link.jamDensity * (link.length - x));
 	}
 }
