@@ -20,6 +20,8 @@ public class Model {
 	public final ObjectProperty<DTANetworkPane.Shape> selectedShapeProperty = new SimpleObjectProperty<>(null);
 	public final ObjectProperty<DTANetworkPane.Shape> hoveredShapeProperty = new SimpleObjectProperty<>(null);
 	
+	public final DoubleProperty horizontalDividerProperty = new SimpleDoubleProperty(0.75);
+	
 	private Model() {
 		timeline.setCycleCount(Timeline.INDEFINITE);
 		timeline.getKeyFrames().add(new KeyFrame(

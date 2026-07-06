@@ -50,21 +50,26 @@ public class MainStageController {
 	
 	public void onSelectedShapeChanged(ObservableValue<? extends DTANetworkPane.Shape> observable,
 	                                   DTANetworkPane.Shape oldValue, DTANetworkPane.Shape newValue) {
-		if (newValue == null)
-			return;
+		if (mainStage.horizontalRootSplitPane.getItems().size() == 2)
+			mainStage.horizontalRootSplitPane.getItems().removeLast();
 		
-		double currDividerPosition = mainStage.horizontalRootSplitPane.getDividerPositions()[0];
-		mainStage.horizontalRootSplitPane.getItems().removeLast();
-		
-		if (newValue instanceof DTANetworkPane.NodeShape) {
-			Intersection node = MainGUI.network.intersections[newValue.index];
-			mainStage.horizontalRootSplitPane.getItems().add(new NodePane(node));
-		} else if (newValue instanceof DTANetworkPane.LinkShape) {
-			Link link = MainGUI.network.links[newValue.index];
-			mainStage.horizontalRootSplitPane.getItems().add(new LinkPane(link));
+		switch (newValue) {
+			case null -> {
+				return;
+			}
+			case DTANetworkPane.NodeShape nodeShape -> {
+				Intersection intersection = MainGUI.network.intersections[nodeShape.index];
+				mainStage.horizontalRootSplitPane.getItems().add(new NodePane(intersection));
+			}
+			case DTANetworkPane.LinkShape linkShape -> {
+				Link link = MainGUI.network.links[linkShape.index];
+				mainStage.horizontalRootSplitPane.getItems().add(new LinkPane(link));
+			}
+			default -> throw new RuntimeException("Unexpected shape: " + newValue);
 		}
 		
-		mainStage.horizontalRootSplitPane.setDividerPositions(currDividerPosition);
+		mainStage.horizontalRootSplitPane.getDividers().getFirst().positionProperty()
+				.bindBidirectional(Model.getInstance().horizontalDividerProperty);
 	}
 	
 	public void onSliderValueChanged(ObservableValue<? extends Number> observable,

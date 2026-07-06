@@ -7,8 +7,8 @@ import black0ut1.gui.model.Model;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -30,7 +30,7 @@ import java.awt.*;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
-public class LinkPane extends GridPane {
+public class LinkPane extends ScrollPane {
 	
 	public final LinkPaneController controller;
 	public final Link link;
@@ -40,9 +40,6 @@ public class LinkPane extends GridPane {
 		this.link = link;
 		this.controller = new LinkPaneController(this);
 		
-		setPadding(new Insets(10));
-		setMinWidth(0);
-		
 		getRoot();
 		
 		Model.getInstance().currentTimeProperty.set(Model.getInstance().currentTimeProperty.get() + 1);
@@ -50,23 +47,22 @@ public class LinkPane extends GridPane {
 	}
 	
 	public void getRoot() {
-		add(getDetailsPane(), 0, 0);
+		VBox root = new VBox();
+		root.setPadding(new Insets(10));
+		root.setMinWidth(0);
 		
 		TextFlow FDtitle = titleWithTooltip("Fundamental diagram", "Double click the chart to enlarge");
-		add(FDtitle, 0, 1);
-		add(getFDplot(), 0, 2);
-		
 		TextFlow CVCtitle = titleWithTooltip("Cumulative vehicle counts", "Double click the chart to enlarge");
-		add(CVCtitle, 0, 3);
-		add(getCVCplot(), 0, 4);
-		
 		TextFlow TTtitle = titleWithTooltip("Travel time", "Double click the chart to enlarge");
-		add(TTtitle, 0, 5);
-		add(getTTplot(), 0, 6);
-		
 		TextFlow flowTitle = titleWithTooltip("Inflow and outflow", "Double click the chart to enlarge");
-		add(flowTitle, 1, 3);
-		add(getFlowPlot(), 1, 4);
+		
+		root.getChildren().addAll(getDetailsPane(),
+				FDtitle, getFDplot(),
+				CVCtitle, getCVCplot(),
+				TTtitle, getTTplot(),
+				flowTitle, getFlowPlot()
+		);
+		setContent(root);
 	}
 	
 	public Node getDetailsPane() {
@@ -222,10 +218,13 @@ public class LinkPane extends GridPane {
 		
 		XYPlot plot = chart.getXYPlot();
 		double maxY = Double.NEGATIVE_INFINITY;
-		for (Object series : dataset.getSeries())
+		double minY = Double.POSITIVE_INFINITY;
+		for (Object series : dataset.getSeries()) {
 			maxY = Math.max(maxY, ((XYSeries) series).getMaxY());
+			minY = Math.min(minY, ((XYSeries) series).getMinY());
+		}
 		plot.getRangeAxis().setUpperBound(maxY * 1.2);
-		plot.getRangeAxis().setLowerBound(0);
+		plot.getRangeAxis().setLowerBound(minY * 0.8);
 		
 		if (plotCustomizer != null) {
 			XYLineAndShapeRenderer r = new XYLineAndShapeRenderer();

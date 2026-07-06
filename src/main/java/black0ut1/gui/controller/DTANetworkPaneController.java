@@ -19,6 +19,9 @@ public class DTANetworkPaneController {
 	}
 	
 	public void onMouseClicked(MouseEvent e) {
+		if (!e.isStillSincePress())
+			return;
+		
 		double x = (e.getX() - pane.getWidth() / 2) / pane.scale - pane.offset.getX();
 		double y = (e.getY() - pane.getHeight() / 2) / pane.scale - pane.offset.getY();
 		
