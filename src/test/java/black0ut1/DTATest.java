@@ -5,9 +5,7 @@ import black0ut1.data.network.Network;
 import black0ut1.dynamic.Convergence;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
-import black0ut1.dynamic.equilibrium.MSA;
-import black0ut1.dynamic.equilibrium.StaticAONRouteChoice;
-import black0ut1.dynamic.equilibrium.StaticRouteChoice;
+import black0ut1.dynamic.equilibrium.*;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.dnl.ILTM_DNL;
 import black0ut1.dynamic.tdsp.CDOT;
@@ -52,7 +50,7 @@ public class DTATest {
 		
 		Convergence convergence = new Convergence(dynamicNetwork, tdodm, stepSize, null);
 		
-		MSA msa = new MSA(dynamicNetwork, tdodm, routeChoice, dnl, tdsp, msaSteps, stepSize, convergence);
+		MOF_DUE msa = new MSA(dynamicNetwork, tdodm, routeChoice, dnl, tdsp, msaSteps, stepSize, convergence);
 		long tick = System.currentTimeMillis();
 		msa.run();
 		long tock = System.currentTimeMillis();
