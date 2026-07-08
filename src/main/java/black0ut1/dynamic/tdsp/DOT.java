@@ -6,7 +6,6 @@ import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
-import black0ut1.util.DynamicUtils;
 
 /**
  * The Decreasing Order of Time (DOT) algorithm. It is an all-to-one time-dependent
@@ -73,21 +72,8 @@ public class DOT {
 						   MixtureOutgoingFractions.Indices outgoingIndices) {
 		for (Link link : network.links) {
 			int n = link.tail.index;
-			int m = link.head.index;
 			
-			// Normalized travel time must be >= 1. In other words, the original travel
-			// time must be >= step size.                         right boundary vvv
-			int travelTimeNormalized = (int) Math.round(travelTimes[link.index][t + 1] / stepSize);
-			double travelTime = stepSize * travelTimeNormalized;
-			
-			double newCost;
-			if (t + travelTimeNormalized > timeSteps - 1) {
-				// Here, we use the the assumption that conditions are stationary after
-				// the modelled period.
-				newCost = travelTime + costs.getCost(m, timeSteps - 1, d);
-			} else {
-				newCost = travelTime + costs.getCost(m, t + travelTimeNormalized, d);
-			}
+			double newCost = computeCost(t, d, link, travelTimes, costs);
 			
 			if (newCost < costs.getCost(n, t, d)) {
 				costs.setCost(n, t, d, newCost);
@@ -102,6 +88,33 @@ public class DOT {
 				
 				outgoingIndices.setIndex(n, t, d, (byte) J);
 			}
+		}
+	}
+	
+	/**
+	 * Computes the cost/time of the shortest path to destination d when departing from
+	 * link tail at time t.
+	 * @param t The time instant at which the vehicle is departing from link tail.
+	 * @param d The destination towards which the vehicle is traveling.
+	 * @param link The link along which the vehicle is departing from link tail.
+	 * @param travelTimes Travel times
+	 * @param costs Already computed future costs.
+	 * @return The cost/time of the shortest path.
+	 */
+	public double computeCost(int t, int d, Link link, double[][] travelTimes, MixtureOutgoingFractions.Costs costs) {
+		int m = link.head.index;
+		
+		// Normalized travel time must be >= 1. In other words, the original travel
+		// time must be >= step size.                         right boundary vvv
+		int travelTimeNormalized = (int) Math.round(travelTimes[link.index][t + 1] / stepSize);
+		double travelTime = stepSize * travelTimeNormalized;
+		
+		if (t + travelTimeNormalized > timeSteps - 1) {
+			// Here, we use the the assumption that conditions are stationary after
+			// the modelled period.
+			return travelTime + costs.getCost(m, timeSteps - 1, d);
+		} else {
+			return travelTime + costs.getCost(m, t + travelTimeNormalized, d);
 		}
 	}
 	

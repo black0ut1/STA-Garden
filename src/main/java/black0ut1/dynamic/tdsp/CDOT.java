@@ -17,51 +17,32 @@ public class CDOT extends DOT {
 	}
 	
 	@Override
-	protected void forTime(int t, int d, double[][] travelTimes, MixtureOutgoingFractions.Costs costs,
-						   MixtureOutgoingFractions.Indices outgoingIndices) {
-		for (Link link : network.links) {
-			int n = link.tail.index;
-			int m = link.head.index;
+	public double computeCost(int t, int d, Link link, double[][] travelTimes, MixtureOutgoingFractions.Costs costs) {
+		int m = link.head.index;
+		
+		// Normalized travel time must be >= 1. In other words, the original travel
+		// time must be >= step size.           right boundary vvv
+		double travelTimeNormalized = travelTimes[link.index][t + 1] / stepSize;
+		double travelTime = travelTimes[link.index][t + 1];
+		
+		int rounded = (int) Math.round(travelTimeNormalized);
+		
+		if (t + rounded > timeSteps - 1) {
+			// Here, we use the the assumption that conditions are stationary after
+			// the modelled period.
+			return travelTime + costs.getCost(m, timeSteps - 1, d);
 			
-			// Normalized travel time must be >= 1. In other words, the original travel
-			// time must be >= step size.           right boundary vvv
-			double travelTimeNormalized = travelTimes[link.index][t + 1] / stepSize;
-			double travelTime = travelTimes[link.index][t + 1];
+		} else if (Util.equals(travelTimeNormalized, rounded, 1e-10)) {
+			// Travel time sufficiently close to an integer.
+			return travelTime + costs.getCost(m, t + rounded, d);
 			
-			int rounded = (int) Math.round(travelTimeNormalized);
+		} else {
+			// Nnon-integer travel time, values must be interpolated.
+			int t0 = (int) travelTimeNormalized;  // integer part
+			double p = travelTimeNormalized - t0; // fractional part
 			
-			double newCost;
-			if (t + rounded > timeSteps - 1) {
-				// Here, we use the the assumption that conditions are stationary after
-				// the modelled period.
-				newCost = travelTime + costs.getCost(m, timeSteps - 1, d);
-				
-			} else if (Util.equals(travelTimeNormalized, rounded, 1e-10)) {
-				// Travel time sufficiently close to an integer.
-				newCost = travelTime + costs.getCost(m, t + rounded, d);
-				
-			} else {
-				// Nnon-integer travel time, values must be interpolated.
-				int t0 = (int) travelTimeNormalized;  // integer part
-				double p = travelTimeNormalized - t0; // fractional part
-				
-				double interpolated = (1 - p) * costs.getCost(m, t + t0, d) + p * costs.getCost(m, t + t0 + 1, d);
-				newCost = travelTime + interpolated;
-			}
-			
-			if (newCost < costs.getCost(n, t, d)) {
-				costs.setCost(n, t, d, newCost);
-				
-				// find the index of link in link.tail.outgoingLinks
-				int J = -1;
-				for (int j = 0; j < link.tail.outgoingLinks.length; j++)
-					if (link.tail.outgoingLinks[j] == link) {
-						J = j;
-						break;
-					}
-				
-				outgoingIndices.setIndex(n, t, d, (byte) J);
-			}
+			double interpolated = (1 - p) * costs.getCost(m, t + t0, d) + p * costs.getCost(m, t + t0 + 1, d);
+			return travelTime + interpolated;
 		}
 	}
 }
