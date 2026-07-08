@@ -35,28 +35,30 @@ public class DOT {
 	}
 	
 	public Pair<double[][][], MixtureOutgoingFractions.Indices> shortestPaths(MixtureOutgoingFractions c) {
-		// costs are defined at boundaries between time steps while mixture fractions are
-		// defined during time steps, the resolution here is to use the left boundary
-		// values
+		// Costs are defined at boundaries between time steps while mixture fractions and
+		// shortest path indices are defined during time steps. The resolution here is to
+		// use the right boundary values when determining the shortest path. The cost at
+		// t=0 is the right boundary after first time step (i.e. the second instant).
+		// 									|-|-|-|
+		//									 ^^
+		//    first time step (indices at t=0)^
+		//                                    right boundary (costs at t=0)
 		
-		// costs[t][n][d] is the shortest time from n to d, if departing from n at time t
-		double[][][] costs = new double[timeSteps + 1][network.routedIntersections.length][network.zones.length];
+		// costs[t][n][d] is the shortest time from n to d, if departing from n at
+		// (t+1)-th time instant
+		double[][][] costs = new double[timeSteps][network.routedIntersections.length][network.zones.length];
 		MixtureOutgoingFractions.Indices outgoingIndices = c.new Indices();
 		
-		// 1. Initialize all costs to infinity, initialize mixture fractions
+		// 1. Initialize all costs to infinity
 		for (double[][] a : costs)
 			for (double[] b : a)
 				Arrays.fill(b, Double.POSITIVE_INFINITY);
 		
 		// 2. Initialize costs from destinations to themselves to 0, initialize turning
 		// fractions of nodes adjacent to destinations
-		for (int t = 0; t <= timeSteps; t++)
+		for (int t = 0; t < timeSteps; t++)
 			for (int d = 0; d < network.zones.length; d++) {
 				costs[t][d][d] = 0;
-				
-				if (t == timeSteps)
-					continue;
-				
 				outgoingIndices.setIndex(d, t, d, (byte) 0);
 			}
 		
@@ -72,37 +74,34 @@ public class DOT {
 		
 		// 4. Set the rest of the values in decreasing order of time
 		for (int d = 0; d < network.zones.length; d++)
-			for (int t = timeSteps; t >= 0; t--)
+			for (int t = timeSteps - 2; t >= 0; t--)
 				forTime(t, d, travelTimes, costs, outgoingIndices);
 		
 		return new Pair<>(costs, outgoingIndices);
 	}
 	
-	protected void forTime(int t, int d, double[][] travelTimes,
-	                       double[][][] costs, MixtureOutgoingFractions.Indices outgoingIndices) {
+	protected void forTime(int t, int d, double[][] travelTimes, double[][][] costs,
+						   MixtureOutgoingFractions.Indices outgoingIndices) {
 		for (Link link : network.links) {
 			int n = link.tail.index;
 			int m = link.head.index;
 			
 			// Normalized travel time must be >= 1. In other words, the original travel
-			// time must be >= step size.
-			int travelTimeNormalized = (int) Math.round(travelTimes[link.index][timeSteps] / stepSize);
+			// time must be >= step size.                         right boundary vvv
+			int travelTimeNormalized = (int) Math.round(travelTimes[link.index][t + 1] / stepSize);
 			double travelTime = stepSize * travelTimeNormalized;
 			
 			double newCost;
-			if (t + travelTimeNormalized > timeSteps) {
+			if (t + travelTimeNormalized > timeSteps - 1) {
 				// Here, we use the the assumption that conditions are stationary after
 				// the modelled period.
-				newCost = travelTime + costs[timeSteps][m][d];
+				newCost = travelTime + costs[timeSteps - 1][m][d];
 			} else {
 				newCost = travelTime + costs[t + travelTimeNormalized][m][d];
 			}
 			
 			if (newCost < costs[t][n][d]) {
 				costs[t][n][d] = newCost;
-				
-				if (t == timeSteps)
-					continue;
 				
 				// find the index of link in link.tail.outgoingLinks
 				int J = -1;
@@ -119,6 +118,8 @@ public class DOT {
 	
 	protected void sssp(int destination, double[][] travelTimes,
 						double[][][] costs, MixtureOutgoingFractions.Indices outgoingIndices) {
+		// This method operates on the very last time instant.
+		
 		PriorityQueue pq = new PriorityQueue(network.intersections.length, 0);
 		byte[] mark = new byte[network.intersections.length];
 		
@@ -145,11 +146,11 @@ public class DOT {
 				double newCost = stepSize * Math.round(travelTimes[incomingLinkIndex][timeSteps] / stepSize);
 				if (mark[tailNode] == 0) {
 					mark[tailNode] = 1;
-					costs[timeSteps][tailNode][destination] = newCost;
+					costs[timeSteps - 1][tailNode][destination] = newCost;
 					outgoingIndices.setIndex(tailNode, timeSteps - 1, destination, (byte) incomingLinkIndex);
 					pq.add(tailNode, newCost);
-				} else if (newCost < costs[timeSteps][tailNode][destination]) {
-					costs[timeSteps][tailNode][destination] = newCost;
+				} else if (newCost < costs[timeSteps - 1][tailNode][destination]) {
+					costs[timeSteps - 1][tailNode][destination] = newCost;
 					outgoingIndices.setIndex(tailNode, timeSteps - 1, destination, (byte) incomingLinkIndex);
 					pq.setLowerPriority(tailNode, newCost);
 				}

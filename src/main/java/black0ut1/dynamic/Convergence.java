@@ -2,7 +2,7 @@ package black0ut1.dynamic;
 
 import black0ut1.dynamic.loading.link.Link;
 
-public class Convergence {
+public class  Convergence {
 	
 	protected final TimeDependentODM odm;
 	protected final double totalDemand;

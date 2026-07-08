@@ -17,24 +17,24 @@ public class CDOT extends DOT {
 	}
 	
 	@Override
-	protected void forTime(int t, int d, double[][] travelTimes,
-						   double[][][] costs, MixtureOutgoingFractions.Indices outgoingIndices) {
+	protected void forTime(int t, int d, double[][] travelTimes, double[][][] costs,
+						   MixtureOutgoingFractions.Indices outgoingIndices) {
 		for (Link link : network.links) {
 			int n = link.tail.index;
 			int m = link.head.index;
 			
 			// Normalized travel time must be >= 1. In other words, the original travel
-			// time must be >= step size.
-			double travelTime = travelTimes[link.index][t];
-			double travelTimeNormalized = travelTime / stepSize;
+			// time must be >= step size.           right boundary vvv
+			double travelTimeNormalized = travelTimes[link.index][t + 1] / stepSize;
+			double travelTime = travelTimes[link.index][t + 1];
 			
 			int rounded = (int) Math.round(travelTimeNormalized);
 			
 			double newCost;
-			if (t + travelTimeNormalized >= timeSteps) {
+			if (t + rounded > timeSteps - 1) {
 				// Here, we use the the assumption that conditions are stationary after
 				// the modelled period.
-				newCost = travelTime + costs[timeSteps][m][d];
+				newCost = travelTime + costs[timeSteps - 1][m][d];
 				
 			} else if (Util.equals(travelTimeNormalized, rounded, 1e-10)) {
 				// Travel time sufficiently close to an integer.
@@ -45,19 +45,12 @@ public class CDOT extends DOT {
 				int t0 = (int) travelTimeNormalized;  // integer part
 				double p = travelTimeNormalized - t0; // fractional part
 				
-				if (t0 == timeSteps) {
-					newCost = travelTime + costs[timeSteps][m][d];
-				} else {
-					double interpolated = (1 - p) * costs[t + t0][m][d] + p * costs[t + t0 + 1][m][d];
-					newCost = travelTime + interpolated;
-				}
+				double interpolated = (1 - p) * costs[t + t0][m][d] + p * costs[t + t0 + 1][m][d];
+				newCost = travelTime + interpolated;
 			}
 			
 			if (newCost < costs[t][n][d]) {
 				costs[t][n][d] = newCost;
-				
-				if (t == timeSteps)
-					continue;
 				
 				// find the index of link in link.tail.outgoingLinks
 				int J = -1;
