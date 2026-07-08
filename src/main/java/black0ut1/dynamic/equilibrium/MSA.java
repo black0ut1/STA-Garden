@@ -41,7 +41,7 @@ public class MSA {
 //		dnl.checkDestinationInflows(false);
 		
 		var pair = tdsp.shortestPaths(mfs);
-		double[][][] costs = pair.first();
+		MixtureOutgoingFractions.Costs costs = pair.first();
 		MixtureOutgoingFractions.Indices shortestOugoingLinks = pair.second();
 		
 		double tstt = convergence.totalSystemTravelTime(network, stepSize);

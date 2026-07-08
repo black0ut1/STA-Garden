@@ -17,7 +17,7 @@ public class CDOT extends DOT {
 	}
 	
 	@Override
-	protected void forTime(int t, int d, double[][] travelTimes, double[][][] costs,
+	protected void forTime(int t, int d, double[][] travelTimes, MixtureOutgoingFractions.Costs costs,
 						   MixtureOutgoingFractions.Indices outgoingIndices) {
 		for (Link link : network.links) {
 			int n = link.tail.index;
@@ -34,23 +34,23 @@ public class CDOT extends DOT {
 			if (t + rounded > timeSteps - 1) {
 				// Here, we use the the assumption that conditions are stationary after
 				// the modelled period.
-				newCost = travelTime + costs[timeSteps - 1][m][d];
+				newCost = travelTime + costs.getCost(m, timeSteps - 1, d);
 				
 			} else if (Util.equals(travelTimeNormalized, rounded, 1e-10)) {
 				// Travel time sufficiently close to an integer.
-				newCost = travelTime + costs[t + rounded][m][d];
+				newCost = travelTime + costs.getCost(m, t + rounded, d);
 				
 			} else {
 				// Nnon-integer travel time, values must be interpolated.
 				int t0 = (int) travelTimeNormalized;  // integer part
 				double p = travelTimeNormalized - t0; // fractional part
 				
-				double interpolated = (1 - p) * costs[t + t0][m][d] + p * costs[t + t0 + 1][m][d];
+				double interpolated = (1 - p) * costs.getCost(m, t + t0, d) + p * costs.getCost(m, t + t0 + 1, d);
 				newCost = travelTime + interpolated;
 			}
 			
-			if (newCost < costs[t][n][d]) {
-				costs[t][n][d] = newCost;
+			if (newCost < costs.getCost(n, t, d)) {
+				costs.setCost(n, t, d, newCost);
 				
 				// find the index of link in link.tail.outgoingLinks
 				int J = -1;

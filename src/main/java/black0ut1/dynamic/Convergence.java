@@ -1,6 +1,7 @@
 package black0ut1.dynamic;
 
 import black0ut1.dynamic.loading.link.Link;
+import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 
 public class  Convergence {
 	
@@ -34,7 +35,7 @@ public class  Convergence {
 		return tstt * stepSize;
 	}
 	
-	public double shortestPathTravelTime(double[][][] costs) {
+	public double shortestPathTravelTime(MixtureOutgoingFractions.Costs costs) {
 		double sptt = 0;
 		
 		for (int origin = 0; origin < odm.zones; origin++)
@@ -42,7 +43,7 @@ public class  Convergence {
 				for (int t = 0; t < odm.timeSteps; t++) {
 					double demand = odm.getDemand(origin, destination, t);
 					if (demand > 0) // to avoid NaNs
-						sptt += costs[t][origin][destination] * demand;
+						sptt += costs.getCost(origin, t, destination) * demand;
 				}
 		
 		return sptt;

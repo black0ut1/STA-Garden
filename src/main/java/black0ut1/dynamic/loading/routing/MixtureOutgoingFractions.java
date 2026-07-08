@@ -3,6 +3,8 @@ package black0ut1.dynamic.loading.routing;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 
+import java.util.Arrays;
+
 public class MixtureOutgoingFractions {
 	
 	protected final double[] values;
@@ -51,6 +53,25 @@ public class MixtureOutgoingFractions {
 		
 		public void setIndex(int n, int t, int d, byte j) {
 			values[n * timeSteps * destinations + t * destinations + d] = j;
+		}
+	}
+	
+	public class Costs {
+		
+		protected final double[] values = new double[intersections * destinations * timeSteps];
+		
+		public Costs() {}
+		
+		public Costs(double value) {
+			Arrays.fill(values, value);
+		}
+		
+		public double getCost(int n, int t, int d) {
+			return values[n * timeSteps * destinations + t * destinations + d];
+		}
+		
+		public void setCost(int n, int t, int d, double cost) {
+			values[n * timeSteps * destinations + t * destinations + d] = cost;
 		}
 	}
 }

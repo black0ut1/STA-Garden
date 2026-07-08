@@ -8,8 +8,6 @@ import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.util.DynamicUtils;
 
-import java.util.Arrays;
-
 /**
  * The Decreasing Order of Time (DOT) algorithm. It is an all-to-one time-dependent
  * shortest paths algorithm for all departure times. It works with discrete model time and
@@ -34,7 +32,7 @@ public class DOT {
 		this.sssp = sssp;
 	}
 	
-	public Pair<double[][][], MixtureOutgoingFractions.Indices> shortestPaths(MixtureOutgoingFractions c) {
+	public Pair<MixtureOutgoingFractions.Costs, MixtureOutgoingFractions.Indices> shortestPaths(MixtureOutgoingFractions c) {
 		// Costs are defined at boundaries between time steps while mixture fractions and
 		// shortest path indices are defined during time steps. The resolution here is to
 		// use the right boundary values when determining the shortest path. The cost at
@@ -44,21 +42,15 @@ public class DOT {
 		//    first time step (indices at t=0)^
 		//                                    right boundary (costs at t=0)
 		
-		// costs[t][n][d] is the shortest time from n to d, if departing from n at
-		// (t+1)-th time instant
-		double[][][] costs = new double[timeSteps][network.routedIntersections.length][network.zones.length];
+		// 1. Initialize all costs to infinity, initialize shortest path indices
+		MixtureOutgoingFractions.Costs costs = c.new Costs(Double.POSITIVE_INFINITY);
 		MixtureOutgoingFractions.Indices outgoingIndices = c.new Indices();
-		
-		// 1. Initialize all costs to infinity
-		for (double[][] a : costs)
-			for (double[] b : a)
-				Arrays.fill(b, Double.POSITIVE_INFINITY);
 		
 		// 2. Initialize costs from destinations to themselves to 0, initialize turning
 		// fractions of nodes adjacent to destinations
 		for (int t = 0; t < timeSteps; t++)
 			for (int d = 0; d < network.zones.length; d++) {
-				costs[t][d][d] = 0;
+				costs.setCost(d, t, d, 0);
 				outgoingIndices.setIndex(d, t, d, (byte) 0);
 			}
 		
@@ -80,7 +72,7 @@ public class DOT {
 		return new Pair<>(costs, outgoingIndices);
 	}
 	
-	protected void forTime(int t, int d, double[][] travelTimes, double[][][] costs,
+	protected void forTime(int t, int d, double[][] travelTimes, MixtureOutgoingFractions.Costs costs,
 						   MixtureOutgoingFractions.Indices outgoingIndices) {
 		for (Link link : network.links) {
 			int n = link.tail.index;
@@ -95,13 +87,13 @@ public class DOT {
 			if (t + travelTimeNormalized > timeSteps - 1) {
 				// Here, we use the the assumption that conditions are stationary after
 				// the modelled period.
-				newCost = travelTime + costs[timeSteps - 1][m][d];
+				newCost = travelTime + costs.getCost(m, timeSteps - 1, d);
 			} else {
-				newCost = travelTime + costs[t + travelTimeNormalized][m][d];
+				newCost = travelTime + costs.getCost(m, t + travelTimeNormalized, d);
 			}
 			
-			if (newCost < costs[t][n][d]) {
-				costs[t][n][d] = newCost;
+			if (newCost < costs.getCost(n, t, d)) {
+				costs.setCost(n, t, d, newCost);
 				
 				// find the index of link in link.tail.outgoingLinks
 				int J = -1;
@@ -116,8 +108,8 @@ public class DOT {
 		}
 	}
 	
-	protected void sssp(int destination, double[][] travelTimes,
-						double[][][] costs, MixtureOutgoingFractions.Indices outgoingIndices) {
+	protected void sssp(int destination, double[][] travelTimes, MixtureOutgoingFractions.Costs costs,
+						MixtureOutgoingFractions.Indices outgoingIndices) {
 		// This method operates on the very last time instant.
 		
 		PriorityQueue pq = new PriorityQueue(network.intersections.length, 0);
@@ -146,11 +138,11 @@ public class DOT {
 				double newCost = stepSize * Math.round(travelTimes[incomingLinkIndex][timeSteps] / stepSize);
 				if (mark[tailNode] == 0) {
 					mark[tailNode] = 1;
-					costs[timeSteps - 1][tailNode][destination] = newCost;
+					costs.setCost(tailNode, timeSteps - 1, destination, newCost);
 					outgoingIndices.setIndex(tailNode, timeSteps - 1, destination, (byte) incomingLinkIndex);
 					pq.add(tailNode, newCost);
-				} else if (newCost < costs[timeSteps - 1][tailNode][destination]) {
-					costs[timeSteps - 1][tailNode][destination] = newCost;
+				} else if (newCost < costs.getCost(tailNode, timeSteps - 1, destination)) {
+					costs.setCost(tailNode, timeSteps - 1, destination, newCost);
 					outgoingIndices.setIndex(tailNode, timeSteps - 1, destination, (byte) incomingLinkIndex);
 					pq.setLowerPriority(tailNode, newCost);
 				}
