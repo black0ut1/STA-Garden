@@ -3,13 +3,23 @@ package black0ut1.dynamic;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 
+import java.util.function.Consumer;
+
 public class  Convergence {
 	
+	protected final DynamicNetwork network;
 	protected final TimeDependentODM odm;
+	protected final double stepSize;
 	protected final double totalDemand;
 	
-	public Convergence(TimeDependentODM odm) {
+	protected final Consumer<double[]> callback;
+	
+	public Convergence(DynamicNetwork network, TimeDependentODM odm,
+					   double stepSize, Consumer<double[]> callback) {
+		this.network = network;
 		this.odm = odm;
+		this.stepSize = stepSize;
+		this.callback = callback;
 		
 		double totalDemand1 = 0;
 		for (int origin = 0; origin < odm.zones; origin++)
@@ -19,8 +29,7 @@ public class  Convergence {
 		this.totalDemand = totalDemand1;
 	}
 	
-	
-	public double totalSystemTravelTime(DynamicNetwork network, double stepSize) {
+	public double totalSystemTravelTime() {
 		double tstt = 0;
 		
 		for (Link link : network.links)
@@ -55,5 +64,21 @@ public class  Convergence {
 	
 	public double relativeGap(double tstt, double sptt) {
 		return (tstt - sptt) / sptt;
+	}
+	
+	public double[] computeAll(MixtureOutgoingFractions.Costs costs) {
+		double ttst = totalSystemTravelTime();
+		double sptt = shortestPathTravelTime(costs);
+		double[] all = new double[] {
+				ttst,
+				sptt,
+				averageExcessCost(ttst, sptt),
+				relativeGap(ttst, sptt)
+		};
+		
+		if (callback != null)
+			callback.accept(all);
+		
+		return all;
 	}
 }

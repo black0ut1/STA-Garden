@@ -2,6 +2,7 @@ package black0ut1;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
+import black0ut1.dynamic.Convergence;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.equilibrium.MSA;
@@ -49,7 +50,9 @@ public class DTATest {
 		DynamicNetworkLoading dnl = new ILTM_DNL(dynamicNetwork, tdodm, stepSize, timeSteps, 1e-8);
 		DOT tdsp = new CDOT(dynamicNetwork, stepSize, timeSteps, false);
 		
-		MSA msa = new MSA(dynamicNetwork, tdodm, routeChoice, dnl, tdsp, msaSteps, stepSize);
+		Convergence convergence = new Convergence(dynamicNetwork, tdodm, stepSize, null);
+		
+		MSA msa = new MSA(dynamicNetwork, tdodm, routeChoice, dnl, tdsp, msaSteps, stepSize, convergence);
 		long tick = System.currentTimeMillis();
 		msa.run();
 		long tock = System.currentTimeMillis();

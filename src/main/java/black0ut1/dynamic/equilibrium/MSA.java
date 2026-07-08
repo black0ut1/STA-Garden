@@ -21,8 +21,10 @@ public class MSA {
 	protected final DOT tdsp;
 	protected final double stepSize;
 	
+	protected final Convergence convergence;
+	
 	public MSA(DynamicNetwork network, TimeDependentODM odm, StaticRouteChoice initialRouteChoice,
-	           DynamicNetworkLoading dnl, DOT tdsp, int maxIterations, double stepSize) {
+	           DynamicNetworkLoading dnl, DOT tdsp, int maxIterations, double stepSize, Convergence convergence) {
 		this.network = network;
 		this.odm = odm;
 		this.initialRouteChoice = initialRouteChoice;
@@ -30,11 +32,10 @@ public class MSA {
 		this.maxIterations = maxIterations;
 		this.tdsp = tdsp;
 		this.stepSize = stepSize;
+		this.convergence = convergence;
 	}
 	
 	public void run() {
-		Convergence convergence = new Convergence(odm);
-		
 		var mfs = initialRouteChoice.computeInitialMixtureFractions();
 		dnl.setTurningFractions(mfs);
 		dnl.loadNetwork();
@@ -44,14 +45,11 @@ public class MSA {
 		MixtureOutgoingFractions.Costs costs = pair.first();
 		MixtureOutgoingFractions.Indices shortestOugoingLinks = pair.second();
 		
-		double tstt = convergence.totalSystemTravelTime(network, stepSize);
-		System.out.println("[DUE] Total system travel time:  " + tstt);
-		double sptt = convergence.shortestPathTravelTime(costs);
-		System.out.println("[DUE] Shortest path travel time: " + sptt);
-		double aec = convergence.averageExcessCost(tstt, sptt);
-		System.out.println("[DUE] Average excess cost: " + aec);
-		double rg = convergence.relativeGap(tstt, sptt);
-		System.out.println("[DUE] Relative gap:        " + rg);
+		double[] criterions = convergence.computeAll(costs);
+		System.out.println("[DUE] TTST: " + criterions[0]);
+		System.out.println("[DUE] SPTT: " + criterions[1]);
+		System.out.println("[DUE] AEC:  " + criterions[2]);
+		System.out.println("[DUE] RG:   " + criterions[3]);
 
 		
 		for (int i = 0; i < maxIterations; i++) {
@@ -83,14 +81,11 @@ public class MSA {
 			costs = pair.first();
 			shortestOugoingLinks = pair.second();
 			
-			tstt = convergence.totalSystemTravelTime(network, stepSize);
-			System.out.println("[DUE] Total system travel time:  " + tstt);
-			sptt = convergence.shortestPathTravelTime(costs);
-			System.out.println("[DUE] Shortest path travel time: " + sptt);
-			aec = convergence.averageExcessCost(tstt, sptt);
-			System.out.println("[DUE] Average excess cost: " + aec);
-			rg = convergence.relativeGap(tstt, sptt);
-			System.out.println("[DUE] Relative gap:        " + rg);
+			criterions = convergence.computeAll(costs);
+			System.out.println("[DUE] TTST: " + criterions[0]);
+			System.out.println("[DUE] SPTT: " + criterions[1]);
+			System.out.println("[DUE] AEC:  " + criterions[2]);
+			System.out.println("[DUE] RG:   " + criterions[3]);
 		}
 		
 //		dnl.checkDestinationInflows(false);
