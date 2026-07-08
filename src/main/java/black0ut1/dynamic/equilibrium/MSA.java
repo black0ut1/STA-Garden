@@ -6,6 +6,7 @@ import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.tdsp.DOT;
+import black0ut1.util.DynamicUtils;
 
 /**
  * Method of Successive Averages algorithm.
@@ -23,7 +24,11 @@ public class MSA extends MOF_DUE {
 		dnl.loadNetwork();
 //		dnl.checkDestinationInflows(false);
 		
-		var pair = tdsp.shortestPaths(mfs);
+		double[][] travelTimes = new double[network.links.length][];
+		for (int i = 0; i < network.links.length; i++)
+			travelTimes[i] = DynamicUtils.computeTravelTime(network.links[i], stepSize);
+		
+		var pair = tdsp.shortestPaths(mfs, travelTimes);
 		MixtureOutgoingFractions.Costs costs = pair.first();
 		MixtureOutgoingFractions.Indices shortestOugoingLinks = pair.second();
 		
@@ -54,7 +59,10 @@ public class MSA extends MOF_DUE {
 			
 			dnl.loadNetwork();
 			
-			pair = tdsp.shortestPaths(mfs);
+			for (int j = 0; j < network.links.length; j++)
+				travelTimes[j] = DynamicUtils.computeTravelTime(network.links[j], stepSize);
+			
+			pair = tdsp.shortestPaths(mfs, travelTimes);
 			costs = pair.first();
 			shortestOugoingLinks = pair.second();
 			

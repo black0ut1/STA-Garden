@@ -32,7 +32,8 @@ public class DOT {
 		this.sssp = sssp;
 	}
 	
-	public Pair<MixtureOutgoingFractions.Costs, MixtureOutgoingFractions.Indices> shortestPaths(MixtureOutgoingFractions c) {
+	public Pair<MixtureOutgoingFractions.Costs, MixtureOutgoingFractions.Indices> shortestPaths(
+			MixtureOutgoingFractions c, double[][] travelTimes) {
 		// Costs are defined at boundaries between time steps while mixture fractions and
 		// shortest path indices are defined during time steps. The resolution here is to
 		// use the right boundary values when determining the shortest path. The cost at
@@ -53,10 +54,6 @@ public class DOT {
 				costs.setCost(d, t, d, 0);
 				outgoingIndices.setIndex(d, t, d, (byte) 0);
 			}
-		
-		double[][] travelTimes = new double[network.links.length][];
-		for (int i = 0; i < network.links.length; i++)
-			travelTimes[i] = DynamicUtils.computeTravelTime(network.links[i], stepSize);
 		
 		// 3. (Optional) Initialize costs at th last time step
 		if (sssp) {
