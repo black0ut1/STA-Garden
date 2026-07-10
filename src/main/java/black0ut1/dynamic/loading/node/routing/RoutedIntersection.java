@@ -44,9 +44,9 @@ public class RoutedIntersection extends Intersection {
 		for (int i = 0; i < incomingLinks.length; i++) {
 			mixtureFlows[i] = incomingLinks[i].getOutgoingMixtureFlow(time, sendingFlows[i]);
 			
-			for (int d = 0; d < mixtureFlows[i].destinations.length; d++) {
-				int destination = mixtureFlows[i].destinations[d];
-				double portion = mixtureFlows[i].portions[d];
+			for (int d = 0; d < mixtureFlows[i].size(); d++) {
+				int destination = mixtureFlows[i].getDestination(d);
+				double portion = mixtureFlows[i].getPortion(d);
 				
 				for (int j = 0; j < outgoingLinks.length; j++) {
 					totalTurningFractions.set(i, j,
@@ -94,14 +94,14 @@ public class RoutedIntersection extends Intersection {
 					if (counters[i] == -1)
 						continue;
 					
-					if (incomingMixtureFlows[i].destinations[counters[i]] == d) {
-						sum += incomingMixtureFlows[i].portions[counters[i]] * incomingMixtureFlows[i].totalFlow
+					if (incomingMixtureFlows[i].getDestination(counters[i]) == d) {
+						sum += incomingMixtureFlows[i].getPortion(counters[i]) * incomingMixtureFlows[i].totalFlow
 								* fractions.getFraction(this.index, time, d, j);
 						counters[i]++;
 					}
 					
 					// All destinations in incomingMixtureFlows[i] have been processed, it can be ignored
-					if (counters[i] == incomingMixtureFlows[i].destinations.length)
+					if (counters[i] == incomingMixtureFlows[i].size())
 						counters[i] = -1;
 				}
 				
@@ -113,6 +113,7 @@ public class RoutedIntersection extends Intersection {
 			}
 			
 			MixtureFlow a = new MixtureFlow(outflows[j], destinations, portions, len);
+			a.rectify();
 			outgoingMixtureFlows[j] = a;
 		}
 		

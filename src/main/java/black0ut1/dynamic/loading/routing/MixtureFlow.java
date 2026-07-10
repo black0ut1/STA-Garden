@@ -5,6 +5,7 @@ package black0ut1.dynamic.loading.routing;
  * double, because we must track how much of the flow is going to each
  * destination.
  * TODO thoroughly document, implementation is fast but opaque
+ * TODO value class candidate
  */
 public class MixtureFlow {
 	
@@ -17,9 +18,9 @@ public class MixtureFlow {
 	 * destination is not included in this map, zero percent of the
 	 * total totalFlow head there. */
 	/** Array of destinations in ascending order. */
-	public final int[] destinations;
+	private final int[] destinations;
 	
-	public final double[] portions;
+	private final double[] portions;
 	
 	/** Using this reduces the number of objects allocated. */
 	public static final MixtureFlow ZERO = new MixtureFlow(0, new int[0], new double[0], 0);
@@ -37,6 +38,18 @@ public class MixtureFlow {
 		this.totalFlow = totalFlow;
 		this.destinations = destinations;
 		this.portions = portions;
+	}
+	
+	public int getDestination(int i) {
+		return destinations[i];
+	}
+	
+	public double getPortion(int i) {
+		return portions[i];
+	}
+	
+	public int size() {
+		return destinations.length;
 	}
 	
 	public MixtureFlow plus(MixtureFlow other) {
@@ -101,28 +114,21 @@ public class MixtureFlow {
 		return new MixtureFlow(newFlow, destinations, portions);
 	}
 	
-	public void checkPortions(double tolerance) {
-		double sum = 0;
-		for (double portion : portions)
-			sum += portion;
-		
-		if (sum != 0 && Math.abs(sum - 1) > tolerance)
-			System.out.println("Portions do not sum to 1. Sum: " + sum);
-	}
-	
 	public void rectify() {
-		
 		double sum = 0;
-		int nonZero = 0;
-		for (double portion : portions) {
-			sum += portion;
+		double maxPortion = Double.NEGATIVE_INFINITY;
+		int maxPortionIndex = -1;
+		
+		for (int i = 0; i < portions.length; i++) {
+			sum += portions[i];
 			
-			if (portion != 0)
-				nonZero++;
+			if (portions[i] > maxPortion) {
+				maxPortion = portions[i];
+				maxPortionIndex = i;
+			}
 		}
 		
-		double rectificationValue = (sum - 1) / nonZero;
-		for (int i = 0; i < portions.length; i++)
-			portions[i] -= rectificationValue;
+		double error = 1 - sum;
+		portions[maxPortionIndex] += error;
 	}
 }
