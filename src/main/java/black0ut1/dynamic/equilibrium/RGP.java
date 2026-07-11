@@ -17,16 +17,15 @@ import black0ut1.util.DynamicUtils;
  * - (Gentile, 2016) Solving a Dynamic User Equilibrium model based on splitting rates
  * with Gradient Projection algorithms
  */
-public class ReducedGradientProjection extends MOF_DUE {
+public class RGP extends MOF_DUE {
 	
 	protected static final double RO = 1;
 	protected static final double ETA_1 = 2;
 	protected static final double ETA_2 = 2 / 3.0;
 	protected static final double ETA_3 = 1;
 	
-	public ReducedGradientProjection(DynamicNetwork network, TimeDependentODM odm, StaticRouteChoice initialRouteChoice,
-									 DynamicNetworkLoading dnl, DOT tdsp, int maxIterations, double stepSize,
-									 Convergence convergence) {
+	public RGP(DynamicNetwork network, TimeDependentODM odm, StaticRouteChoice initialRouteChoice,
+	           DynamicNetworkLoading dnl, DOT tdsp, int maxIterations, double stepSize, Convergence convergence) {
 		super(network, odm, initialRouteChoice, dnl, tdsp, maxIterations, stepSize, convergence);
 	}
 	
@@ -45,7 +44,7 @@ public class ReducedGradientProjection extends MOF_DUE {
 		MixtureOutgoingFractions.Indices shortestOugoingLinks = pair.second();
 		
 		double[] criterions = convergence.computeAll(costs);
-		System.out.println("[DUE] TTST: " + criterions[0]);
+		System.out.println("[DUE] TSTT: " + criterions[0]);
 		System.out.println("[DUE] SPTT: " + criterions[1]);
 		System.out.println("[DUE] AEC:  " + criterions[2]);
 		System.out.println("[DUE] RG:   " + criterions[3]);
@@ -73,9 +72,9 @@ public class ReducedGradientProjection extends MOF_DUE {
 								continue;
 							
 							double cost = tdsp.computeCost(t, d, outgoingLink, travelTimes, costs);
-							double delta = (bestCost - cost) / (2 * g); // negative since bestCost < cost
+							double delta = (cost - bestCost) / (2 * g); // positive since bestCost < cost
 							
-							double newValue = Math.max(0, mfs.getFraction(n, t, d, j) + delta);
+							double newValue = Math.max(0, mfs.getFraction(n, t, d, j) - delta);
 							mfs.setFraction(n, t, d, j, newValue);
 							sum += newValue;
 						}
@@ -93,7 +92,7 @@ public class ReducedGradientProjection extends MOF_DUE {
 			shortestOugoingLinks = pair.second();
 			
 			double[] newCriterions = convergence.computeAll(costs);
-			System.out.println("[DUE] TTST: " + newCriterions[0]);
+			System.out.println("[DUE] TSTT: " + newCriterions[0]);
 			System.out.println("[DUE] SPTT: " + newCriterions[1]);
 			System.out.println("[DUE] AEC:  " + newCriterions[2]);
 			System.out.println("[DUE] RG:   " + newCriterions[3]);
