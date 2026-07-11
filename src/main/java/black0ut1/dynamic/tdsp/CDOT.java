@@ -25,9 +25,9 @@ public class CDOT extends DOT {
 		double travelTimeNormalized = travelTimes[link.index][t + 1] / stepSize;
 		double travelTime = travelTimes[link.index][t + 1];
 		
-		int rounded = (int) Math.round(travelTimeNormalized);
+		int rounded = (int) Math.min(Math.round(travelTimeNormalized), Integer.MAX_VALUE);
 		
-		if (t + rounded > timeSteps - 1) {
+		if ((long) t + rounded > timeSteps - 1) {
 			// Here, we use the the assumption that conditions are stationary after
 			// the modelled period.
 			return travelTime + costs.getCost(m, timeSteps - 1, d);

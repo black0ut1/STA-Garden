@@ -115,6 +115,9 @@ public class MixtureFlow {
 	}
 	
 	public void rectify() {
+		if (portions.length == 0)
+			return;
+		
 		double sum = 0;
 		double maxPortion = Double.NEGATIVE_INFINITY;
 		int maxPortionIndex = -1;

@@ -105,11 +105,14 @@ public class DOT {
 		int m = link.head.index;
 		
 		// Normalized travel time must be >= 1. In other words, the original travel
-		// time must be >= step size.                         right boundary vvv
-		int travelTimeNormalized = (int) Math.round(travelTimes[link.index][t + 1] / stepSize);
+		// time must be >= step size.                     right boundary vvv
+		long travelTimeNormalized1 = Math.round(travelTimes[link.index][t + 1] / stepSize);
+		// If travelTimes[link.index][t + 1] is infinity, travelTimeNormalized1 is
+		// Long.MAX_VALUE and that converted to int is -1 -> negative cost.
+		int travelTimeNormalized = (int) Math.min(travelTimeNormalized1, Integer.MAX_VALUE);
 		double travelTime = stepSize * travelTimeNormalized;
 		
-		if (t + travelTimeNormalized > timeSteps - 1) {
+		if ((long) t + travelTimeNormalized > timeSteps - 1) {
 			// Here, we use the the assumption that conditions are stationary after
 			// the modelled period.
 			return travelTime + costs.getCost(m, timeSteps - 1, d);
