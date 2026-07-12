@@ -12,6 +12,12 @@ public class BitSet32 {
 		this.size = size;
 	}
 	
+	public static BitSet32 filled(int size) {
+		BitSet32 set = new BitSet32(size);
+		set.word = 0xFFFFFFFF;
+		return set;
+	}
+	
 	public void set(int bit) {
 		int mask = 1 << bit;
 		word |= mask;

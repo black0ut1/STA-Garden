@@ -1,5 +1,6 @@
 package black0ut1.dynamic.equilibrium;
 
+import black0ut1.data.BitSet32;
 import black0ut1.dynamic.Convergence;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
@@ -10,23 +11,9 @@ import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.tdsp.DOT;
 import black0ut1.util.DynamicUtils;
 
-/**
- * Reduced Gradient Projection algorithm.
- * <p>
- * Bibliography:																		  <br>
- * - (Gentile, 2016) Solving a Dynamic User Equilibrium model based on splitting rates
- * with Gradient Projection algorithms
- */
-public class RGP extends MOF_DUE {
+public class QGP extends RGP {
 	
-	protected static final double RO = 1;
-	protected static final double ETA_1 = 2;
-	protected static final double ETA_2 = 2 / 3.0;
-	protected static final double ETA_3 = 1;
-	
-	protected final ScaleFactor scaleFactor = ScaleFactor.MIN_COST;
-	
-	public RGP(DynamicNetwork network, TimeDependentODM odm, StaticRouteChoice initialRouteChoice,
+	public QGP(DynamicNetwork network, TimeDependentODM odm, StaticRouteChoice initialRouteChoice,
 	           DynamicNetworkLoading dnl, DOT tdsp, int maxIterations, double stepSize, Convergence convergence) {
 		super(network, odm, initialRouteChoice, dnl, tdsp, maxIterations, stepSize, convergence);
 	}
@@ -56,32 +43,81 @@ public class RGP extends MOF_DUE {
 			System.out.println("[DUE] Iteration: " + i);
 			
 			double alpha = Math.pow(ETA_1 / (ETA_1 + eta_bad), ETA_2);
-			for (int n = 0; n < mfs.intersections; n++)
+			for (int n = 0; n < mfs.intersections; n++) {
+				Link[] outgoingLinks = network.routedIntersections[n].outgoingLinks;
+				
 				for (int t = 0; t < mfs.timeSteps; t++)
 					for (int d = 0; d < network.zones.length; d++) {
-						double minCost = costs.getCost(n, t, d);
-						byte bestLinkIndex = shortestOugoingLinks.getIndex(n, t, d);
+						double bestCost = costs.getCost(n, t, d);
 						
-						double sum = 0;
-						for (int j = 0; j < network.routedIntersections[n].outgoingLinks.length; j++) {
-							if (j == bestLinkIndex)
+						double[] costs1 = new double[outgoingLinks.length];
+						double[] gs = new double[outgoingLinks.length];
+						for (int j = 0; j < outgoingLinks.length; j++) {
+							if (outgoingLinks[j] instanceof Connector)
 								continue;
 							
-							Link outgoingLink = network.routedIntersections[n].outgoingLinks[j];
-							if (outgoingLink instanceof Connector)
-								continue;
-							
-							double cost = tdsp.computeCost(t, d, outgoingLink, travelTimes, costs);
-							double g = scaleFactor(minCost, cost, alpha);
-							double delta = (cost - minCost) / (2 * g); // positive since minCost < cost
-							
-							double newValue = Math.max(0, mfs.getFraction(n, t, d, j) - delta);
-							mfs.setFraction(n, t, d, j, newValue);
-							sum += newValue;
+							costs1[j] = tdsp.computeCost(t, d, outgoingLinks[j], travelTimes, costs);
+							gs[j] = scaleFactor(bestCost, costs1[j], alpha);
 						}
 						
-						mfs.setFraction(n, t, d, bestLinkIndex, 1 - sum);
+						BitSet32 B = BitSet32.filled(outgoingLinks.length);
+						for (int j = 0; j < outgoingLinks.length; j++)
+							if (outgoingLinks[j] instanceof Connector)
+								B.clear(j);
+						
+						double[] delta = new double[outgoingLinks.length];
+						while (true) {
+							
+							// Compute the weighted average cost
+							double numerator = 0;
+							double denominator = 0;
+							for (int j = 0; j < outgoingLinks.length; j++) {
+								if (!B.get(j))
+									continue;
+								
+								numerator += costs1[j] / gs[j];
+								denominator += 1 / gs[j];
+							}
+							
+							double avgCost = numerator / denominator;
+							
+							boolean eliminated = false;
+							for (int j = 0; j < outgoingLinks.length; j++) {
+								if (!B.get(j))
+									continue;
+								
+								delta[j] = (avgCost - costs1[j]) / gs[j];
+								if (mfs.getFraction(n, t, d, j) <= 0 && delta[j] < 0) {
+									B.clear(j);
+									eliminated = true;
+								}
+							}
+							
+							if (!eliminated)
+								break;
+						}
+						
+						// Compute parameter beta
+						double beta = 1;
+						for (int j = 0; j < outgoingLinks.length; j++) {
+							if (!B.get(j))
+								continue;
+							
+							if (delta[j] < 0)
+								beta = Math.min(beta, -costs1[j] / delta[j]);
+						}
+						
+						for (int j = 0; j < outgoingLinks.length; j++) {
+							if (outgoingLinks[j] instanceof Connector)
+								continue;
+							
+							double newValue = mfs.getFraction(n, t, d, j) + beta * delta[j];
+							if (newValue < 0)
+								throw new NullPointerException("Negative fraction");
+							mfs.setFraction(n, t, d, j, newValue);
+						}
 					}
+			}
 			
 			dnl.loadNetwork();
 			
@@ -104,20 +140,7 @@ public class RGP extends MOF_DUE {
 			
 			criterions = newCriterions;
 		}
-
+		
 		dnl.checkDestinationInflows(false);
-	}
-	
-	protected double scaleFactor(double minCost, double cost, double alpha) {
-		double numerator = switch (scaleFactor) {
-			case MIN_COST -> minCost;
-			case COST -> cost;
-		};
-		return numerator / (RO * alpha);
-	}
-	
-	public enum ScaleFactor {
-		MIN_COST,
-		COST
 	}
 }
