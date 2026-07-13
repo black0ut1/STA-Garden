@@ -11,6 +11,13 @@ import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.tdsp.DOT;
 import black0ut1.util.DynamicUtils;
 
+/**
+ * Quasi-Gradient Projection algorithm.
+ * <p>
+ * Bibliography:																		  <br>
+ * - (Gentile, 2016) Solving a Dynamic User Equilibrium model based on splitting rates
+ * with Gradient Projection algorithms
+ */
 public class QGP extends RGP {
 	
 	public QGP(DynamicNetwork network, TimeDependentODM odm, StaticRouteChoice initialRouteChoice,
@@ -68,26 +75,24 @@ public class QGP extends RGP {
 						double[] delta = new double[outgoingLinks.length];
 						while (true) {
 							
-							// Compute the weighted average cost
+							// Compute the weighted average cost of set B
 							double numerator = 0;
 							double denominator = 0;
-							for (int j = 0; j < outgoingLinks.length; j++) {
-								if (!B.get(j))
-									continue;
-								
-								numerator += costs1[j] / gs[j];
-								denominator += 1 / gs[j];
-							}
+							for (int j = 0; j < outgoingLinks.length; j++)
+								if (B.get(j)) {
+									numerator += costs1[j] / gs[j];
+									denominator += 1 / gs[j];
+								}
 							
 							double avgCost = numerator / denominator;
 							
 							boolean eliminated = false;
 							for (int j = 0; j < outgoingLinks.length; j++) {
-								if (!B.get(j))
-									continue;
+								delta[j] = B.get(j)
+										? (avgCost - costs1[j]) / gs[j]
+										: 0;
 								
-								delta[j] = (avgCost - costs1[j]) / gs[j];
-								if (mfs.getFraction(n, t, d, j) <= 0 && delta[j] < 0) {
+								if (mfs.getFraction(n, t, d, j) == 0 && delta[j] < 0) {
 									B.clear(j);
 									eliminated = true;
 								}
@@ -99,21 +104,17 @@ public class QGP extends RGP {
 						
 						// Compute parameter beta
 						double beta = 1;
-						for (int j = 0; j < outgoingLinks.length; j++) {
-							if (!B.get(j))
-								continue;
-							
-							if (delta[j] < 0)
-								beta = Math.min(beta, -costs1[j] / delta[j]);
-						}
+						for (int j = 0; j < outgoingLinks.length; j++)
+							if (B.get(j) && delta[j] < 0)
+								beta = Math.min(beta, -mfs.getFraction(n, t, d, j) / delta[j]);
 						
 						for (int j = 0; j < outgoingLinks.length; j++) {
 							if (outgoingLinks[j] instanceof Connector)
 								continue;
 							
-							double newValue = mfs.getFraction(n, t, d, j) + beta * delta[j];
-							if (newValue < 0)
-								throw new NullPointerException("Negative fraction");
+							double newValue = Math.max(0, mfs.getFraction(n, t, d, j) + beta * delta[j]);
+							if (newValue != newValue)
+								throw new ArrayIndexOutOfBoundsException();
 							mfs.setFraction(n, t, d, j, newValue);
 						}
 					}

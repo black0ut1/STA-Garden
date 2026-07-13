@@ -40,4 +40,12 @@ public class BitSet32 {
 	public boolean isClear() {
 		return word == 0;
 	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < size; i++)
+			sb.append(get(i) ? "1" : "0");
+		return sb.reverse().toString();
+	}
 }
