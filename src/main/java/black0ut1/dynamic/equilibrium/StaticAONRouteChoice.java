@@ -3,6 +3,7 @@ package black0ut1.dynamic.equilibrium;
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.dynamic.DynamicNetwork;
+import black0ut1.dynamic.loading.link.Connector;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.util.SSSP;
@@ -72,12 +73,20 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 			}
 			
 			// Destination flow do not use this intersection -> fractions will be
-			// uniformly distributed
+			// uniformly distributed among non-connector links
 			if (nodeFlow == 0) {
-				double fraction = 1.0 / node.outgoingLinks.length;
-				for (int j = 0; j < node.outgoingLinks.length; j++)
+				int numLinks = (node.outgoingLinks[0] instanceof Connector)
+						? node.outgoingLinks.length - 1
+						: node.outgoingLinks.length;
+				
+				double fraction = 1.0 / numLinks;
+				for (int j = 0; j < node.outgoingLinks.length; j++) {
+					if (node.outgoingLinks[j] instanceof Connector)
+						continue;
+					
 					for (int t = 0; t < timeSteps; t++)
 						result.setFraction(node1, t, destination, j, fraction);
+				}
 				
 			} // all flow from each incoming link is going into J
 			else {

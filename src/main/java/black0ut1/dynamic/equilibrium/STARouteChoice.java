@@ -2,6 +2,7 @@ package black0ut1.dynamic.equilibrium;
 
 import black0ut1.data.network.Bush;
 import black0ut1.dynamic.DynamicNetwork;
+import black0ut1.dynamic.loading.link.Connector;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
@@ -55,12 +56,20 @@ public class STARouteChoice implements StaticRouteChoice {
 				}
 				
 				// Destination flow do not use this intersection -> fractions will be
-				// uniformly distributed
+				// uniformly distributed among non-connector links
 				if (outgoingFlow == 0) {
-					double fraction = 1.0 / intersection.outgoingLinks.length;
-					for (int j = 0; j < intersection.outgoingLinks.length; j++)
+					int numLinks = (intersection.outgoingLinks[0] instanceof Connector)
+							? intersection.outgoingLinks.length - 1
+							: intersection.outgoingLinks.length;
+					
+					double fraction = 1.0 / numLinks;
+					for (int j = 0; j < intersection.outgoingLinks.length; j++) {
+						if (intersection.outgoingLinks[j] instanceof Connector)
+							continue;
+						
 						for (int t = 0; t < maxSteps; t++)
 							result.setFraction(intersection.index, t, destination, j, fraction);
+					}
 				}
 				else {
 					for (int j = 0; j < intersection.outgoingLinks.length; j++) {
