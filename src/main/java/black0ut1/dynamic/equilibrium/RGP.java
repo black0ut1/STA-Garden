@@ -56,22 +56,26 @@ public class RGP extends MOF_DUE {
 			System.out.println("[DUE] Iteration: " + i);
 			
 			double alpha = Math.pow(ETA_1 / (ETA_1 + eta_bad), ETA_2);
-			for (int n = 0; n < mfs.intersections; n++)
+			for (int n = 0; n < mfs.intersections; n++) {
+				Link[] outgoingLinks = network.routedIntersections[n].outgoingLinks;
+				
 				for (int t = 0; t < mfs.timeSteps; t++)
 					for (int d = 0; d < network.zones.length; d++) {
 						double minCost = costs.getCost(n, t, d);
+						if (minCost == 0 || minCost == Double.POSITIVE_INFINITY)
+							continue;
+						
 						byte bestLinkIndex = shortestOugoingLinks.getIndex(n, t, d);
 						
 						double sum = 0;
-						for (int j = 0; j < network.routedIntersections[n].outgoingLinks.length; j++) {
+						for (int j = 0; j < outgoingLinks.length; j++) {
 							if (j == bestLinkIndex)
 								continue;
 							
-							Link outgoingLink = network.routedIntersections[n].outgoingLinks[j];
-							if (outgoingLink instanceof Connector)
+							if (outgoingLinks[j] instanceof Connector)
 								continue;
 							
-							double cost = tdsp.computeCost(t, d, outgoingLink, travelTimes, costs);
+							double cost = tdsp.computeCost(t, d, outgoingLinks[j], travelTimes, costs);
 							double g = scaleFactor(minCost, cost, alpha);
 							double delta = (cost - minCost) / (2 * g); // positive since minCost < cost
 							
@@ -82,6 +86,7 @@ public class RGP extends MOF_DUE {
 						
 						mfs.setFraction(n, t, d, bestLinkIndex, 1 - sum);
 					}
+			}
 			
 			dnl.loadNetwork();
 			

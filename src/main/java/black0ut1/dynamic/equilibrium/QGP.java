@@ -55,7 +55,9 @@ public class QGP extends RGP {
 				
 				for (int t = 0; t < mfs.timeSteps; t++)
 					for (int d = 0; d < network.zones.length; d++) {
-						double bestCost = costs.getCost(n, t, d);
+						double minCost = costs.getCost(n, t, d);
+						if (minCost == 0)
+							continue;
 						
 						double[] costs1 = new double[outgoingLinks.length];
 						double[] gs = new double[outgoingLinks.length];
@@ -64,8 +66,14 @@ public class QGP extends RGP {
 								continue;
 							
 							costs1[j] = tdsp.computeCost(t, d, outgoingLinks[j], travelTimes, costs);
-							gs[j] = scaleFactor(bestCost, costs1[j], alpha);
+							gs[j] = scaleFactor(minCost, costs1[j], alpha);
 						}
+						
+						// hack that avoids NaNs, which occur on line
+						//    ? (avgCost - costs1[j]) / gs[j]
+						// and still gives correct results
+						for (int j = 0; j < outgoingLinks.length; j++)
+							costs1[j] = Math.min(costs1[j], Double.MAX_VALUE);
 						
 						BitSet32 B = BitSet32.filled(outgoingLinks.length);
 						for (int j = 0; j < outgoingLinks.length; j++)
@@ -113,8 +121,6 @@ public class QGP extends RGP {
 								continue;
 							
 							double newValue = Math.max(0, mfs.getFraction(n, t, d, j) + beta * delta[j]);
-							if (newValue != newValue)
-								throw new ArrayIndexOutOfBoundsException();
 							mfs.setFraction(n, t, d, j, newValue);
 						}
 					}
