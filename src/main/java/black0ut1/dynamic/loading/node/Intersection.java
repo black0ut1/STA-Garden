@@ -14,6 +14,8 @@ public abstract class Intersection {
 	public final Link[] incomingLinks;
 	public final Link[] outgoingLinks;
 	
+	public double potential;
+	
 	public Intersection(int index, Link[] incomingLinks, Link[] outgoingLinks) {
 		this.index = index;
 		this.incomingLinks = incomingLinks;

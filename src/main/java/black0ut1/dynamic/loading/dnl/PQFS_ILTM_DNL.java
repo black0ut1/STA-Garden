@@ -5,9 +5,8 @@ import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.LTM;
 import black0ut1.dynamic.loading.link.Link;
+import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.routing.MixtureFlow;
-import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
-import black0ut1.dynamic.loading.node.Zone;
 
 /**
  * This is an alternative to {@code FastSweepingILTM_DNL} which does
@@ -26,62 +25,48 @@ public class PQFS_ILTM_DNL extends ILTM_DNL {
 	@Override
 	protected void loadForTime(int t) {
 		
+		// 1. Warm/cold-start the cumulative values that will be set during this time step.
+		// Warm-starting uses the value of cumulative inflow/outflow from the same time
+		// of previous run. Cold-starting uses the value from the previous time step of
+		// the current run.
 		for (Link link : network.links) {
 			link.cumulativeInflow[t + 1] = Math.max(link.cumulativeInflow[t + 1], link.cumulativeInflow[t]);
 			link.cumulativeOutflow[t + 1] = Math.max(link.cumulativeOutflow[t + 1], link.cumulativeOutflow[t]);
 		}
 		
-		// 1. Load traffic from each origin onto the connector
-		for (Zone zone : network.zones) {
-			Link outgoingLink = zone.outgoingLinks[0];
-			outgoingLink.computeReceivingFlow(t);
-			
-			Link incomingLink = zone.incomingLinks[0];
-			incomingLink.computeSendingFlow(t);
-			
-			var pair = zone.computeMixtureInflowsOutflows(t);
-			
-			MixtureFlow outgoingFlow = pair.second()[0];
-			outgoingLink.inflow[t] = outgoingFlow;
-			outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
-			
-			MixtureFlow incomingFlow = pair.first()[0];
-			incomingLink.outflow[t] = incomingFlow;
-			incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
-		}
-		
-		
-		PriorityQueue pq = new PriorityQueue(network.routedIntersections.length, 0);
-		for (int i = 0; i < network.routedIntersections.length; i++)
+		// 2. Create priority queue and add every intersection into it with priority being
+		// infinity (here, it's -infinity because this is max-priority queue).
+		PriorityQueue pq = new PriorityQueue(network.intersections.length, 0);
+		for (int i = 0; i < network.intersections.length; i++)
 			pq.add(i, -Double.POSITIVE_INFINITY);
 		
-		// 2. Iterate until update potential of every intersection of
-		// is under precision
+		// 3. Iteratively update the intersections with the highest potential until the
+		// highest potential is under precision.
 		while (-pq.getMinPriority() > precision) {
 			nodeUpdates++;
 			
 			int index = pq.popMin();
-			RoutedIntersection node = network.routedIntersections[index];
+			Intersection node = network.intersections[index];
 			
-			// 2.1.1 Update sending flow of each incoming link
+			// 3.1 Update sending flow of each incoming link.
 			for (Link incomingLink : node.incomingLinks)
 				incomingLink.computeSendingFlow(t);
 			
-			// 2.1.2 Update receiving flow of each outgoing link
+			// 2.1.2 Update receiving flow of each outgoing link.
 			for (Link outgoingLink : node.outgoingLinks)
 				outgoingLink.computeReceivingFlow(t);
 			
-			// 2.1.3 Compute oriented flows using intersection model
+			// 3.3 Compute oriented mixture flows using routing model.
 			var pair = node.computeMixtureInflowsOutflows(t);
 			
-			// 2.1.4 Remove oriented flows from incoming links
+			// 3.4 Increase outflows of incoming links.
 			for (int i = 0; i < node.incomingLinks.length; i++) {
 				Link incomingLink = node.incomingLinks[i];
 				MixtureFlow incomingFlow = pair.first()[i];
 				
 				double Xad = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 				
-				// increase update potential of the incoming link tail
+				// Increase update potential of the link tail.
 				if (incomingLink instanceof LTM) {
 					double Vi = incomingLink.cumulativeOutflow[t + 1];
 					double potentialIncrease = ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
@@ -94,14 +79,14 @@ public class PQFS_ILTM_DNL extends ILTM_DNL {
 				incomingLink.cumulativeOutflow[t + 1] = Xad;
 			}
 			
-			// 2.1.5 Load oriented flows onto outgoing links
+			// 3.5 Increase inflows of outgoing links.
 			for (int j = 0; j < node.outgoingLinks.length; j++) {
 				Link outgoingLink = node.outgoingLinks[j];
 				MixtureFlow outgoingFlow = pair.second()[j];
 				
 				double Xbd = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
 				
-				// increase update potential of the outgoing link head
+				// Increase update potential of the link head.
 				if (outgoingLink instanceof LTM) {
 					double Ui = outgoingLink.cumulativeInflow[t + 1];
 					double potentialIncrease = ((LTM) outgoingLink).phi * Math.abs(Xbd - Ui);
@@ -114,8 +99,7 @@ public class PQFS_ILTM_DNL extends ILTM_DNL {
 				outgoingLink.cumulativeInflow[t + 1] = Xbd;
 			}
 			
-			// 2.1.6 This intersection was just updated, thus
-			// potential is 0
+			// 3.6 This intersection was just updated, thus potential is 0.
 			pq.add(index, 0);
 		}
 	}

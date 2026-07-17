@@ -17,7 +17,6 @@ public class RoutedIntersection extends Intersection {
 	
 	protected MixtureOutgoingFractions fractions;
 	protected final NodeModel nodeModel;
-	public double potential;
 	
 	public RoutedIntersection(int index, Link[] incomingLinks, Link[] outgoingLinks, NodeModel nodeModel) {
 		super(index, incomingLinks, outgoingLinks);

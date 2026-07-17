@@ -5,7 +5,6 @@ import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.link.Link;
 import black0ut1.dynamic.loading.routing.MixtureFlow;
 import black0ut1.dynamic.loading.node.Intersection;
-import black0ut1.dynamic.loading.node.Zone;
 
 /**
  * The basic dynamic network loading scheme. For each time in the
@@ -32,41 +31,22 @@ public class BasicDNL extends DynamicNetworkLoading {
 	@Override
 	protected void loadForTime(int t) {
 		
-		// 1. Load traffic from each origin onto the connector
-		for (Zone zone : network.zones) {
-			Link outgoingLink = zone.outgoingLinks[0];
-			outgoingLink.computeReceivingFlow(t);
-			
-			Link incomingLink = zone.incomingLinks[0];
-			incomingLink.computeSendingFlow(t);
-			
-			var pair = zone.computeMixtureInflowsOutflows(t);
-			
-			MixtureFlow outgoingFlow = pair.second()[0];
-			outgoingLink.inflow[t] = outgoingFlow;
-			outgoingLink.cumulativeInflow[t + 1] = outgoingLink.cumulativeInflow[t] + outgoingFlow.totalFlow;
-			
-			MixtureFlow incomingFlow = pair.first()[0];
-			incomingLink.outflow[t] = incomingFlow;
-			incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
-		}
-		
-		// 2. For each intersection
-		for (Intersection node : network.routedIntersections) {
+		// For each intersection.
+		for (Intersection node : network.intersections) {
 			nodeUpdates++;
 			
-			// 2.1 Update sending flow of each incoming link
+			// 1. Update sending flow of each incoming link.
 			for (Link incomingLink : node.incomingLinks)
 				incomingLink.computeSendingFlow(t);
 			
-			// 2.2 Update receiving flow of each outgoing link
+			// 2. Update receiving flow of each outgoing link.
 			for (Link outgoingLink : node.outgoingLinks)
 				outgoingLink.computeReceivingFlow(t);
 			
-			// 2.3 Compute oriented flows using intersection model
+			// 3. Compute oriented mixture flows using routing model.
 			var pair = node.computeMixtureInflowsOutflows(t);
 			
-			// 2.4 Remove oriented flows from incoming links
+			// 4. Increase outflows of incoming links.
 			for (int i = 0; i < node.incomingLinks.length; i++) {
 				Link incomingLink = node.incomingLinks[i];
 				MixtureFlow incomingFlow = pair.first()[i];
@@ -75,7 +55,7 @@ public class BasicDNL extends DynamicNetworkLoading {
 				incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 			}
 			
-			// 2.5 Load oriented flows onto outgoing links
+			// 5. Increase inflows of outgoing links.
 			for (int j = 0; j < node.outgoingLinks.length; j++) {
 				Link outgoingLink = node.outgoingLinks[j];
 				MixtureFlow outgoingFlow = pair.second()[j];
