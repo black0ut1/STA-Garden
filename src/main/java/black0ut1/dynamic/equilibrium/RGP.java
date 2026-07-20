@@ -58,6 +58,8 @@ public class RGP extends MOF_DUE {
 			double alpha = Math.pow(ETA_1 / (ETA_1 + eta_bad), ETA_2);
 			for (int n = 0; n < mfs.intersections; n++) {
 				Link[] outgoingLinks = network.routedIntersections[n].outgoingLinks;
+				MixtureOutgoingFractions.Intersection mof = mfs.get(n);
+				mof.start();
 				
 				for (int t = 0; t < mfs.timeSteps; t++)
 					for (int d = 0; d < network.zones.length; d++) {
@@ -79,13 +81,14 @@ public class RGP extends MOF_DUE {
 							double g = scaleFactor(minCost, cost, alpha);
 							double delta = (cost - minCost) / (2 * g); // positive since minCost < cost
 							
-							double newValue = Math.max(0, mfs.getFraction(n, t, d, j) - delta);
-							mfs.setFraction(n, t, d, j, newValue);
+							double newValue = Math.max(0, mof.getFraction(t, d, j) - delta);
+							mof.setFraction(t, d, j, newValue);
 							sum += newValue;
 						}
 						
-						mfs.setFraction(n, t, d, bestLinkIndex, 1 - sum);
+						mof.setFraction(t, d, bestLinkIndex, 1 - sum);
 					}
+				mof.compress();
 			}
 			
 			dnl.loadNetwork();

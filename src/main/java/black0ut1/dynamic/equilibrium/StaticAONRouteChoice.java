@@ -29,12 +29,13 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 		
 		// create first mixture fraction for each node
 		for (int node = 0; node < network.nodes; node++)
-			createNodeFractions(result, destinationFlows, node);
+			createNodeFractions(result.get(node), destinationFlows, node);
 		
 		return result;
 	}
 	
-	protected void createNodeFractions(MixtureOutgoingFractions result, double[][] destinationFlows, int node1) {
+	protected void createNodeFractions(MixtureOutgoingFractions.Intersection mof, double[][] destinationFlows, int node1) {
+		mof.start();
 		
 		Intersection node = dNetwork.routedIntersections[node1];
 		
@@ -85,15 +86,17 @@ public class StaticAONRouteChoice implements StaticRouteChoice {
 						continue;
 					
 					for (int t = 0; t < timeSteps; t++)
-						result.setFraction(node1, t, destination, j, fraction);
+						mof.setFraction(t, destination, j, fraction);
 				}
 				
 			} // all flow from each incoming link is going into J
 			else {
 				for (int t = 0; t < timeSteps; t++)
-					result.setFraction(node1, t, destination, J, 1);
+					mof.setFraction(t, destination, J, 1);
 			}
 		}
+		
+		mof.compress();
 	}
 	
 	protected double[][] assignFlows() {

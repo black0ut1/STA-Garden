@@ -1,46 +1,134 @@
 package black0ut1.dynamic.loading.routing;
 
 import black0ut1.dynamic.DynamicNetwork;
-import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
 
-import java.util.Arrays;
+import java.util.*;
 
 public class MixtureOutgoingFractions {
 	
-	protected final double[] values;
-	protected final int[] offsets;
+	public final Intersection[] mofIntersections;
 	protected final DynamicNetwork network;
+	protected final double[] temporaryGrid;
 	
 	public final int intersections;
 	public final int destinations;
 	public final int timeSteps;
 	
 	public MixtureOutgoingFractions(DynamicNetwork network, int timeSteps) {
-		int outdegreeSum = 0;
-		for (RoutedIntersection routedIntersection : network.routedIntersections)
-			outdegreeSum += routedIntersection.outgoingLinks.length;
-		
-		this.values = new double[outdegreeSum * timeSteps * network.zones.length];
-		this.offsets = new int[network.routedIntersections.length];
-		for (int i = 1; i < network.routedIntersections.length; i++) {
-			this.offsets[i] = this.offsets[i - 1] + timeSteps * network.zones.length *
-					network.routedIntersections[i - 1].outgoingLinks.length;
-		}
 		this.network = network;
-		
 		this.intersections = network.routedIntersections.length;
 		this.destinations = network.zones.length;
 		this.timeSteps = timeSteps;
+		
+		this.mofIntersections = new Intersection[intersections];
+		for (int i = 0; i < intersections; i++)
+			mofIntersections[i] = new Intersection(i);
+		
+		int maxJ = 0;
+		for (int i = 0; i < intersections; i++)
+			maxJ = Math.max(maxJ, mofIntersections[i].J);
+		this.temporaryGrid = new double[destinations * timeSteps * maxJ];
 	}
 	
-	public double getFraction(int n, int t, int d, int j) {
-		int J = network.routedIntersections[n].outgoingLinks.length;
-		return values[offsets[n] + t * destinations * J + d * J + j];
+	public Intersection get(int n) {
+		return mofIntersections[n];
 	}
 	
-	public void setFraction(int n, int t, int d, int j, double val) {
-		int J = network.routedIntersections[n].outgoingLinks.length;
-		values[offsets[n] + t * destinations * J + d * J + j] = val;
+	public class Intersection {
+		
+		public final int J;
+		
+		public final int[] grid;
+		public double[] uniqueVectors;
+		
+		public Intersection(int n) {
+			this.J = network.routedIntersections[n].outgoingLinks.length;
+			this.grid = new int[timeSteps * destinations];
+		}
+		
+		public void start() {
+			Arrays.fill(temporaryGrid, 0);
+		}
+		
+		public void setFraction(int t, int d, int j, double val) {
+			temporaryGrid[t * destinations * J + d * J + j] = val;
+		}
+		
+		public double getFraction(int t, int d, int j) {
+			int index = grid[t * destinations + d];
+			
+			if (index >= 0) {
+				return index == j ? 1 : 0;
+			} else {
+				int poolIndex = -(index + 1);
+				return uniqueVectors[poolIndex * J + j];
+			}
+		}
+		
+		public void compress() {
+			int uniqueVectorsLen = 0;
+			Map<double[], Integer> vectorToIndex = new TreeMap<>((o1, o2) -> {
+				for (int i = 0; i < J; i++) {
+					if (o1[i] < o2[i])
+						return -1;
+					if (o1[i] > o2[i])
+						return 1;
+				}
+				
+				return 0;
+			});
+			
+			for (int d = 0; d < destinations; d++) {
+				for (int t = 0; t < timeSteps; t++) {
+					double[] vector = Arrays.copyOfRange(temporaryGrid,
+							t * destinations * J + d * J, t * destinations * J + d * J + J);
+					
+					int singletonIndex = isSingleton(vector);
+					
+					if (singletonIndex >= 0)
+						// If the vector is a singleton, set the grid to the index of the
+						// 1 value.
+						grid[t * destinations + d] = singletonIndex;
+					
+					else {
+						// If not, set the value in grid to the index of the vector in the
+						// pool of unique vectors, adding it if necessary.
+						// Index i into the pool is stored in the grid as -(i + 1),
+						// because non-negative integers represent singletons.
+						Integer index = vectorToIndex.get(vector);
+						if (index != null)
+							grid[t * destinations + d] = -(index + 1);
+						else {
+							vectorToIndex.put(vector, uniqueVectorsLen);
+							grid[t * destinations + d] = -(uniqueVectorsLen + 1);
+							uniqueVectorsLen++;
+						}
+					}
+				}
+			}
+			
+			uniqueVectors = new double[uniqueVectorsLen * J];
+			for (Map.Entry<double[], Integer> entry : vectorToIndex.entrySet()) {
+				int poolIndex = entry.getValue();
+				double[] vector = entry.getKey();
+				System.arraycopy(vector, 0, uniqueVectors, poolIndex * J, J);
+			}
+		}
+		
+		/**
+		 * Determines, whether a vector is a singleton, returning the index of the single
+		 * value 1 in the vector. Otherwise, this method returns -1.
+		 */
+		protected int isSingleton(double[] vector) {
+			for (int j = 0; j < J; j++) {
+				if (vector[j] == 1)
+					return j;
+				if (vector[j] > 0)
+					return -1;
+			}
+			
+			return -1;
+		}
 	}
 	
 	public class Indices {

@@ -2,10 +2,10 @@ package black0ut1.dynamic.loading.node.routing;
 
 import black0ut1.data.DoubleMatrix;
 import black0ut1.data.tuple.Pair;
+import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.routing.MixtureFlow;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.loading.link.Link;
-import black0ut1.dynamic.loading.node.Intersection;
 import black0ut1.dynamic.loading.node.models.NodeModel;
 
 /**
@@ -29,6 +29,7 @@ public class RoutedIntersection extends Intersection {
 	
 	@Override
 	public Pair<MixtureFlow[], MixtureFlow[]> computeMixtureInflowsOutflows(int time) {
+		MixtureOutgoingFractions.Intersection mof = fractions.get(index);
 		
 		double[] sendingFlows = new double[incomingLinks.length];
 		for (int i = 0; i < incomingLinks.length; i++)
@@ -49,7 +50,7 @@ public class RoutedIntersection extends Intersection {
 				
 				for (int j = 0; j < outgoingLinks.length; j++) {
 					totalTurningFractions.set(i, j,
-							totalTurningFractions.get(i, j) + portion * fractions.getFraction(this.index, time, destination, j));
+							totalTurningFractions.get(i, j) + portion * mof.getFraction(time, destination, j));
 				}
 			}
 		}
@@ -95,7 +96,7 @@ public class RoutedIntersection extends Intersection {
 					
 					if (incomingMixtureFlows[i].getDestination(counters[i]) == d) {
 						sum += incomingMixtureFlows[i].getPortion(counters[i]) * incomingMixtureFlows[i].totalFlow
-								* fractions.getFraction(this.index, time, d, j);
+								* mof.getFraction(time, d, j);
 						counters[i]++;
 					}
 					
