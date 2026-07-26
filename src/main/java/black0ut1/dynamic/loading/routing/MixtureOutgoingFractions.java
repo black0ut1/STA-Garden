@@ -38,12 +38,12 @@ public class MixtureOutgoingFractions {
 		
 		public final int J;
 		
-		public final int[] grid;
+		public final int[][] indices = new int[destinations][];
+		public final int[][] values = new int[destinations][];
 		public double[] uniqueVectors;
 		
 		public Intersection(int n) {
 			this.J = network.routedIntersections[n].outgoingLinks.length;
-			this.grid = new int[timeSteps * destinations];
 		}
 		
 		public void start() {
@@ -55,7 +55,12 @@ public class MixtureOutgoingFractions {
 		}
 		
 		public double getFraction(int t, int d, int j) {
-			int index = grid[t * destinations + d];
+			int index = -1;
+			for (int i = indices[d].length - 1; i >= 0; i--) // TODO optionally use binary search
+				if (indices[d][i] <= t) {
+					index = values[d][i];
+					break;
+				}
 			
 			if (index >= 0) {
 				return index == j ? 1 : 0;
@@ -66,6 +71,8 @@ public class MixtureOutgoingFractions {
 		}
 		
 		public void compress() {
+			int[] grid = new int[timeSteps * destinations];
+			
 			int uniqueVectorsLen = 0;
 			Map<double[], Integer> vectorToIndex = new TreeMap<>((o1, o2) -> {
 				for (int i = 0; i < J; i++) {
@@ -112,6 +119,35 @@ public class MixtureOutgoingFractions {
 				int poolIndex = entry.getValue();
 				double[] vector = entry.getKey();
 				System.arraycopy(vector, 0, uniqueVectors, poolIndex * J, J);
+			}
+			
+			// Compress the grid.
+			for (int d = 0; d < destinations; d++) {
+				
+				// The number of periods of constant values in the grid for this destination.
+				int numPeriods = 1;
+				for (int t = 1; t < timeSteps; t++)
+					if (grid[t * destinations + d] != grid[(t - 1) * destinations + d])
+						numPeriods++;
+				
+				// values[i] is the value that lies in the grid on positions from
+				// grid[indices[i] * destinations + d] to
+				// grid[(indices[i + 1] - 1) * destinations + d].
+				// That is, on the positions in the grid where t is in interval
+				// [indices[i], indices[i + 1]) and for this destination.
+				int[] indices = new int[numPeriods];
+				int[] values = new int[numPeriods];
+				values[0] = grid[d]; // grid[0 * destinations + d]
+				int i = 1;
+				for (int t = 1; t < timeSteps; t++)
+					if (grid[t * destinations + d] != grid[(t - 1) * destinations + d]) {
+						indices[i] = t;
+						values[i] = grid[t * destinations + d];
+						i++;
+					}
+				
+				this.indices[d] = indices;
+				this.values[d] = values;
 			}
 		}
 		
