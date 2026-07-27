@@ -4,7 +4,10 @@ import black0ut1.data.DoubleMatrix;
 import black0ut1.data.network.Network;
 import black0ut1.data.tuple.Pair;
 import black0ut1.io.InputOutput;
+import com.sun.management.HotSpotDiagnosticMXBean;
 
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Vector;
@@ -86,5 +89,18 @@ public class Util {
 		System.out.println("OK (" + (endTime - startTime) + "ms)");
 		
 		return new Pair<>(network, odMatrix);
+	}
+	
+	public static void dumpHeap(String fileName) {
+		try {
+			HotSpotDiagnosticMXBean mxBean = ManagementFactory.newPlatformMXBeanProxy(
+					ManagementFactory.getPlatformMBeanServer(),
+					"com.sun.management:type=HotSpotDiagnostic",
+					HotSpotDiagnosticMXBean.class
+			);
+			mxBean.dumpHeap(fileName + ".hprof", true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
