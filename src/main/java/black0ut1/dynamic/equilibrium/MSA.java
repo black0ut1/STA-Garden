@@ -1,5 +1,6 @@
 package black0ut1.dynamic.equilibrium;
 
+import black0ut1.Main;
 import black0ut1.dynamic.Convergence;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
@@ -7,6 +8,7 @@ import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.tdsp.DOT;
 import black0ut1.util.DynamicUtils;
+import black0ut1.util.Util;
 
 /**
  * Method of Successive Averages algorithm.
@@ -73,6 +75,7 @@ public class MSA extends MOF_DUE {
 			System.out.println("[DUE] RG:   " + criterions[3]);
 		}
 		
-//		dnl.checkDestinationInflows(false);
+		Util.dumpHeap(Main.network);
+		System.out.println();
 	}
 }

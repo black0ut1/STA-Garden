@@ -43,5 +43,5 @@ jar {
 }
 
 tasks.withType(JavaExec).configureEach {
-    jvmArgs = ['-Xmx10G']
+    jvmArgs = ['-Xmx10G', '-XX:StartFlightRecording=filename=recording.jfr']
 }

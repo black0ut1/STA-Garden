@@ -1,92 +1,62 @@
 package black0ut1;
 
 import black0ut1.data.DoubleMatrix;
-import black0ut1.data.network.Bush;
 import black0ut1.data.network.Network;
-import black0ut1.data.network.Path;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
-import black0ut1.dynamic.loading.node.routing.RoutedIntersection;
+import black0ut1.dynamic.equilibrium.MOF_DUE;
+import black0ut1.dynamic.equilibrium.MSA;
+import black0ut1.dynamic.equilibrium.StaticAONRouteChoice;
+import black0ut1.dynamic.equilibrium.StaticRouteChoice;
+import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
+import black0ut1.dynamic.loading.dnl.ILTM_DNL;
+import black0ut1.dynamic.tdsp.DOT;
 import black0ut1.io.TNTP;
-import black0ut1.static_.assignment.Convergence;
-import black0ut1.static_.assignment.Settings;
-import black0ut1.static_.assignment.path.ProjectedGradient;
-import black0ut1.util.NetworkUtils;
 import black0ut1.util.Util;
-
-import java.util.Arrays;
 
 
 public class Main {
 	
-	public static void main(String[] args) {
-		String map = "ChicagoSketch";
-		String networkFile = "data/" + map + "/" + map + "_net.tntp";
-		String odmFile = "data/" + map + "/" + map + "_trips.tntp";
-		String nodeFile = "data/" + map + "/" + map + "_node.tntp";
-		
-		var pair = Util.loadData(new TNTP(), networkFile, odmFile, nodeFile);
-//		new GUI(new AssignmentPanel(pair.first()));
-		
-		double stepSize = 0.5;
-		int odmSteps = 30;
-		int timeSteps = 350;
-		
-		// The ODM will generate flow for only first 10 time steps
-		TimeDependentODM odm = TimeDependentODM.fromStaticUniform(pair.second(), odmSteps);
-		DynamicNetwork network = DynamicNetwork.fromStaticNetwork(pair.first(), odm, stepSize, timeSteps);
-		
-		long sumOutlinks = 0;
-		for (RoutedIntersection routedIntersection : network.routedIntersections)
-			sumOutlinks += routedIntersection.outgoingLinks.length;
-		System.out.printf("Average outdegree: %.2f%n", (double) sumOutlinks / network.routedIntersections.length);
-		System.out.println("Number of routed intersections: " + network.routedIntersections.length);
-		System.out.println("Number of zones: " + network.zones.length);
-		System.out.println("Time steps: " + timeSteps);
-		System.out.println();
-		
-		long numParameters = sumOutlinks * network.zones.length * timeSteps;
-		System.out.println("Number of turning parameters: " + numParameters);
-		System.out.println("Parameters in RAM: " + numParameters * 8 / (1000 * 1000) + " MB");
-		
-		int[] linksByOutlinkNum = new int[16];
-		for (RoutedIntersection routedIntersection : network.routedIntersections)
-			linksByOutlinkNum[routedIntersection.outgoingLinks.length]++;
-		System.out.println("Numbers of intersections with specified amount of outgoing links: \n" + Arrays.toString(linksByOutlinkNum));
-		
-		double[][][][] a = new double[network.routedIntersections.length][network.zones.length][timeSteps][];
-		for (int i = 0; i < network.routedIntersections.length; i++)
-			for (int j = 0; j < network.zones.length; j++)
-				for (int k = 0; k < timeSteps; k++)
-					a[i][j][k] = new double[network.routedIntersections[i].outgoingLinks.length];
-	}
+	// step size, odm steps, time steps, msa steps
+	public static final Object[] siouxFallsParams = {1.0, 30, 110, 100, 10.0};
+	public static final Object[] chicagoSketchParams = {0.1, 30, 350, 5, 2.0};
 	
-	private static Bush[] destinationBushes(Network network, DoubleMatrix odm) {
-		Settings settings = new Settings(network, odm, 20, new Convergence.Builder()
-				.addCriterion(Convergence.Criterion.RELATIVE_GAP_1));
-		ProjectedGradient pg = new ProjectedGradient(settings);
-		pg.assignFlows();
-		NetworkUtils.checkPathFlows(network, odm, pg.getPaths(), pg.getFlows());
+	public static String network;
+	
+	public static void main(String[] args) {
+		network = args[0];
+		Object[] params = ("SiouxFalls".equals(network))
+				? siouxFallsParams
+				: chicagoSketchParams;
 		
+		String networkFile = "data/" + network + "/" + network + "_net.tntp";
+		String odmFile = "data/" + network + "/" + network + "_trips.tntp";
+		String nodeFile = "data/" + network + "/" + network + "_node.tntp";
+		var pair = Util.loadData(new TNTP(), networkFile, odmFile, nodeFile);
+		Network network = pair.first();
+		DoubleMatrix odm = pair.second();
 		
-		Bush[] destinationBushes = new Bush[network.zones];
-		for (int dest = 0; dest < network.zones; dest++)
-			destinationBushes[dest] = new Bush(network.edges, dest);
+		double stepSize = (double) params[0];
+		int odmSteps = (int) params[1];
+		int timeSteps = (int) params[2];
+		int msaSteps = (int) params[3];
+		double odmScale = (double) params[4];
 		
-		var paths = pg.getPaths();
-		for (int origin = 0; origin < network.zones; origin++)
-			for (int destination = 0; destination < network.zones; destination++) {
-				var odPaths = paths.get(origin, destination);
-				if (odPaths == null)
-					continue;
-				
-				for (Path path : odPaths)
-					for (int index : path.edges) {
-						destinationBushes[destination].addEdge(index);
-						destinationBushes[destination].addFlow(index, path.flow);
-					}
-			}
+		TimeDependentODM tdodm = TimeDependentODM
+				.fromStaticGaussian(odm, odmSteps)
+				.scale(odmScale);
+		DynamicNetwork dynamicNetwork = DynamicNetwork.fromStaticNetwork(pair.first(), tdodm, stepSize, timeSteps);
 		
-		return destinationBushes;
+		StaticRouteChoice routeChoice = new StaticAONRouteChoice(network, dynamicNetwork, odm, timeSteps);
+		DynamicNetworkLoading dnl = new ILTM_DNL(dynamicNetwork, tdodm, stepSize, timeSteps, 1e-8);
+		DOT tdsp = new DOT(dynamicNetwork, stepSize, timeSteps, false);
+		
+		black0ut1.dynamic.Convergence convergence = new black0ut1.dynamic.Convergence(dynamicNetwork, tdodm, stepSize, null);
+		
+		MOF_DUE msa = new MSA(dynamicNetwork, tdodm, routeChoice, dnl, tdsp, msaSteps, stepSize, convergence);
+		long tick = System.currentTimeMillis();
+		msa.run();
+		long tock = System.currentTimeMillis();
+		System.out.println("DTA took: " + (tock - tick) + "ms");
 	}
 }
