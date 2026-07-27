@@ -23,14 +23,15 @@ public class STARouteChoice implements StaticRouteChoice {
 		MixtureOutgoingFractions result = new MixtureOutgoingFractions(network, maxSteps);
 		
 		for (RoutedIntersection intersection : network.routedIntersections)
-			createMixtureFractionsForIntersection(result, intersection);
+			createMixtureFractionsForIntersection(result.get(intersection.index), intersection);
 		
 		return result;
 	}
 	
 	protected void createMixtureFractionsForIntersection(
-			MixtureOutgoingFractions result, RoutedIntersection intersection) {
+			MixtureOutgoingFractions.Intersection mof, RoutedIntersection intersection) {
 		// Creates turning fractions for each destination
+		mof.start();
 		
 		for (int destination = 0; destination < destinationBushes.length; destination++) {
 			
@@ -40,7 +41,7 @@ public class STARouteChoice implements StaticRouteChoice {
 				// traffic from all incoming links will leave using the connector (which
 				// is the first outgoing link)
 				for (int t = 0; t < maxSteps; t++)
-					result.setFraction(intersection.index, t, destination, 0, 1);
+					mof.setFraction(t, destination, 0, 1);
 				
 			} // 1b) Intersection is not the destination
 			else {
@@ -68,7 +69,7 @@ public class STARouteChoice implements StaticRouteChoice {
 							continue;
 						
 						for (int t = 0; t < maxSteps; t++)
-							result.setFraction(intersection.index, t, destination, j, fraction);
+							mof.setFraction(t, destination, j, fraction);
 					}
 				}
 				else {
@@ -80,10 +81,12 @@ public class STARouteChoice implements StaticRouteChoice {
 								: bush.getEdgeFlow(outgoingLinkIndex) / outgoingFlow;
 						
 						for (int t = 0; t < maxSteps; t++)
-							result.setFraction(intersection.index, t, destination, j, fraction);
+							mof.setFraction(t, destination, j, fraction);
 					}
 				}
 			}
 		}
+		
+		mof.compress();
 	}
 }

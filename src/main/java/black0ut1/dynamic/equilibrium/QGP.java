@@ -52,6 +52,8 @@ public class QGP extends RGP {
 			double alpha = Math.pow(ETA_1 / (ETA_1 + eta_bad), ETA_2);
 			for (int n = 0; n < mfs.intersections; n++) {
 				Link[] outgoingLinks = network.routedIntersections[n].outgoingLinks;
+				MixtureOutgoingFractions.Intersection mof = mfs.get(n);
+				mof.start();
 				
 				for (int t = 0; t < mfs.timeSteps; t++)
 					for (int d = 0; d < network.zones.length; d++) {
@@ -100,7 +102,7 @@ public class QGP extends RGP {
 										? (avgCost - costs1[j]) / gs[j]
 										: 0;
 								
-								if (mfs.getFraction(n, t, d, j) == 0 && delta[j] < 0) {
+								if (mof.getFraction(t, d, j) == 0 && delta[j] < 0) {
 									B.clear(j);
 									eliminated = true;
 								}
@@ -114,16 +116,17 @@ public class QGP extends RGP {
 						double beta = 1;
 						for (int j = 0; j < outgoingLinks.length; j++)
 							if (B.get(j) && delta[j] < 0)
-								beta = Math.min(beta, -mfs.getFraction(n, t, d, j) / delta[j]);
+								beta = Math.min(beta, -mof.getFraction(t, d, j) / delta[j]);
 						
 						for (int j = 0; j < outgoingLinks.length; j++) {
 							if (outgoingLinks[j] instanceof Connector)
 								continue;
 							
-							double newValue = Math.max(0, mfs.getFraction(n, t, d, j) + beta * delta[j]);
-							mfs.setFraction(n, t, d, j, newValue);
+							double newValue = Math.max(0, mof.getFraction(t, d, j) + beta * delta[j]);
+							mof.setFraction(t, d, j, newValue);
 						}
 					}
+				mof.compress();
 			}
 			
 			dnl.loadNetwork();

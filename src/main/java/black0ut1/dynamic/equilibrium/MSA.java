@@ -46,18 +46,23 @@ public class MSA extends MOF_DUE {
 			
 			double lambda = 1.0 / (i + 2);
 			
-			for (int n = 0; n < mfs.intersections; n++)
+			for (int n = 0; n < mfs.intersections; n++) {
+				MixtureOutgoingFractions.Intersection mof = mfs.get(n);
+				mof.start();
+				
 				for (int t = 0; t < mfs.timeSteps; t++)
 					for (int d = 0; d < network.zones.length; d++)
 						for (int j = 0; j < network.routedIntersections[n].outgoingLinks.length; j++) {
-							double fraction = mfs.getFraction(n, t, d, j);
+							double fraction = mof.getFraction(t, d, j);
 							
 							double newFraction = (shortestOugoingLinks.getIndex(n, t, d) == j)
 									? (1 - lambda) * fraction + lambda
 									: (1 - lambda) * fraction;
 							
-							mfs.setFraction(n, t, d, j, newFraction);
+							mof.setFraction(t, d, j, newFraction);
 						}
+				mof.compress();
+			}
 			
 			dnl.loadNetwork();
 			
