@@ -39,10 +39,8 @@ public class CTM extends Link {
 	}
 	
 	public void advanceFlow(int time) {
-		if (time > 0) {
-			cellFlow[0] = inflow[time - 1].totalFlow;
-			cellFlow[cellFlow.length - 1] = cumulativeOutflow[time] - cumulativeOutflow[time - 1];
-		}
+		cellFlow[0] = inflow[time].totalFlow;
+		cellFlow[cellFlow.length - 1] = cumulativeOutflow[time + 1] - cumulativeOutflow[time];
 		
 		for (int x = 0; x < cells.length; x++)
 			cells[x] = cells[x] + cellFlow[x] - cellFlow[x + 1];
@@ -62,7 +60,6 @@ public class CTM extends Link {
 		double[] flowSent = {10, 10, 10, 10, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0};
 		for (int t = 0; t <= 20; t++) {
 			
-			ctm.advanceFlow(t);
 			ctm.computeSendingFlow(t);
 			ctm.computeReceivingFlow(t);
 			
@@ -88,6 +85,7 @@ public class CTM extends Link {
 			
 			ctm.cumulativeOutflow[t + 1] = ctm.cumulativeOutflow[t] + mf.totalFlow;
 			
+			ctm.advanceFlow(t);
 			
 			System.out.format("%2d | %4.1f  %4.1f | %6.1f  %6.1f  %6.1f  %6.1f  %6.1f  %6.1f  | %4.1f %6.1f %n",
 					t, flowSent[t], ctm.getReceivingFlow(),
