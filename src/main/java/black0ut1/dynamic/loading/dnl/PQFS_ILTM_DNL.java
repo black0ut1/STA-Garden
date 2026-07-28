@@ -75,7 +75,6 @@ public class PQFS_ILTM_DNL extends ILTM_DNL {
 						pq.decreasePriority(incomingLink.tail.index, potentialIncrease);
 				}
 				
-				incomingLink.outflow[t] = incomingFlow;
 				incomingLink.cumulativeOutflow[t + 1] = Xad;
 			}
 			

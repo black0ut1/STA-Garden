@@ -86,7 +86,6 @@ public class FS_ILTM_DNL extends ILTM_DNL {
 						incomingLink.tail.potential += ((LTM) incomingLink).psi * Math.abs(Xad - Vi);
 					}
 					
-					incomingLink.outflow[t] = incomingFlow;
 					incomingLink.cumulativeOutflow[t + 1] = Xad;
 				}
 				

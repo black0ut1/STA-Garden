@@ -83,13 +83,12 @@ public class LTM extends Link {
 				flowExited = 0;
 			MixtureFlow mf = new MixtureFlow(flowExited, new int[0], new double[0], 0);
 			
-			ltm.outflow[t] = mf;
 			ltm.cumulativeOutflow[t + 1] = ltm.cumulativeOutflow[t] + mf.totalFlow;
 			
 			System.out.printf("%2d | %4.1f  %4.1f %6.1f | %4.1f %5.1f  | %4.1f %6.1f %8.1f %n",
 					t, flowSent[t], ltm.getReceivingFlow(), ltm.inflow[t].totalFlow,
 					ltm.cumulativeInflow[t], ltm.cumulativeOutflow[t],
-					ltm.sendingFlow, ltm.outflow[t].totalFlow,
+					ltm.sendingFlow, ltm.cumulativeOutflow[t + 1] - ltm.cumulativeOutflow[t],
 					ltm.cumulativeInflow[t] - ltm.cumulativeOutflow[t]);
 		}
 	}
