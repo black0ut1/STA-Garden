@@ -51,7 +51,6 @@ public class BasicDNL extends DynamicNetworkLoading {
 				Link incomingLink = node.incomingLinks[i];
 				MixtureFlow incomingFlow = pair.first()[i];
 				
-				incomingLink.outflow[t] = incomingFlow;
 				incomingLink.cumulativeOutflow[t + 1] = incomingLink.cumulativeOutflow[t] + incomingFlow.totalFlow;
 			}
 			

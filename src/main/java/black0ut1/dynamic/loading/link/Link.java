@@ -42,8 +42,6 @@ public abstract class Link {
 	protected double sendingFlow;
 	/** The flow that entered this link at each time step. */
 	public final MixtureFlow[] inflow;
-	/** The flow that exited this link at each time step. */
-	public final MixtureFlow[] outflow;
 	/** How many vehicles passed the upstream end up until now. */
 	public final double[] cumulativeInflow;
 	/** How many vehicles passed the downstream end up until now. */
@@ -60,7 +58,6 @@ public abstract class Link {
 		this.freeFlowSpeed = freeFlowSpeed;
 		
 		this.inflow = new MixtureFlow[timeSteps];
-		this.outflow = new MixtureFlow[timeSteps];
 		this.cumulativeInflow = new double[timeSteps + 1];
 		this.cumulativeOutflow = new double[timeSteps + 1];
 		
@@ -192,7 +189,6 @@ public abstract class Link {
 	public void reset() {
 		// release objects
 		Arrays.fill(inflow, null);
-		Arrays.fill(outflow, null);
 		
 		// zero out cumulative flows
 		Arrays.fill(cumulativeInflow, 0);

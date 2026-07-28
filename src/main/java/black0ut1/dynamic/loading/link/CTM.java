@@ -41,7 +41,7 @@ public class CTM extends Link {
 	public void advanceFlow(int time) {
 		if (time > 0) {
 			cellFlow[0] = inflow[time - 1].totalFlow;
-			cellFlow[cellFlow.length - 1] = outflow[time - 1].totalFlow;
+			cellFlow[cellFlow.length - 1] = cumulativeOutflow[time] - cumulativeOutflow[time - 1];
 		}
 		
 		for (int x = 0; x < cells.length; x++)
@@ -86,7 +86,6 @@ public class CTM extends Link {
 				flowExited = 0;
 			MixtureFlow mf = new MixtureFlow(flowExited, new int[0], new double[0], 0);
 			
-			ctm.outflow[t] = mf;
 			ctm.cumulativeOutflow[t + 1] = ctm.cumulativeOutflow[t] + mf.totalFlow;
 			
 			
