@@ -9,6 +9,10 @@ package black0ut1.dynamic.loading.routing;
  */
 public class MixtureFlow {
 	
+	public static int length = 0;
+	public static int instances = 0;
+	public static int[] numPortionsOrder = new int[300];
+	
 	/** The total flow, which consists of portions heading to
 	 * different destinations. */
 	public final double totalFlow;
@@ -32,6 +36,13 @@ public class MixtureFlow {
 		this.portions = new double[len];
 		System.arraycopy(destinations, 0, this.destinations, 0, len);
 		System.arraycopy(portions, 0, this.portions, 0, len);
+		
+		length += len;
+		instances++;
+		for (double portion : this.portions) {
+			int i = (int) -Math.log10(portion);
+			numPortionsOrder[i]++;
+		}
 	}
 	
 	private MixtureFlow(double totalFlow, int[] destinations, double[] portions) {

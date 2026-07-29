@@ -5,10 +5,14 @@ import black0ut1.dynamic.Convergence;
 import black0ut1.dynamic.DynamicNetwork;
 import black0ut1.dynamic.TimeDependentODM;
 import black0ut1.dynamic.loading.dnl.DynamicNetworkLoading;
+import black0ut1.dynamic.loading.routing.MixtureFlow;
 import black0ut1.dynamic.loading.routing.MixtureOutgoingFractions;
 import black0ut1.dynamic.tdsp.DOT;
 import black0ut1.util.DynamicUtils;
 import black0ut1.util.Util;
+
+import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * Method of Successive Averages algorithm.
@@ -39,7 +43,12 @@ public class MSA extends MOF_DUE {
 		System.out.println("[DUE] SPTT: " + criterions[1]);
 		System.out.println("[DUE] AEC:  " + criterions[2]);
 		System.out.println("[DUE] RG:   " + criterions[3]);
-
+		
+		System.out.printf(Locale.US, "Avg. size of MixtureFlow: %.2f\n", MixtureFlow.length / (double) MixtureFlow.instances);
+		System.out.format(Locale.US, "Distribution of portion orders %s\n", Arrays.toString(MixtureFlow.numPortionsOrder));
+		MixtureFlow.length = 0;
+		MixtureFlow.instances = 0;
+		Arrays.fill(MixtureFlow.numPortionsOrder, 0);
 		
 		for (int i = 0; i < maxIterations; i++) {
 			System.out.println("[DUE] Iteration: " + i);
@@ -78,6 +87,12 @@ public class MSA extends MOF_DUE {
 			System.out.println("[DUE] SPTT: " + criterions[1]);
 			System.out.println("[DUE] AEC:  " + criterions[2]);
 			System.out.println("[DUE] RG:   " + criterions[3]);
+			
+			System.out.printf(Locale.US, "Avg. size of MixtureFlow: %.2f\n", MixtureFlow.length / (double) MixtureFlow.instances);
+			System.out.format(Locale.US, "Distribution of portion orders %s\n", Arrays.toString(MixtureFlow.numPortionsOrder));
+			MixtureFlow.length = 0;
+			MixtureFlow.instances = 0;
+			Arrays.fill(MixtureFlow.numPortionsOrder, 0);
 		}
 		
 		Util.dumpHeap(Main.network);
