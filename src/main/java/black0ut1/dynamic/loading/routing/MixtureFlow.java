@@ -9,6 +9,8 @@ package black0ut1.dynamic.loading.routing;
  */
 public class MixtureFlow {
 	
+	public static double PRECISION = 1e-5;
+	
 	/** The total flow, which consists of portions heading to
 	 * different destinations. */
 	public final double totalFlow;
@@ -27,6 +29,20 @@ public class MixtureFlow {
 	
 	public MixtureFlow(double totalFlow, int[] destinations, double[] portions, int len) {
 		this.totalFlow = totalFlow;
+		
+		// Filter out portions lower than PRECISION
+		if (PRECISION > 0) {
+			int actualLen = 0;
+			
+			for (int i = 0; i < len; i++)
+				if (portions[i] >= PRECISION) {
+					portions[actualLen] = portions[i];
+					destinations[actualLen] = destinations[i];
+					actualLen++;
+				}
+			
+			len = actualLen;
+		}
 		
 		this.destinations = new int[len];
 		this.portions = new double[len];
